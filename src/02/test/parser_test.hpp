@@ -49,8 +49,17 @@ void testBooleanLiteral(std::unique_ptr<ast::Expression> exp, bool value)
 	std::unique_ptr<ast::Boolean> stmt(x);
 
 	EXPECT_NE(stmt, nullptr);
-	EXPECT_EQ(stmt->Value, value);
-	EXPECT_EQ(stmt->TokenLiteral(), value ? "true" : "false");
+
+	if (value)
+	{
+		EXPECT_TRUE(stmt->Value);
+		EXPECT_STREQ(stmt->TokenLiteral().c_str(), "true");
+	}
+	else
+	{
+		EXPECT_FALSE(stmt->Value);
+		EXPECT_STREQ(stmt->TokenLiteral().c_str(), "false");
+	}
 }
 
 void testLiteralExpression(std::unique_ptr<ast::Expression> exp, std::variant<std::string, bool, long long int, int> expected)
@@ -116,10 +125,11 @@ TEST(TestLetStatements, BasicAssertions)
 
 	struct Input inputs[]
 	{
-		{"let x = 5", "x", 5},
+		{
+			"let x = 5", "x", 5},
 			{"let y = true", "y", true},
 		{
-			"let foobar = y", "foobar", "y"
+			"let foobar = y", "foobar", std::string("y")
 		}
 	};
 
@@ -150,7 +160,7 @@ TEST(TestReturnStatements, BasicAssertions)
 		{"return 5", 5},
 			{"return true", true},
 		{
-			"return foobar", "foobar"
+			"return foobar", std::string("foobar")
 		}
 	};
 
@@ -239,8 +249,8 @@ TEST(TestParsingPrefixExpressions, BasicAssertions)
 	{
 		{"!5;", "!", 5},
 			{"-15;", "-", 15},
-			{"!foobar;", "!", "foobar"},
-			{"-foobar;", "-", "foobar"},
+			{"!foobar;", "!", std::string("foobar")},
+			{"-foobar;", "-", std::string("foobar")},
 			{"!true;", "!", true},
 		{
 			"!false;", "!", false
@@ -293,14 +303,14 @@ TEST(TestParsingInfixExpressions, BasicAssertions)
 			{"5 < 5;", 5, "<", 5},
 			{"5 == 5;", 5, "==", 5},
 			{"5 != 5;", 5, "!=", 5},
-			{"foobar + barfoo;", "foobar", "+", "barfoo"},
-			{"foobar - barfoo;", "foobar", "-", "barfoo"},
-			{"foobar * barfoo;", "foobar", "*", "barfoo"},
-			{"foobar / barfoo;", "foobar", "/", "barfoo"},
-			{"foobar > barfoo;", "foobar", ">", "barfoo"},
-			{"foobar < barfoo;", "foobar", "<", "barfoo"},
-			{"foobar == barfoo;", "foobar", "==", "barfoo"},
-			{"foobar != barfoo;", "foobar", "!=", "barfoo"},
+			{"foobar + barfoo;", std::string("foobar"), "+", std::string("barfoo")},
+			{"foobar - barfoo;", std::string("foobar"), "-", std::string("barfoo")},
+			{"foobar * barfoo;", std::string("foobar"), "*", std::string("barfoo")},
+			{"foobar / barfoo;", std::string("foobar"), "/", std::string("barfoo")},
+			{"foobar > barfoo;", std::string("foobar"), ">", std::string("barfoo")},
+			{"foobar < barfoo;", std::string("foobar"), "<", std::string("barfoo")},
+			{"foobar == barfoo;", std::string("foobar"), "==", std::string("barfoo")},
+			{"foobar != barfoo;", std::string("foobar"), "!=", std::string("barfoo")},
 			{"true == true", true, "==", true},
 			{"true != false", true, "!=", false},
 		{
@@ -513,7 +523,7 @@ TEST(TestIfExpression, BasicAssertions)
 
 	EXPECT_NE(ifStmt, nullptr);
 
-	testInfixExpression(std::move(ifStmt->pCondition), "x", "<", "y");
+	testInfixExpression(std::move(ifStmt->pCondition), std::string("x"), "<", std::string("y"));
 
 	EXPECT_EQ(ifStmt->pConsequence->v_pStatements.size(), 1u);
 
@@ -523,7 +533,7 @@ TEST(TestIfExpression, BasicAssertions)
 
 	EXPECT_NE(exprStmt, nullptr);
 
-	testIdentifier(std::move(exprStmt->pExpression), "x");
+	testIdentifier(std::move(exprStmt->pExpression), std::string("x"));
 	EXPECT_EQ(ifStmt->pAlternative, nullptr);
 }
 
@@ -550,7 +560,7 @@ TEST(TestIfElseExpression, BasicAssertions)
 
 	EXPECT_NE(ifStmt, nullptr);
 
-	testInfixExpression(std::move(ifStmt->pCondition), "x", "<", "y");
+	testInfixExpression(std::move(ifStmt->pCondition), std::string("x"), "<", std::string("y"));
 
 	EXPECT_EQ(ifStmt->pConsequence->v_pStatements.size(), 1u);
 
@@ -560,7 +570,7 @@ TEST(TestIfElseExpression, BasicAssertions)
 
 	EXPECT_NE(exprStmt, nullptr);
 
-	testIdentifier(std::move(exprStmt->pExpression), "x");
+	testIdentifier(std::move(exprStmt->pExpression), std::string("x"));
 
 	EXPECT_EQ(ifStmt->pAlternative->v_pStatements.size(), 1u);
 
@@ -569,7 +579,7 @@ TEST(TestIfElseExpression, BasicAssertions)
 	std::unique_ptr<ast::ExpressionStatement> exprStmtAlt(y3);
 
 	EXPECT_NE(exprStmtAlt, nullptr);
-	testIdentifier(std::move(exprStmtAlt->pExpression), "y");
+	testIdentifier(std::move(exprStmtAlt->pExpression), std::string("y"));
 }
 
 TEST(TestFunctionLiteralParsing, BasicAssertions)
@@ -597,8 +607,8 @@ TEST(TestFunctionLiteralParsing, BasicAssertions)
 
 	EXPECT_EQ(funcStmt->v_pParameters.size(), 2u);
 
-	testLiteralExpression(std::move(funcStmt->v_pParameters[0]), "x");
-	testLiteralExpression(std::move(funcStmt->v_pParameters[1]), "y");
+	testLiteralExpression(std::move(funcStmt->v_pParameters[0]), std::string("x"));
+	testLiteralExpression(std::move(funcStmt->v_pParameters[1]), std::string("y"));
 
 	EXPECT_EQ(funcStmt->pBody->v_pStatements.size(), 1u);
 
@@ -608,7 +618,7 @@ TEST(TestFunctionLiteralParsing, BasicAssertions)
 
 	EXPECT_NE(bodyStmt, nullptr);
 
-	testInfixExpression(std::move(bodyStmt->pExpression), "x", "+", "y");
+	testInfixExpression(std::move(bodyStmt->pExpression), std::string("x"), "+", std::string("y"));
 }
 
 TEST(TestFunctionParameterParsing, BasicAssertions)
