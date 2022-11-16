@@ -29,11 +29,10 @@ add_executable(monkey
 target_link_libraries(monkey
 )
 
-add_executable(monkey_test
+add_executable(test_monkey
   test/main.cpp
-  test/lexer_test.cpp
 )
 
-target_link_libraries(monkey_test
+target_link_libraries(test_monkey
   ${GTEST_BOTH_LIBRARIES}
 )

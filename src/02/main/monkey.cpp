@@ -7,7 +7,13 @@ int main()
 {
     char *user = getlogin();
 
-    std::cout << "Hello " << user << "! This is the Monkey-CPP programming language!" << std::endl;
+
+    if(user){
+        std::cout << "Hello " << user << "! This is the Monkey-CPP programming language!" << std::endl;
+    } else {
+        std::cout << "Hello " << "! This is the Monkey-CPP programming language!" << std::endl;
+    }
+    
     std::cout << "Feel free to type in commands" << std::endl;
 
     repl::Start();

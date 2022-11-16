@@ -14,6 +14,9 @@ namespace token
     {
         TokenType Type;
         std::string Literal;
+
+        Token(){}
+        Token(TokenType type, std::string literal): Type(type), Literal(literal){}
     };
 
     namespace types
