@@ -10,6 +10,8 @@
 #include "ast/ast.hpp"
 #include "parser/parser.hpp"
 
+using namespace std::string_literals;
+
 void printParserErrors(std::vector<std::string> errors)
 {
 	if (errors.size() == 0)
@@ -129,7 +131,7 @@ TEST(TestLetStatements, BasicAssertions)
 			"let x = 5", "x", 5},
 			{"let y = true", "y", true},
 		{
-			"let foobar = y", "foobar", std::string("y")
+			"let foobar = y", "foobar", "y"s
 		}
 	};
 
@@ -160,7 +162,7 @@ TEST(TestReturnStatements, BasicAssertions)
 		{"return 5", 5},
 			{"return true", true},
 		{
-			"return foobar", std::string("foobar")
+			"return foobar", "foobar"s
 		}
 	};
 
@@ -249,8 +251,8 @@ TEST(TestParsingPrefixExpressions, BasicAssertions)
 	{
 		{"!5;", "!", 5},
 			{"-15;", "-", 15},
-			{"!foobar;", "!", std::string("foobar")},
-			{"-foobar;", "-", std::string("foobar")},
+			{"!foobar;", "!", "foobar"s},
+			{"-foobar;", "-", "foobar"s},
 			{"!true;", "!", true},
 		{
 			"!false;", "!", false
@@ -303,14 +305,14 @@ TEST(TestParsingInfixExpressions, BasicAssertions)
 			{"5 < 5;", 5, "<", 5},
 			{"5 == 5;", 5, "==", 5},
 			{"5 != 5;", 5, "!=", 5},
-			{"foobar + barfoo;", std::string("foobar"), "+", std::string("barfoo")},
-			{"foobar - barfoo;", std::string("foobar"), "-", std::string("barfoo")},
-			{"foobar * barfoo;", std::string("foobar"), "*", std::string("barfoo")},
-			{"foobar / barfoo;", std::string("foobar"), "/", std::string("barfoo")},
-			{"foobar > barfoo;", std::string("foobar"), ">", std::string("barfoo")},
-			{"foobar < barfoo;", std::string("foobar"), "<", std::string("barfoo")},
-			{"foobar == barfoo;", std::string("foobar"), "==", std::string("barfoo")},
-			{"foobar != barfoo;", std::string("foobar"), "!=", std::string("barfoo")},
+			{"foobar + barfoo;", "foobar"s, "+", "barfoo"s},
+			{"foobar - barfoo;", "foobar"s, "-", "barfoo"s},
+			{"foobar * barfoo;", "foobar"s, "*", "barfoo"s},
+			{"foobar / barfoo;", "foobar"s, "/", "barfoo"s},
+			{"foobar > barfoo;", "foobar"s, ">", "barfoo"s},
+			{"foobar < barfoo;", "foobar"s, "<", "barfoo"s},
+			{"foobar == barfoo;", "foobar"s, "==", "barfoo"s},
+			{"foobar != barfoo;", "foobar"s, "!=", "barfoo"s},
 			{"true == true", true, "==", true},
 			{"true != false", true, "!=", false},
 		{
@@ -523,7 +525,7 @@ TEST(TestIfExpression, BasicAssertions)
 
 	EXPECT_NE(ifStmt, nullptr);
 
-	testInfixExpression(std::move(ifStmt->pCondition), std::string("x"), "<", std::string("y"));
+	testInfixExpression(std::move(ifStmt->pCondition), "x"s, "<", "y"s);
 
 	EXPECT_EQ(ifStmt->pConsequence->v_pStatements.size(), 1u);
 
@@ -533,7 +535,7 @@ TEST(TestIfExpression, BasicAssertions)
 
 	EXPECT_NE(exprStmt, nullptr);
 
-	testIdentifier(std::move(exprStmt->pExpression), std::string("x"));
+	testIdentifier(std::move(exprStmt->pExpression), "x"s);
 	EXPECT_EQ(ifStmt->pAlternative, nullptr);
 }
 
@@ -560,7 +562,7 @@ TEST(TestIfElseExpression, BasicAssertions)
 
 	EXPECT_NE(ifStmt, nullptr);
 
-	testInfixExpression(std::move(ifStmt->pCondition), std::string("x"), "<", std::string("y"));
+	testInfixExpression(std::move(ifStmt->pCondition), "x"s, "<", "y"s);
 
 	EXPECT_EQ(ifStmt->pConsequence->v_pStatements.size(), 1u);
 
@@ -570,7 +572,7 @@ TEST(TestIfElseExpression, BasicAssertions)
 
 	EXPECT_NE(exprStmt, nullptr);
 
-	testIdentifier(std::move(exprStmt->pExpression), std::string("x"));
+	testIdentifier(std::move(exprStmt->pExpression), "x"s);
 
 	EXPECT_EQ(ifStmt->pAlternative->v_pStatements.size(), 1u);
 
@@ -579,7 +581,7 @@ TEST(TestIfElseExpression, BasicAssertions)
 	std::unique_ptr<ast::ExpressionStatement> exprStmtAlt(y3);
 
 	EXPECT_NE(exprStmtAlt, nullptr);
-	testIdentifier(std::move(exprStmtAlt->pExpression), std::string("y"));
+	testIdentifier(std::move(exprStmtAlt->pExpression), "y"s);
 }
 
 TEST(TestFunctionLiteralParsing, BasicAssertions)
@@ -607,8 +609,8 @@ TEST(TestFunctionLiteralParsing, BasicAssertions)
 
 	EXPECT_EQ(funcStmt->v_pParameters.size(), 2u);
 
-	testLiteralExpression(std::move(funcStmt->v_pParameters[0]), std::string("x"));
-	testLiteralExpression(std::move(funcStmt->v_pParameters[1]), std::string("y"));
+	testLiteralExpression(std::move(funcStmt->v_pParameters[0]), "x"s);
+	testLiteralExpression(std::move(funcStmt->v_pParameters[1]), "y"s);
 
 	EXPECT_EQ(funcStmt->pBody->v_pStatements.size(), 1u);
 
@@ -618,7 +620,7 @@ TEST(TestFunctionLiteralParsing, BasicAssertions)
 
 	EXPECT_NE(bodyStmt, nullptr);
 
-	testInfixExpression(std::move(bodyStmt->pExpression), std::string("x"), "+", std::string("y"));
+	testInfixExpression(std::move(bodyStmt->pExpression), "x"s, "+", "y"s);
 }
 
 TEST(TestFunctionParameterParsing, BasicAssertions)
