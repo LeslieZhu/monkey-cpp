@@ -35,6 +35,6 @@
 01/cpp/monkey
 02/cpp/monkey
 03/cpp/monkey
-build/
-Build/
+build*/
+Build*/
 .vscode/
