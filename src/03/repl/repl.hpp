@@ -7,6 +7,8 @@
 
 #include "lexer/lexer.hpp"
 #include "parser/parser.hpp"
+#include "objects/environment.hpp"
+#include "evaluator/evaluator.hpp"
 
 namespace repl
 {
@@ -39,6 +41,8 @@ namespace repl
 
     void Start()
     {
+        auto env = objects::NewEnvironment();
+
         std::string line;
         while (true)
         {
@@ -54,7 +58,7 @@ namespace repl
             std::unique_ptr<lexer::Lexer> pLexer = lexer::New(line);
             std::unique_ptr<parser::Parser> pParser = parser::New(std::move(pLexer));
             std::unique_ptr<ast::Program> pProgram{pParser->ParseProgram()};
-            
+
             std::vector<std::string> errors = pParser->Errors();
             if (errors.size() > 0)
             {
@@ -63,6 +67,15 @@ namespace repl
             }
 
             std::cout << pProgram->String() << std::endl;
+
+            std::unique_ptr<ast::Node> astNode(reinterpret_cast<ast::Node *>(pProgram.release()));
+
+            auto evaluated = evaluator::Eval(std::move(astNode), env);
+
+            if (evaluated != nullptr)
+            {
+                std::cout << evaluated->Inspect() << std::endl;
+            }
         }
     }
 }

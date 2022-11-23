@@ -357,7 +357,7 @@ namespace ast
         virtual NodeType GetNodeType() { return ast::NodeType::CallExpression; }
     };
 
-    struct Program
+    struct Program: Node
     {
         std::vector<std::unique_ptr<Statement>> v_pStatements;
 
