@@ -37,8 +37,8 @@ namespace parser
 
     struct Parser
     {
-        using prefixParseFn = std::unique_ptr<ast::Expression> (Parser::*)();
-        using infixParseFn = std::unique_ptr<ast::Expression> (Parser::*)(std::unique_ptr<ast::Expression>);
+        using prefixParseFn = std::shared_ptr<ast::Expression> (Parser::*)();
+        using infixParseFn = std::shared_ptr<ast::Expression> (Parser::*)(std::shared_ptr<ast::Expression>);
 
         std::unique_ptr<lexer::Lexer> pLexer;
         std::vector<std::string> errors;
@@ -128,18 +128,18 @@ namespace parser
 
             while (!curTokenIs(token::types::EndOF))
             {
-                std::unique_ptr<ast::Statement> pStmt{parseStatement()};
+                std::shared_ptr<ast::Statement> pStmt{parseStatement()};
 
                 if (pStmt)
                 {
-                    pProgram->v_pStatements.push_back(std::move(pStmt));
+                    pProgram->v_pStatements.push_back(pStmt);
                 }
                 nextToken();
             }
             return pProgram;
         }
 
-        std::unique_ptr<ast::Statement> parseStatement()
+        std::shared_ptr<ast::Statement> parseStatement()
         {
             if (curToken.Type == token::types::LET)
             {
@@ -155,9 +155,9 @@ namespace parser
             }
         }
 
-        std::unique_ptr<ast::LetStatement> parseLetStatement()
+        std::shared_ptr<ast::LetStatement> parseLetStatement()
         {
-            std::unique_ptr<ast::LetStatement> pStmt = std::make_unique<ast::LetStatement>();
+            std::shared_ptr<ast::LetStatement> pStmt = std::make_shared<ast::LetStatement>();
             pStmt->Token = curToken;
 
             if (!expectPeek(token::types::IDENT))
@@ -165,7 +165,7 @@ namespace parser
                 return nullptr;
             }
 
-            pStmt->pName = std::make_unique<ast::Identifier>(curToken, curToken.Literal);
+            pStmt->pName = std::make_shared<ast::Identifier>(curToken, curToken.Literal);
 
             if (!expectPeek(token::types::ASSIGN))
             {
@@ -183,9 +183,9 @@ namespace parser
             return pStmt;
         }
 
-        std::unique_ptr<ast::ReturnStatement> parseReturnStatement()
+        std::shared_ptr<ast::ReturnStatement> parseReturnStatement()
         {
-            std::unique_ptr<ast::ReturnStatement> pStmt = std::make_unique<ast::ReturnStatement>(curToken);
+            std::shared_ptr<ast::ReturnStatement> pStmt = std::make_shared<ast::ReturnStatement>(curToken);
             nextToken();
             pStmt->pReturnValue = parseExpression(Priority::LOWEST);
             if (peekTokenIs(token::types::SEMICOLON))
@@ -195,9 +195,9 @@ namespace parser
             return pStmt;
         }
 
-        std::unique_ptr<ast::ExpressionStatement> parseExpressionStatement()
+        std::shared_ptr<ast::ExpressionStatement> parseExpressionStatement()
         {
-            std::unique_ptr<ast::ExpressionStatement> pStmt = std::make_unique<ast::ExpressionStatement>(curToken);
+            std::shared_ptr<ast::ExpressionStatement> pStmt = std::make_shared<ast::ExpressionStatement>(curToken);
             pStmt->pExpression = parseExpression(Priority::LOWEST);
             if (peekTokenIs(token::types::SEMICOLON))
             {
@@ -206,7 +206,7 @@ namespace parser
             return pStmt;
         }
 
-        std::unique_ptr<ast::Expression> parseExpression(Priority precedence)
+        std::shared_ptr<ast::Expression> parseExpression(Priority precedence)
         {
             prefixParseFn prefix = prefixParseFns[curToken.Type];
             if (prefix == nullptr)
@@ -216,7 +216,7 @@ namespace parser
             }
 
             //std::unique_ptr<ast::Expression> leftExp = (this->*(prefix))();
-            std::unique_ptr<ast::Expression> leftExp = (this->*prefix)();
+            std::shared_ptr<ast::Expression> leftExp = (this->*prefix)();
             while (!peekTokenIs(token::types::SEMICOLON) && precedence < peekPrecedence())
             {
                 infixParseFn infix = infixParseFns[peekToken.Type];
@@ -227,7 +227,7 @@ namespace parser
 
                 nextToken();
                 //leftExp = (this->*(infix))(std::move(leftExp));
-                leftExp = (this->*infix)(std::move(leftExp));
+                leftExp = (this->*infix)(leftExp);
             }
             return leftExp;
         }
@@ -253,15 +253,15 @@ namespace parser
             return Priority::LOWEST;
         }
 
-        std::unique_ptr<ast::Expression> parseIdentifier()
+        std::shared_ptr<ast::Expression> parseIdentifier()
         {
-            std::unique_ptr<ast::Identifier> pStmt = std::make_unique<ast::Identifier>(curToken, curToken.Literal);
+            std::shared_ptr<ast::Identifier> pStmt = std::make_shared<ast::Identifier>(curToken, curToken.Literal);
             return pStmt;
         }
 
-        std::unique_ptr<ast::Expression> parseIntegerLiteral()
+        std::shared_ptr<ast::Expression> parseIntegerLiteral()
         {
-            std::unique_ptr<ast::IntegerLiteral> pLit = std::make_unique<ast::IntegerLiteral>(curToken);
+            std::shared_ptr<ast::IntegerLiteral> pLit = std::make_shared<ast::IntegerLiteral>(curToken);
 
             try
             {
@@ -278,33 +278,33 @@ namespace parser
             return pLit;
         }
 
-        std::unique_ptr<ast::Expression> parsePrefixExpression()
+        std::shared_ptr<ast::Expression> parsePrefixExpression()
         {
-            std::unique_ptr<ast::PrefixExpression> pExpression = std::make_unique<ast::PrefixExpression>(curToken, curToken.Literal);
+            std::shared_ptr<ast::PrefixExpression> pExpression = std::make_shared<ast::PrefixExpression>(curToken, curToken.Literal);
             nextToken();
             pExpression->pRight = parseExpression(Priority::PREFIX);
             return pExpression;
         }
 
-        std::unique_ptr<ast::Expression> parseInfixExpression(std::unique_ptr<ast::Expression> left)
+        std::shared_ptr<ast::Expression> parseInfixExpression(std::shared_ptr<ast::Expression> left)
         {
-            std::unique_ptr<ast::InfixExpression> pExpression = std::make_unique<ast::InfixExpression>(curToken, curToken.Literal, std::move(left));
+            std::shared_ptr<ast::InfixExpression> pExpression = std::make_shared<ast::InfixExpression>(curToken, curToken.Literal, left);
             Priority precedence = curPrecedence();
             nextToken();
             pExpression->pRight = parseExpression(precedence);
             return pExpression;
         }
 
-        std::unique_ptr<ast::Expression> parseBoolean()
+        std::shared_ptr<ast::Expression> parseBoolean()
         {
-            std::unique_ptr<ast::Boolean> pStmt = std::make_unique<ast::Boolean>(curToken, curTokenIs(token::types::TRUE));
+            std::shared_ptr<ast::Boolean> pStmt = std::make_shared<ast::Boolean>(curToken, curTokenIs(token::types::TRUE));
             return pStmt;
         }
 
-        std::unique_ptr<ast::Expression> parseGroupedExpression()
+        std::shared_ptr<ast::Expression> parseGroupedExpression()
         {
             nextToken();
-            std::unique_ptr<ast::Expression> pExp = parseExpression(Priority::LOWEST);
+            std::shared_ptr<ast::Expression> pExp = parseExpression(Priority::LOWEST);
             if (!expectPeek(token::types::RPAREN))
             {
                 return nullptr;
@@ -312,9 +312,9 @@ namespace parser
             return pExp;
         }
 
-        std::unique_ptr<ast::Expression> parseIfExpression()
+        std::shared_ptr<ast::Expression> parseIfExpression()
         {
-            std::unique_ptr<ast::IfExpression> pExpression = std::make_unique<ast::IfExpression>(curToken);
+            std::shared_ptr<ast::IfExpression> pExpression = std::make_shared<ast::IfExpression>(curToken);
             if (!expectPeek(token::types::LPAREN))
             {
                 return nullptr;
@@ -342,16 +342,16 @@ namespace parser
             return pExpression;
         }
 
-        std::unique_ptr<ast::BlockStatement> parseBlockStatement()
+        std::shared_ptr<ast::BlockStatement> parseBlockStatement()
         {
-            std::unique_ptr<ast::BlockStatement> pBlock = std::make_unique<ast::BlockStatement>(curToken);
+            std::shared_ptr<ast::BlockStatement> pBlock = std::make_shared<ast::BlockStatement>(curToken);
             nextToken();
             while (!curTokenIs(token::types::RBRACE) && !curTokenIs(token::types::EndOF))
             {
-                std::unique_ptr<ast::Statement> pStmt = parseStatement();
+                std::shared_ptr<ast::Statement> pStmt = parseStatement();
                 if (pStmt != nullptr)
                 {
-                    pBlock->v_pStatements.push_back(std::move(pStmt));
+                    pBlock->v_pStatements.push_back(pStmt);
                 }
                 nextToken();
             }
@@ -359,9 +359,9 @@ namespace parser
             return pBlock;
         }
 
-        std::unique_ptr<ast::Expression> parseFunctionLiteral()
+        std::shared_ptr<ast::Expression> parseFunctionLiteral()
         {
-            std::unique_ptr<ast::FunctionLiteral> pLit = std::make_unique<ast::FunctionLiteral>(curToken);
+            std::shared_ptr<ast::FunctionLiteral> pLit = std::make_shared<ast::FunctionLiteral>(curToken);
             if (!expectPeek(token::types::LPAREN))
             {
                 return nullptr;
@@ -378,9 +378,9 @@ namespace parser
             return pLit;
         }
 
-        std::vector<std::unique_ptr<ast::Identifier>> parseFunctionParameters()
+        std::vector<std::shared_ptr<ast::Identifier>> parseFunctionParameters()
         {
-            std::vector<std::unique_ptr<ast::Identifier>> v_pIdentifiers{};
+            std::vector<std::shared_ptr<ast::Identifier>> v_pIdentifiers{};
 
             if (peekTokenIs(token::types::RPAREN))
             {
@@ -388,33 +388,33 @@ namespace parser
                 return v_pIdentifiers;
             }
             nextToken();
-            std::unique_ptr<ast::Identifier> pIdent = std::make_unique<ast::Identifier>(curToken, curToken.Literal);
-            v_pIdentifiers.push_back(std::move(pIdent));
+            std::shared_ptr<ast::Identifier> pIdent = std::make_shared<ast::Identifier>(curToken, curToken.Literal);
+            v_pIdentifiers.push_back(pIdent);
 
             while (peekTokenIs(token::types::COMMA))
             {
                 nextToken();
                 nextToken();
-                std::unique_ptr<ast::Identifier> pIdent = std::make_unique<ast::Identifier>(curToken, curToken.Literal);
-                v_pIdentifiers.push_back(std::move(pIdent));
+                std::shared_ptr<ast::Identifier> pIdent = std::make_shared<ast::Identifier>(curToken, curToken.Literal);
+                v_pIdentifiers.push_back(pIdent);
             }
             if (!expectPeek(token::types::RPAREN))
             {
-                return std::vector<std::unique_ptr<ast::Identifier>>{};
+                return std::vector<std::shared_ptr<ast::Identifier>>{};
             }
             return v_pIdentifiers;
         }
 
-        std::unique_ptr<ast::Expression> parseCallExpression(std::unique_ptr<ast::Expression> function)
+        std::shared_ptr<ast::Expression> parseCallExpression(std::shared_ptr<ast::Expression> function)
         {
-            std::unique_ptr<ast::CallExpression> pExp = std::make_unique<ast::CallExpression>(curToken, std::move(function));
+            std::shared_ptr<ast::CallExpression> pExp = std::make_shared<ast::CallExpression>(curToken, function);
             pExp->pArguments = parseCallArguments();
             return pExp;
         }
 
-        std::vector<std::unique_ptr<ast::Expression>> parseCallArguments()
+        std::vector<std::shared_ptr<ast::Expression>> parseCallArguments()
         {
-            std::vector<std::unique_ptr<ast::Expression>> args{};
+            std::vector<std::shared_ptr<ast::Expression>> args{};
             if (peekTokenIs(token::types::RPAREN))
             {
                 nextToken();
@@ -430,7 +430,7 @@ namespace parser
             }
             if (!expectPeek(token::types::RPAREN))
             {
-                return std::vector<std::unique_ptr<ast::Expression>>{};
+                return std::vector<std::shared_ptr<ast::Expression>>{};
             }
             return args;
         }

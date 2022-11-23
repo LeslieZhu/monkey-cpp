@@ -25,30 +25,27 @@ void printParserErrors(std::vector<std::string> errors)
 	}
 }
 
-void testIntegerLiteral(std::unique_ptr<ast::Expression> exp, int64_t value)
+void testIntegerLiteral(std::shared_ptr<ast::Expression> exp, int64_t value)
 {
-	auto x = reinterpret_cast<ast::IntegerLiteral *>(exp.release());
-	std::unique_ptr<ast::IntegerLiteral> stmt(x);
+	std::shared_ptr<ast::IntegerLiteral> stmt = std::dynamic_pointer_cast<ast::IntegerLiteral>(exp);
 
 	EXPECT_NE(stmt, nullptr);
 	EXPECT_EQ(stmt->Value, value);
 	EXPECT_EQ(stmt->TokenLiteral(), std::to_string(value));
 }
 
-void testIdentifier(std::unique_ptr<ast::Expression> exp, std::string value)
+void testIdentifier(std::shared_ptr<ast::Expression> exp, std::string value)
 {
-	auto x = reinterpret_cast<ast::Identifier *>(exp.release());
-	std::unique_ptr<ast::Identifier> stmt(x);
+	std::shared_ptr<ast::Identifier> stmt = std::dynamic_pointer_cast<ast::Identifier>(exp);
 
 	EXPECT_NE(stmt, nullptr);
 	EXPECT_EQ(stmt->Value, value);
 	EXPECT_EQ(stmt->TokenLiteral(), value);
 }
 
-void testBooleanLiteral(std::unique_ptr<ast::Expression> exp, bool value)
+void testBooleanLiteral(std::shared_ptr<ast::Expression> exp, bool value)
 {
-	auto x = reinterpret_cast<ast::Boolean *>(exp.release());
-	std::unique_ptr<ast::Boolean> stmt(x);
+	std::shared_ptr<ast::Boolean> stmt = std::dynamic_pointer_cast<ast::Boolean>(exp);
 
 	EXPECT_NE(stmt, nullptr);
 
@@ -64,23 +61,23 @@ void testBooleanLiteral(std::unique_ptr<ast::Expression> exp, bool value)
 	}
 }
 
-void testLiteralExpression(std::unique_ptr<ast::Expression> exp, std::variant<std::string, bool, long long int, int> expected)
+void testLiteralExpression(std::shared_ptr<ast::Expression> exp, std::variant<std::string, bool, long long int, int> expected)
 {
 	if (std::holds_alternative<long long int>(expected))
 	{
-		testIntegerLiteral(std::move(exp), std::get<long long int>(expected));
+		testIntegerLiteral(exp, std::get<long long int>(expected));
 	}
 	else if (std::holds_alternative<int>(expected))
 	{
-		testIntegerLiteral(std::move(exp), static_cast<long long int>(std::get<int>(expected)));
+		testIntegerLiteral(exp, static_cast<long long int>(std::get<int>(expected)));
 	}
 	else if (std::holds_alternative<std::string>(expected))
 	{
-		testIdentifier(std::move(exp), std::get<std::string>(expected));
+		testIdentifier(exp, std::get<std::string>(expected));
 	}
 	else if (std::holds_alternative<bool>(expected))
 	{
-		testBooleanLiteral(std::move(exp), std::get<bool>(expected));
+		testBooleanLiteral(exp, std::get<bool>(expected));
 	}
 	else
 	{
@@ -88,24 +85,22 @@ void testLiteralExpression(std::unique_ptr<ast::Expression> exp, std::variant<st
 	}
 }
 
-void testInfixExpression(std::unique_ptr<ast::Expression> exp, std::variant<std::string, bool, long long int, int> left, std::string operatorStr, std::variant<std::string, bool, long long int, int> right)
+void testInfixExpression(std::shared_ptr<ast::Expression> exp, std::variant<std::string, bool, long long int, int> left, std::string operatorStr, std::variant<std::string, bool, long long int, int> right)
 {
-	auto x = reinterpret_cast<ast::InfixExpression *>(exp.release());
-	std::unique_ptr<ast::InfixExpression> infixStmt(x);
+	std::shared_ptr<ast::InfixExpression> infixStmt = std::dynamic_pointer_cast<ast::InfixExpression>(exp);
 
 	EXPECT_NE(infixStmt, nullptr);
 
-	testLiteralExpression(std::move(infixStmt->pLeft), left);
+	testLiteralExpression(infixStmt->pLeft, left);
 	EXPECT_STREQ(infixStmt->Operator.c_str(), operatorStr.c_str());
-	testLiteralExpression(std::move(infixStmt->pRight), right);
+	testLiteralExpression(infixStmt->pRight, right);
 }
 
-std::unique_ptr<ast::LetStatement> testLetStatement(std::unique_ptr<ast::Statement> s, std::string name)
+std::shared_ptr<ast::LetStatement> testLetStatement(std::shared_ptr<ast::Statement> s, std::string name)
 {
 	EXPECT_EQ(s->TokenLiteral(), "let");
 
-	auto x = reinterpret_cast<ast::LetStatement *>(s.release());
-	std::unique_ptr<ast::LetStatement> stmt(x);
+	std::shared_ptr<ast::LetStatement> stmt = std::dynamic_pointer_cast<ast::LetStatement>(s);
 
 	EXPECT_NE(stmt, nullptr);
 	EXPECT_EQ(stmt->GetNodeType(), ast::NodeType::LetStatement);
@@ -144,8 +139,8 @@ TEST(TestLetStatements, BasicAssertions)
 
 		EXPECT_EQ(pProgram->v_pStatements.size(), 1u);
 
-		auto letStmt = testLetStatement(std::move(pProgram->v_pStatements[0]), s.expectedIdentifier);
-		testLiteralExpression(std::move(letStmt->pValue), s.expectedValue);
+		auto letStmt = testLetStatement(pProgram->v_pStatements[0], s.expectedIdentifier);
+		testLiteralExpression(letStmt->pValue, s.expectedValue);
 	}
 }
 
@@ -175,13 +170,12 @@ TEST(TestReturnStatements, BasicAssertions)
 
 		EXPECT_EQ(pProgram->v_pStatements.size(), 1u);
 
-		std::unique_ptr<ast::Statement> stmt = std::move(pProgram->v_pStatements[0]);
-		auto x = reinterpret_cast<ast::ReturnStatement *>(stmt.release());
-		std::unique_ptr<ast::ReturnStatement> returnStmt(x);
+		std::shared_ptr<ast::Statement> stmt = pProgram->v_pStatements[0];
+		std::shared_ptr<ast::ReturnStatement> returnStmt = std::dynamic_pointer_cast<ast::ReturnStatement>(stmt);
 
 		EXPECT_NE(returnStmt, nullptr);
 		EXPECT_STREQ(returnStmt->TokenLiteral().c_str(), "return");
-		testLiteralExpression(std::move(returnStmt->pReturnValue), item.expectedValue);
+		testLiteralExpression(returnStmt->pReturnValue, item.expectedValue);
 	}
 }
 
@@ -196,15 +190,13 @@ TEST(TestIdentifierExpression, BasicAssertions)
 
 	EXPECT_EQ(pProgram->v_pStatements.size(), 1u);
 
-	std::unique_ptr<ast::Statement> stmt = std::move(pProgram->v_pStatements[0]);
-	auto x = reinterpret_cast<ast::ExpressionStatement *>(stmt.release());
-	std::unique_ptr<ast::ExpressionStatement> expStmt(x);
+	std::shared_ptr<ast::Statement> stmt = pProgram->v_pStatements[0];
+	std::shared_ptr<ast::ExpressionStatement> expStmt = std::dynamic_pointer_cast<ast::ExpressionStatement>(stmt);
 
 	EXPECT_NE(expStmt, nullptr);
 
-	std::unique_ptr<ast::Expression> exp = std::move(expStmt->pExpression);
-	auto y = reinterpret_cast<ast::Identifier *>(exp.release());
-	std::unique_ptr<ast::Identifier> identStmt(y);
+	std::shared_ptr<ast::Expression> exp = expStmt->pExpression;
+	std::shared_ptr<ast::Identifier> identStmt = std::dynamic_pointer_cast<ast::Identifier>(exp);
 
 	EXPECT_NE(identStmt, nullptr);
 	EXPECT_STREQ(identStmt->Value.c_str(), "foobar");
@@ -222,15 +214,13 @@ TEST(TestIntegerLiteralExpression, BasicAssertions)
 
 	EXPECT_EQ(pProgram->v_pStatements.size(), 1u);
 
-	std::unique_ptr<ast::Statement> stmt = std::move(pProgram->v_pStatements[0]);
-	auto x = reinterpret_cast<ast::ExpressionStatement *>(stmt.release());
-	std::unique_ptr<ast::ExpressionStatement> expStmt(x);
+	std::shared_ptr<ast::Statement> stmt = pProgram->v_pStatements[0];
+	std::shared_ptr<ast::ExpressionStatement> expStmt = std::dynamic_pointer_cast<ast::ExpressionStatement>(stmt);
 
 	EXPECT_NE(expStmt, nullptr);
 
-	std::unique_ptr<ast::Expression> exp = std::move(expStmt->pExpression);
-	auto y = reinterpret_cast<ast::IntegerLiteral *>(exp.release());
-	std::unique_ptr<ast::IntegerLiteral> intStmt(y);
+	std::shared_ptr<ast::Expression> exp = expStmt->pExpression;
+	std::shared_ptr<ast::IntegerLiteral> intStmt = std::dynamic_pointer_cast<ast::IntegerLiteral>(exp);
 
 	EXPECT_NE(intStmt, nullptr);
 
@@ -268,20 +258,18 @@ TEST(TestParsingPrefixExpressions, BasicAssertions)
 
 		EXPECT_EQ(pProgram->v_pStatements.size(), 1u);
 
-		std::unique_ptr<ast::Statement> stmt = std::move(pProgram->v_pStatements[0]);
-		auto x = reinterpret_cast<ast::ExpressionStatement *>(stmt.release());
-		std::unique_ptr<ast::ExpressionStatement> expStmt(x);
+		std::shared_ptr<ast::Statement> stmt = pProgram->v_pStatements[0];
+		std::shared_ptr<ast::ExpressionStatement> expStmt = std::dynamic_pointer_cast<ast::ExpressionStatement>(stmt);
 
 		EXPECT_NE(expStmt, nullptr);
 
-		std::unique_ptr<ast::Expression> exp = std::move(expStmt->pExpression);
-		auto y = reinterpret_cast<ast::PrefixExpression *>(exp.release());
-		std::unique_ptr<ast::PrefixExpression> prefixExpStmt(y);
+		std::shared_ptr<ast::Expression> exp = expStmt->pExpression;
+		std::shared_ptr<ast::PrefixExpression> prefixExpStmt = std::dynamic_pointer_cast<ast::PrefixExpression>(exp);
 
 		EXPECT_NE(prefixExpStmt, nullptr);
 
 		EXPECT_STREQ(prefixExpStmt->Operator.c_str(), item.operatorStr.c_str());
-		testLiteralExpression(std::move(prefixExpStmt->pRight), item.value);
+		testLiteralExpression(prefixExpStmt->pRight, item.value);
 	}
 }
 
@@ -329,12 +317,11 @@ TEST(TestParsingInfixExpressions, BasicAssertions)
 
 		EXPECT_EQ(pProgram->v_pStatements.size(), 1u);
 
-		std::unique_ptr<ast::Statement> stmt = std::move(pProgram->v_pStatements[0]);
-		auto x = reinterpret_cast<ast::ExpressionStatement *>(stmt.release());
-		std::unique_ptr<ast::ExpressionStatement> expStmt(x);
+		std::shared_ptr<ast::Statement> stmt = pProgram->v_pStatements[0];
+		std::shared_ptr<ast::ExpressionStatement> expStmt = std::dynamic_pointer_cast<ast::ExpressionStatement>(stmt);
 
 		EXPECT_NE(expStmt, nullptr);
-		testInfixExpression(std::move(expStmt->pExpression), item.leftValue, item.operatorStr, item.rightValue);
+		testInfixExpression(expStmt->pExpression, item.leftValue, item.operatorStr, item.rightValue);
 	}
 }
 
@@ -486,15 +473,13 @@ TEST(TestBooleanExpression, BasicAssertions)
 
 		EXPECT_EQ(pProgram->v_pStatements.size(), 1u);
 
-		std::unique_ptr<ast::Statement> stmt = std::move(pProgram->v_pStatements[0]);
-		auto x = reinterpret_cast<ast::ExpressionStatement *>(stmt.release());
-		std::unique_ptr<ast::ExpressionStatement> expStmt(x);
+		std::shared_ptr<ast::Statement> stmt = pProgram->v_pStatements[0];
+		std::shared_ptr<ast::ExpressionStatement> expStmt = std::dynamic_pointer_cast<ast::ExpressionStatement>(stmt);
 
 		EXPECT_NE(expStmt, nullptr);
 
-		std::unique_ptr<ast::Expression> exp = std::move(expStmt->pExpression);
-		auto y = reinterpret_cast<ast::Boolean *>(exp.release());
-		std::unique_ptr<ast::Boolean> boolStmt(y);
+		std::shared_ptr<ast::Expression> exp = expStmt->pExpression;
+		std::shared_ptr<ast::Boolean> boolStmt = std::dynamic_pointer_cast<ast::Boolean>(exp);
 
 		EXPECT_NE(boolStmt, nullptr);
 
@@ -513,29 +498,26 @@ TEST(TestIfExpression, BasicAssertions)
 
 	EXPECT_EQ(pProgram->v_pStatements.size(), 1u);
 
-	std::unique_ptr<ast::Statement> stmt = std::move(pProgram->v_pStatements[0]);
-	auto x = reinterpret_cast<ast::ExpressionStatement *>(stmt.release());
-	std::unique_ptr<ast::ExpressionStatement> expStmt(x);
+	std::shared_ptr<ast::Statement> stmt = pProgram->v_pStatements[0];
+	std::shared_ptr<ast::ExpressionStatement> expStmt = std::dynamic_pointer_cast<ast::ExpressionStatement>(stmt);
 
 	EXPECT_NE(expStmt, nullptr);
 
-	std::unique_ptr<ast::Expression> exp = std::move(expStmt->pExpression);
-	auto y = reinterpret_cast<ast::IfExpression *>(exp.release());
-	std::unique_ptr<ast::IfExpression> ifStmt(y);
+	std::shared_ptr<ast::Expression> exp = expStmt->pExpression;
+	std::shared_ptr<ast::IfExpression> ifStmt = std::dynamic_pointer_cast<ast::IfExpression>(exp);
 
 	EXPECT_NE(ifStmt, nullptr);
 
-	testInfixExpression(std::move(ifStmt->pCondition), "x"s, "<", "y"s);
+	testInfixExpression(ifStmt->pCondition, "x"s, "<", "y"s);
 
 	EXPECT_EQ(ifStmt->pConsequence->v_pStatements.size(), 1u);
 
-	std::unique_ptr<ast::Statement> baseStmt = std::move(ifStmt->pConsequence->v_pStatements[0]);
-	auto y2 = reinterpret_cast<ast::ExpressionStatement *>(baseStmt.release());
-	std::unique_ptr<ast::ExpressionStatement> exprStmt(y2);
+	std::shared_ptr<ast::Statement> baseStmt = ifStmt->pConsequence->v_pStatements[0];
+	std::shared_ptr<ast::ExpressionStatement> exprStmt = std::dynamic_pointer_cast<ast::ExpressionStatement>(baseStmt);
 
 	EXPECT_NE(exprStmt, nullptr);
 
-	testIdentifier(std::move(exprStmt->pExpression), "x"s);
+	testIdentifier(exprStmt->pExpression, "x"s);
 	EXPECT_EQ(ifStmt->pAlternative, nullptr);
 }
 
@@ -550,38 +532,34 @@ TEST(TestIfElseExpression, BasicAssertions)
 
 	EXPECT_EQ(pProgram->v_pStatements.size(), 1u);
 
-	std::unique_ptr<ast::Statement> stmt = std::move(pProgram->v_pStatements[0]);
-	auto x = reinterpret_cast<ast::ExpressionStatement *>(stmt.release());
-	std::unique_ptr<ast::ExpressionStatement> expStmt(x);
+	std::shared_ptr<ast::Statement> stmt = pProgram->v_pStatements[0];
+	std::shared_ptr<ast::ExpressionStatement> expStmt = std::dynamic_pointer_cast<ast::ExpressionStatement>(stmt);
 
 	EXPECT_NE(expStmt, nullptr);
 
-	std::unique_ptr<ast::Expression> exp = std::move(expStmt->pExpression);
-	auto y = reinterpret_cast<ast::IfExpression *>(exp.release());
-	std::unique_ptr<ast::IfExpression> ifStmt(y);
+	std::shared_ptr<ast::Expression> exp = expStmt->pExpression;
+	std::shared_ptr<ast::IfExpression> ifStmt = std::dynamic_pointer_cast<ast::IfExpression>(exp);
 
 	EXPECT_NE(ifStmt, nullptr);
 
-	testInfixExpression(std::move(ifStmt->pCondition), "x"s, "<", "y"s);
+	testInfixExpression(ifStmt->pCondition, "x"s, "<", "y"s);
 
 	EXPECT_EQ(ifStmt->pConsequence->v_pStatements.size(), 1u);
 
-	std::unique_ptr<ast::Statement> baseStmt = std::move(ifStmt->pConsequence->v_pStatements[0]);
-	auto y2 = reinterpret_cast<ast::ExpressionStatement *>(baseStmt.release());
-	std::unique_ptr<ast::ExpressionStatement> exprStmt(y2);
+	std::shared_ptr<ast::Statement> baseStmt = ifStmt->pConsequence->v_pStatements[0];
+	std::shared_ptr<ast::ExpressionStatement> exprStmt = std::dynamic_pointer_cast<ast::ExpressionStatement>(baseStmt);
 
 	EXPECT_NE(exprStmt, nullptr);
 
-	testIdentifier(std::move(exprStmt->pExpression), "x"s);
+	testIdentifier(exprStmt->pExpression, "x"s);
 
 	EXPECT_EQ(ifStmt->pAlternative->v_pStatements.size(), 1u);
 
-	std::unique_ptr<ast::Statement> baseStmtAlt = std::move(ifStmt->pAlternative->v_pStatements[0]);
-	auto y3 = reinterpret_cast<ast::ExpressionStatement *>(baseStmtAlt.release());
-	std::unique_ptr<ast::ExpressionStatement> exprStmtAlt(y3);
+	std::shared_ptr<ast::Statement> baseStmtAlt = ifStmt->pAlternative->v_pStatements[0];
+	std::shared_ptr<ast::ExpressionStatement> exprStmtAlt = std::dynamic_pointer_cast<ast::ExpressionStatement>(baseStmtAlt);
 
 	EXPECT_NE(exprStmtAlt, nullptr);
-	testIdentifier(std::move(exprStmtAlt->pExpression), "y"s);
+	testIdentifier(exprStmtAlt->pExpression, "y"s);
 }
 
 TEST(TestFunctionLiteralParsing, BasicAssertions)
@@ -595,32 +573,29 @@ TEST(TestFunctionLiteralParsing, BasicAssertions)
 
 	EXPECT_EQ(pProgram->v_pStatements.size(), 1u);
 
-	std::unique_ptr<ast::Statement> stmt = std::move(pProgram->v_pStatements[0]);
-	auto x = reinterpret_cast<ast::ExpressionStatement *>(stmt.release());
-	std::unique_ptr<ast::ExpressionStatement> expStmt(x);
+	std::shared_ptr<ast::Statement> stmt = pProgram->v_pStatements[0];
+	std::shared_ptr<ast::ExpressionStatement> expStmt = std::dynamic_pointer_cast<ast::ExpressionStatement>(stmt);
 
 	EXPECT_NE(expStmt, nullptr);
 
-	std::unique_ptr<ast::Expression> exp = std::move(expStmt->pExpression);
-	auto y = reinterpret_cast<ast::FunctionLiteral *>(exp.release());
-	std::unique_ptr<ast::FunctionLiteral> funcStmt(y);
+	std::shared_ptr<ast::Expression> exp = expStmt->pExpression;
+	std::shared_ptr<ast::FunctionLiteral> funcStmt = std::dynamic_pointer_cast<ast::FunctionLiteral>(exp);
 
 	EXPECT_NE(funcStmt, nullptr);
 
 	EXPECT_EQ(funcStmt->v_pParameters.size(), 2u);
 
-	testLiteralExpression(std::move(funcStmt->v_pParameters[0]), "x"s);
-	testLiteralExpression(std::move(funcStmt->v_pParameters[1]), "y"s);
+	testLiteralExpression(funcStmt->v_pParameters[0], "x"s);
+	testLiteralExpression(funcStmt->v_pParameters[1], "y"s);
 
 	EXPECT_EQ(funcStmt->pBody->v_pStatements.size(), 1u);
 
-	std::unique_ptr<ast::Statement> stmtBody = std::move(funcStmt->pBody->v_pStatements[0]);
-	auto y2 = reinterpret_cast<ast::ExpressionStatement *>(stmtBody.release());
-	std::unique_ptr<ast::ExpressionStatement> bodyStmt(y2);
+	std::shared_ptr<ast::Statement> stmtBody = funcStmt->pBody->v_pStatements[0];
+	std::shared_ptr<ast::ExpressionStatement> bodyStmt = std::dynamic_pointer_cast<ast::ExpressionStatement>(stmtBody);
 
 	EXPECT_NE(bodyStmt, nullptr);
 
-	testInfixExpression(std::move(bodyStmt->pExpression), "x"s, "+", "y"s);
+	testInfixExpression(bodyStmt->pExpression, "x"s, "+", "y"s);
 }
 
 TEST(TestFunctionParameterParsing, BasicAssertions)
@@ -647,22 +622,20 @@ TEST(TestFunctionParameterParsing, BasicAssertions)
 		std::unique_ptr<ast::Program> pProgram{pParser->ParseProgram()};
 		printParserErrors(pParser->Errors());
 
-		std::unique_ptr<ast::Statement> stmt = std::move(pProgram->v_pStatements[0]);
-		auto x = reinterpret_cast<ast::ExpressionStatement *>(stmt.release());
-		std::unique_ptr<ast::ExpressionStatement> expStmt(x);
+		std::shared_ptr<ast::Statement> stmt = pProgram->v_pStatements[0];
+		std::shared_ptr<ast::ExpressionStatement> expStmt = std::dynamic_pointer_cast<ast::ExpressionStatement>(stmt);
 
 		EXPECT_NE(expStmt, nullptr);
 
-		std::unique_ptr<ast::Expression> exp = std::move(expStmt->pExpression);
-		auto y = reinterpret_cast<ast::FunctionLiteral *>(exp.release());
-		std::unique_ptr<ast::FunctionLiteral> funcStmt(y);
+		std::shared_ptr<ast::Expression> exp = expStmt->pExpression;
+		std::shared_ptr<ast::FunctionLiteral> funcStmt = std::dynamic_pointer_cast<ast::FunctionLiteral>(exp);
 
 		EXPECT_NE(funcStmt, nullptr);
 
 		EXPECT_EQ(funcStmt->v_pParameters.size(), item.expectedParams.size());
 		for (unsigned long i = 0; i < item.expectedParams.size(); i++)
 		{
-			testLiteralExpression(std::move(funcStmt->v_pParameters[i]), item.expectedParams[i]);
+			testLiteralExpression(funcStmt->v_pParameters[i], item.expectedParams[i]);
 		}
 	}
 }
@@ -678,25 +651,23 @@ TEST(TestCallExpressionParsing, BasicAssertions)
 
 	EXPECT_EQ(pProgram->v_pStatements.size(), 1u);
 
-	std::unique_ptr<ast::Statement> stmt = std::move(pProgram->v_pStatements[0]);
-	auto x = reinterpret_cast<ast::ExpressionStatement *>(stmt.release());
-	std::unique_ptr<ast::ExpressionStatement> expStmt(x);
+	std::shared_ptr<ast::Statement> stmt = pProgram->v_pStatements[0];
+	std::shared_ptr<ast::ExpressionStatement> expStmt = std::dynamic_pointer_cast<ast::ExpressionStatement>(stmt);
 
 	EXPECT_NE(expStmt, nullptr);
 
-	std::unique_ptr<ast::Expression> exp = std::move(expStmt->pExpression);
-	auto y = reinterpret_cast<ast::CallExpression *>(exp.release());
-	std::unique_ptr<ast::CallExpression> callStmt(y);
+	std::shared_ptr<ast::Expression> exp = expStmt->pExpression;
+	std::shared_ptr<ast::CallExpression> callStmt = std::dynamic_pointer_cast<ast::CallExpression>(exp);
 
 	EXPECT_NE(callStmt, nullptr);
 
-	testIdentifier(std::move(callStmt->pFunction), "add");
+	testIdentifier(callStmt->pFunction, "add");
 
 	EXPECT_EQ(callStmt->pArguments.size(), 3u);
 
-	testLiteralExpression(std::move(callStmt->pArguments[0]), 1);
-	testInfixExpression(std::move(callStmt->pArguments[1]), 2, "*", 3);
-	testInfixExpression(std::move(callStmt->pArguments[2]), 4, "+", 5);
+	testLiteralExpression(callStmt->pArguments[0], 1);
+	testInfixExpression(callStmt->pArguments[1], 2, "*", 3);
+	testInfixExpression(callStmt->pArguments[2], 4, "+", 5);
 }
 
 TEST(TestCallExpressionParameterParsing, BasicAssertions)
@@ -736,19 +707,17 @@ TEST(TestCallExpressionParameterParsing, BasicAssertions)
 
 		EXPECT_EQ(pProgram->v_pStatements.size(), 1u);
 
-		std::unique_ptr<ast::Statement> stmt = std::move(pProgram->v_pStatements[0]);
-		auto x = reinterpret_cast<ast::ExpressionStatement *>(stmt.release());
-		std::unique_ptr<ast::ExpressionStatement> expStmt(x);
+		std::shared_ptr<ast::Statement> stmt = pProgram->v_pStatements[0];
+		std::shared_ptr<ast::ExpressionStatement> expStmt = std::dynamic_pointer_cast<ast::ExpressionStatement>(stmt);
 
 		EXPECT_NE(expStmt, nullptr);
 
-		std::unique_ptr<ast::Expression> exp = std::move(expStmt->pExpression);
-		auto y = reinterpret_cast<ast::CallExpression *>(exp.release());
-		std::unique_ptr<ast::CallExpression> callStmt(y);
+		std::shared_ptr<ast::Expression> exp = expStmt->pExpression;
+		std::shared_ptr<ast::CallExpression> callStmt = std::dynamic_pointer_cast<ast::CallExpression>(exp);
 
 		EXPECT_NE(callStmt, nullptr);
 
-		testIdentifier(std::move(callStmt->pFunction), item.expectedIdent);
+		testIdentifier(callStmt->pFunction, item.expectedIdent);
 
 		EXPECT_EQ(callStmt->pArguments.size(), item.expectedArgs.size());
 

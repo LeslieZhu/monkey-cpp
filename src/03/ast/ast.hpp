@@ -102,8 +102,8 @@ namespace ast
     struct LetStatement : Statement
     {
         token::Token Token; // the token.LET token
-        std::unique_ptr<Identifier> pName;
-        std::unique_ptr<Expression> pValue;
+        std::shared_ptr<Identifier> pName;
+        std::shared_ptr<Expression> pValue;
 
         virtual ~LetStatement() {}
         virtual void StatementNode() {}
@@ -135,7 +135,7 @@ namespace ast
     struct ReturnStatement : Statement
     {
         token::Token Token; // the 'return' token
-        std::unique_ptr<Expression> pReturnValue;
+        std::shared_ptr<Expression> pReturnValue;
 
         ReturnStatement(token::Token tok) : Token(tok), pReturnValue(nullptr) {}
         virtual ~ReturnStatement() {}
@@ -163,7 +163,7 @@ namespace ast
     struct ExpressionStatement : Statement
     {
         token::Token Token; // the first token of the expression
-        std::unique_ptr<Expression> pExpression;
+        std::shared_ptr<Expression> pExpression;
 
         ExpressionStatement(token::Token tok) : Token(tok), pExpression(nullptr) {}
         virtual ~ExpressionStatement() {}
@@ -188,7 +188,7 @@ namespace ast
     struct BlockStatement : Statement
     {
         token::Token Token; // the { token
-        std::vector<std::unique_ptr<Statement>> v_pStatements;
+        std::vector<std::shared_ptr<Statement>> v_pStatements;
 
         BlockStatement(token::Token tok) : Token(tok) {}
         virtual ~BlockStatement() {}
@@ -243,7 +243,7 @@ namespace ast
     {
         token::Token Token; // The prefix token, e.g. !
         std::string Operator;
-        std::unique_ptr<Expression> pRight;
+        std::shared_ptr<Expression> pRight;
 
         PrefixExpression(token::Token tok, std::string literal) : Token(tok), Operator(literal) {}
         virtual ~PrefixExpression() {}
@@ -262,11 +262,11 @@ namespace ast
     struct InfixExpression : Expression
     {
         token::Token Token; // The operator token, e.g. +
-        std::unique_ptr<Expression> pLeft;
+        std::shared_ptr<Expression> pLeft;
         std::string Operator;
-        std::unique_ptr<Expression> pRight;
+        std::shared_ptr<Expression> pRight;
 
-        InfixExpression(token::Token tok, std::string literal, std::unique_ptr<Expression> left) : Token(tok), pLeft(std::move(left)), Operator(literal) {}
+        InfixExpression(token::Token tok, std::string literal, std::shared_ptr<Expression> left) : Token(tok), pLeft(left), Operator(literal) {}
 
         virtual ~InfixExpression() {}
 
@@ -285,9 +285,9 @@ namespace ast
     struct IfExpression : Expression
     {
         token::Token Token; // The 'if' token
-        std::unique_ptr<Expression> pCondition;
-        std::unique_ptr<BlockStatement> pConsequence;
-        std::unique_ptr<BlockStatement> pAlternative;
+        std::shared_ptr<Expression> pCondition;
+        std::shared_ptr<BlockStatement> pConsequence;
+        std::shared_ptr<BlockStatement> pAlternative;
 
         IfExpression(token::Token tok) : Token(tok) {}
         virtual ~IfExpression() {}
@@ -310,8 +310,8 @@ namespace ast
     struct FunctionLiteral : Expression
     {
         token::Token Token; // The 'fn' token
-        std::vector<std::unique_ptr<Identifier>> v_pParameters;
-        std::unique_ptr<BlockStatement> pBody;
+        std::vector<std::shared_ptr<Identifier>> v_pParameters;
+        std::shared_ptr<BlockStatement> pBody;
 
         FunctionLiteral(token::Token tok) : Token(tok) {}
         virtual ~FunctionLiteral() {}
@@ -335,10 +335,10 @@ namespace ast
     struct CallExpression : Expression
     {
         token::Token Token;                           // The '(' token
-        std::unique_ptr<Expression> pFunction; // Identifier or FunctionLiteral
-        std::vector<std::unique_ptr<Expression>> pArguments;
+        std::shared_ptr<Expression> pFunction; // Identifier or FunctionLiteral
+        std::vector<std::shared_ptr<Expression>> pArguments;
 
-        CallExpression(token::Token tok, std::unique_ptr<Expression> function) : Token(tok), pFunction(std::move(function)) {}
+        CallExpression(token::Token tok, std::shared_ptr<Expression> function) : Token(tok), pFunction(function) {}
         virtual ~CallExpression() {}
 
         virtual void ExpressionNode() {}
@@ -359,7 +359,7 @@ namespace ast
 
     struct Program: Node
     {
-        std::vector<std::unique_ptr<Statement>> v_pStatements;
+        std::vector<std::shared_ptr<Statement>> v_pStatements;
 
         std::string TokenLiteral()
         {

@@ -108,13 +108,13 @@ namespace evaluator
 		return unwrapReturnValue(evaluated);
 	}
 
-	std::vector<std::shared_ptr<objects::Object>> evalExpressions(std::vector<std::unique_ptr<ast::Expression>> exps, std::shared_ptr<objects::Environment> env)
+	std::vector<std::shared_ptr<objects::Object>> evalExpressions(std::vector<std::shared_ptr<ast::Expression>> exps, std::shared_ptr<objects::Environment> env)
 	{
 		std::vector<std::shared_ptr<objects::Object>> result;
 
 		for (auto &e : exps)
 		{
-			std::shared_ptr<objects::Object> evaluated = Eval(std::move(e), env);
+			std::shared_ptr<objects::Object> evaluated = Eval(e, env);
 			if (isError(evaluated))
 			{
 				std::vector<std::shared_ptr<objects::Object>> x;
@@ -141,18 +141,18 @@ namespace evaluator
 
 	std::shared_ptr<objects::Object> evalIfExpression(std::shared_ptr<ast::IfExpression> ie, std::shared_ptr<objects::Environment> env)
 	{
-		std::shared_ptr<objects::Object> condition = Eval(std::move(ie->pCondition), env);
+		std::shared_ptr<objects::Object> condition = Eval(ie->pCondition, env);
 		if (isError(condition))
 		{
 			return condition;
 		}
 		if (isTruthy(condition))
 		{
-			return Eval(std::move(ie->pConsequence), env);
+			return Eval(ie->pConsequence, env);
 		}
 		else if (ie->pAlternative != nullptr)
 		{
-			return Eval(std::move(ie->pAlternative), env);
+			return Eval(ie->pAlternative, env);
 		}
 		else
 		{
@@ -286,11 +286,7 @@ namespace evaluator
 
 		for (auto &stmt : block->v_pStatements)
 		{
-			if (!stmt)
-			{
-				continue;
-			}
-			result = Eval(std::move(stmt), env);
+			result = Eval(stmt, env);
 			if (result != nullptr)
 			{
 				objects::ObjectType rt = result->Type();
@@ -323,7 +319,7 @@ namespace evaluator
 			std::cout << "\t\t evalProgram: stmt=" << stmt->String() << std::endl;
 
 			// result = Eval((ast::Node *)stmt, env);
-			result = Eval(std::move(stmt), env);
+			result = Eval(stmt, env);
 
 			if (result == nullptr)
 			{
@@ -369,13 +365,13 @@ namespace evaluator
 			std::cout << "Eval: ExpressionStatement" << std::endl;
 			std::shared_ptr<ast::ExpressionStatement> exprStmt = std::dynamic_pointer_cast<ast::ExpressionStatement>(node);
 			std::cout << "\t exprStmt=" << exprStmt->String() << std::endl;
-			return Eval(std::move(exprStmt->pExpression), env);
+			return Eval(exprStmt->pExpression, env);
 		}
 		else if (node->GetNodeType() == ast::NodeType::ReturnStatement)
 		{
 			std::cout << "Eval: ReturnStatement" << std::endl;
 			std::shared_ptr<ast::ReturnStatement> returnStmt = std::dynamic_pointer_cast<ast::ReturnStatement>(node);
-			std::shared_ptr<objects::Object> val = Eval(std::move(returnStmt->pReturnValue), env);
+			std::shared_ptr<objects::Object> val = Eval(returnStmt->pReturnValue, env);
 			if (isError(val))
 			{
 				return val;
@@ -389,7 +385,7 @@ namespace evaluator
 
 			std::cout << "\t lit stmt=" << lit->String() << std::endl;
 
-			std::shared_ptr<objects::Object> val = Eval(std::move(lit->pValue), env);
+			std::shared_ptr<objects::Object> val = Eval(lit->pValue, env);
 			std::cout << "\t lit get val=" << val->Inspect() << std::endl;
 
 			if (isError(val))
@@ -418,12 +414,12 @@ namespace evaluator
 
 			std::shared_ptr<ast::InfixExpression> infixObj = std::dynamic_pointer_cast<ast::InfixExpression>(node);
 
-			std::shared_ptr<objects::Object> right = Eval(std::move(infixObj->pRight), env);
+			std::shared_ptr<objects::Object> right = Eval(infixObj->pRight, env);
 			if (isError(right))
 			{
 				return right;
 			}
-			return evalPrefixExpression(std::move(infixObj->Operator), right);
+			return evalPrefixExpression(infixObj->Operator, right);
 		}
 		else if (node->GetNodeType() == ast::NodeType::InfixExpression)
 		{
@@ -431,19 +427,19 @@ namespace evaluator
 
 			std::shared_ptr<ast::InfixExpression> infixObj = std::dynamic_pointer_cast<ast::InfixExpression>(node);
 
-			std::shared_ptr<objects::Object> left = Eval(std::move(infixObj->pLeft), env);
+			std::shared_ptr<objects::Object> left = Eval(infixObj->pLeft, env);
 			if (isError(left))
 			{
 				return left;
 			}
 
-			std::shared_ptr<objects::Object> right = Eval(std::move(infixObj->pRight), env);
+			std::shared_ptr<objects::Object> right = Eval(infixObj->pRight, env);
 			if (isError(right))
 			{
 				return right;
 			}
 
-			return evalInfixExpression(std::move(infixObj->Operator), left, right);
+			return evalInfixExpression(infixObj->Operator, left, right);
 		}
 		else if (node->GetNodeType() == ast::NodeType::IfExpression)
 		{
@@ -466,11 +462,11 @@ namespace evaluator
 			std::shared_ptr<objects::Function> function = std::make_shared<objects::Function>();
 
 			// function->Parameters.resize(funcObj->v_pParameters.size());
-			std::for_each(funcObj->v_pParameters.begin(), funcObj->v_pParameters.end(), [&](std::unique_ptr<ast::Identifier> &x)
-						  { function->Parameters.push_back(std::move(x)); });
+			std::for_each(funcObj->v_pParameters.begin(), funcObj->v_pParameters.end(), [&](std::shared_ptr<ast::Identifier> &x)
+						  { function->Parameters.push_back(x); });
 
 			function->Env = env;
-			function->Body = std::move(funcObj->pBody);
+			function->Body = funcObj->pBody;
 
 			return function;
 		}
@@ -479,13 +475,13 @@ namespace evaluator
 			std::cout << "Eval: CallExpression" << std::endl;
 			std::shared_ptr<ast::CallExpression> callObj = std::dynamic_pointer_cast<ast::CallExpression>(node);
 
-			std::shared_ptr<objects::Object> function = Eval(std::move(callObj->pFunction), env);
+			std::shared_ptr<objects::Object> function = Eval(callObj->pFunction, env);
 			if (isError(function))
 			{
 				return function;
 			}
 
-			std::vector<std::shared_ptr<objects::Object>> args = evalExpressions(std::move(callObj->pArguments), env);
+			std::vector<std::shared_ptr<objects::Object>> args = evalExpressions(callObj->pArguments, env);
 			if (args.size() == 1 && isError(args[0]))
 			{
 				return args[0];
