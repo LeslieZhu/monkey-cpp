@@ -38,10 +38,12 @@ void testBooleanObject(std::shared_ptr<objects::Object> obj, bool expected)
     if (expected)
     {
         EXPECT_TRUE(result->Value);
+        EXPECT_STREQ(result->Inspect().c_str(), "true");
     }
     else
     {
         EXPECT_FALSE(result->Value);
+        EXPECT_STREQ(result->Inspect().c_str(), "false");
     }
 }
 

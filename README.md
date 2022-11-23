@@ -13,13 +13,22 @@ But re-write the interpreter with C++.
 For example:
 
 ```
-$ cd src/02/
+$ cd src/03/
 $ mkdir build/
 $ cd build/
 $ cmake ..
 $ make
+
 $ ./test_monkey
+
 $ ./monkey
+
+Hello lesliezhu! This is the Monkey-CPP programming language!
+Feel free to type in commands
+>> let add = fn(x,y){ return x + y; }
+>> add(3,4)
+7
+>>
 ```
 
 # Requires

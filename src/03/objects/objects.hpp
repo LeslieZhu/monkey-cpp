@@ -80,7 +80,7 @@ namespace objects
 		virtual std::string Inspect()
 		{
 			std::stringstream oss;
-			oss << (Value ? "True" : "False");
+			oss << (Value ? "true" : "false");
 			return oss.str();
 		}
 	};

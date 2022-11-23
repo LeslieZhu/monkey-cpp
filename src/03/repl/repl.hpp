@@ -66,7 +66,7 @@ namespace repl
                 continue;
             }
 
-            std::cout << pProgram->String() << std::endl;
+            //std::cout << pProgram->String() << std::endl;
 
             std::unique_ptr<ast::Node> astNode(reinterpret_cast<ast::Node *>(pProgram.release()));
 
