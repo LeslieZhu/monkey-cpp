@@ -51,27 +51,14 @@ namespace parser
 
         Parser()
         {
-            /*
-            prefixParseFns.insert(std::make_pair(token::types::IDENT, (prefixParseFn)(&Parser::parseIdentifier)));
-            prefixParseFns.insert(std::make_pair(token::types::INT, (prefixParseFn)(&Parser::parseIntegerLiteral)));
-            prefixParseFns.insert(std::make_pair(token::types::BANG, (prefixParseFn)(&Parser::parsePrefixExpression)));
-            prefixParseFns.insert(std::make_pair(token::types::MINUS, (prefixParseFn)(&Parser::parsePrefixExpression)));
-            prefixParseFns.insert(std::make_pair(token::types::TRUE, (prefixParseFn)(&Parser::parseBoolean)));
-            prefixParseFns.insert(std::make_pair(token::types::FALSE, (prefixParseFn)(&Parser::parseBoolean)));
-            prefixParseFns.insert(std::make_pair(token::types::LPAREN, (prefixParseFn)(&Parser::parseGroupedExpression)));
-            prefixParseFns.insert(std::make_pair(token::types::IF, (prefixParseFn)(&Parser::parseIfExpression)));
-            prefixParseFns.insert(std::make_pair(token::types::FUNCTION, (prefixParseFn)(&Parser::parseFunctionLiteral)));
+        }
 
-            infixParseFns.insert(std::make_pair(token::types::PLUS, (infixParseFn)(&Parser::parseInfixExpression)));
-            infixParseFns.insert(std::make_pair(token::types::MINUS, (infixParseFn)(&Parser::parseInfixExpression)));
-            infixParseFns.insert(std::make_pair(token::types::SLASH, (infixParseFn)(&Parser::parseInfixExpression)));
-            infixParseFns.insert(std::make_pair(token::types::ASTERISK, (infixParseFn)(&Parser::parseInfixExpression)));
-            infixParseFns.insert(std::make_pair(token::types::EQ, (infixParseFn)(&Parser::parseInfixExpression)));
-            infixParseFns.insert(std::make_pair(token::types::NOT_EQ, (infixParseFn)(&Parser::parseInfixExpression)));
-            infixParseFns.insert(std::make_pair(token::types::LT, (infixParseFn)(&Parser::parseInfixExpression)));
-            infixParseFns.insert(std::make_pair(token::types::GT, (infixParseFn)(&Parser::parseInfixExpression)));
-            infixParseFns.insert(std::make_pair(token::types::LPAREN, (infixParseFn)(&Parser::parseCallExpression)));
-            */
+        ~Parser()
+        {
+            prefixParseFns.clear();
+            infixParseFns.clear();
+            errors.clear();
+            pLexer.reset();
         }
 
         void nextToken()
@@ -215,7 +202,6 @@ namespace parser
                 return nullptr;
             }
 
-            //std::unique_ptr<ast::Expression> leftExp = (this->*(prefix))();
             std::shared_ptr<ast::Expression> leftExp = (this->*prefix)();
             while (!peekTokenIs(token::types::SEMICOLON) && precedence < peekPrecedence())
             {
@@ -226,7 +212,6 @@ namespace parser
                 }
 
                 nextToken();
-                //leftExp = (this->*(infix))(std::move(leftExp));
                 leftExp = (this->*infix)(leftExp);
             }
             return leftExp;

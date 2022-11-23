@@ -98,7 +98,7 @@ namespace objects
 		std::shared_ptr<Object> Value;
 
 		ReturnValue(std::shared_ptr<Object> val) : Value(val) {}
-		virtual ~ReturnValue() {}
+		virtual ~ReturnValue() { Value.reset();}
 		virtual ObjectType Type() { return ObjectType::RETURN_VALUE; }
 		virtual std::string Inspect() { return Value->Inspect(); }
 	};

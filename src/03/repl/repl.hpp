@@ -52,7 +52,7 @@ namespace repl
 
             if (line.size() == 0)
             {
-                break;
+                continue;
             }
 
             std::unique_ptr<lexer::Lexer> pLexer = lexer::New(line);
@@ -65,8 +65,6 @@ namespace repl
                 printParserErrors(errors);
                 continue;
             }
-
-            //std::cout << pProgram->String() << std::endl;
 
             std::unique_ptr<ast::Node> astNode(reinterpret_cast<ast::Node *>(pProgram.release()));
 

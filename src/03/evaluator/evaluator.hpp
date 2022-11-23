@@ -129,13 +129,17 @@ namespace evaluator
 
 	std::shared_ptr<objects::Object> evalIdentifier(std::shared_ptr<ast::Identifier> node, std::shared_ptr<objects::Environment> env)
 	{
-		//std::cout << "\t\t evalIdentifier get by :" << node->Value << std::endl;
+#ifdef DEBUG
+		std::cout << "\t\t evalIdentifier get by :" << node->Value << std::endl;
+#endif
 		std::shared_ptr<objects::Object> val = env->Get(node->Value);
 		if (val == nullptr)
 		{
 			return newError("identifier not found: " + node->Value);
 		}
-		//std::cout << "\t\t evalIdentifier get: [" << val->Inspect() << "]" << std::endl;
+#ifdef DEBUG
+		std::cout << "\t\t evalIdentifier get: [" << val->Inspect() << "]" << std::endl;
+#endif
 		return val;
 	}
 
@@ -302,23 +306,24 @@ namespace evaluator
 
 	std::shared_ptr<objects::Object> evalProgram(std::shared_ptr<ast::Program> program, std::shared_ptr<objects::Environment> env)
 	{
-
-		//std::cout << "\t evalProgram: [Enter]" << std::endl;
-
-		//std::cout << "\t evalProgram: program=" << program->String() << std::endl;
-
+#ifdef DEBUG
+		std::cout << "\t evalProgram: [Enter]" << std::endl;
+		std::cout << "\t evalProgram: program=" << program->String() << std::endl;
+#endif
 		std::shared_ptr<objects::Object> result = std::make_shared<objects::Object>();
 
-		//std::cout << "\t evalProgram: result=" << result->Inspect() << std::endl;
-
-		//std::cout << "\t evalProgram: program Statements Size=" << program->v_pStatements.size() << std::endl;
+#ifdef DEBUG
+		std::cout << "\t evalProgram: result=" << result->Inspect() << std::endl;
+		std::cout << "\t evalProgram: program Statements Size=" << program->v_pStatements.size() << std::endl;
+#endif
 
 		for (auto &stmt : program->v_pStatements)
 		{
 
-			//std::cout << "\t\t evalProgram: stmt=" << stmt->String() << std::endl;
+#ifdef DEBUG
+			std::cout << "\t\t evalProgram: stmt=" << stmt->String() << std::endl;
+#endif
 
-			// result = Eval((ast::Node *)stmt, env);
 			result = Eval(stmt, env);
 
 			if (result == nullptr)
@@ -326,21 +331,19 @@ namespace evaluator
 				continue;
 			}
 
-			//std::cout << "\t\t evalProgram: result=" << result->Inspect() << std::endl;
+#ifdef DEBUG
+			std::cout << "\t\t evalProgram: result=" << result->Inspect() << std::endl;
+#endif
 
 			if (result->Type() == objects::ObjectType::RETURN_VALUE)
 			{
-				//std::cout << "\t\t evalProgram: [Exit 1]" << std::endl;
 				return std::dynamic_pointer_cast<objects::ReturnValue>(result)->Value;
 			}
 			else if (result->Type() == objects::ObjectType::ERROR)
 			{
-				//std::cout << "\t\t evalProgram: [Exit 2]" << std::endl;
 				return result;
 			}
 		}
-
-		//std::cout << "\t evalProgram: [Exit 3]" << std::endl;
 
 		return result;
 	}
@@ -350,26 +353,38 @@ namespace evaluator
 		// Statements
 		if (node->GetNodeType() == ast::NodeType::Program)
 		{
-			//std::cout << "Eval: Program" << std::endl;
+#ifdef DEBUG
+			std::cout << "Eval: Program" << std::endl;
+#endif
 			std::shared_ptr<ast::Program> program = std::dynamic_pointer_cast<ast::Program>(node);
 			return evalProgram(program, env);
 		}
 		else if (node->GetNodeType() == ast::NodeType::BlockStatement)
 		{
-			//std::cout << "Eval: BlockStatement" << std::endl;
+#ifdef DEBUG
+			std::cout << "Eval: BlockStatement" << std::endl;
+#endif
 			std::shared_ptr<ast::BlockStatement> blockStmt = std::dynamic_pointer_cast<ast::BlockStatement>(node);
 			return evalBlockStatement(blockStmt, env);
 		}
 		else if (node->GetNodeType() == ast::NodeType::ExpressionStatement)
 		{
-			//std::cout << "Eval: ExpressionStatement" << std::endl;
+#ifdef DEBUG
+			std::cout << "Eval: ExpressionStatement" << std::endl;
+#endif
 			std::shared_ptr<ast::ExpressionStatement> exprStmt = std::dynamic_pointer_cast<ast::ExpressionStatement>(node);
-			//std::cout << "\t exprStmt=" << exprStmt->String() << std::endl;
+
+#ifdef DEBUG
+			std::cout << "\t exprStmt=" << exprStmt->String() << std::endl;
+#endif
+
 			return Eval(exprStmt->pExpression, env);
 		}
 		else if (node->GetNodeType() == ast::NodeType::ReturnStatement)
 		{
-			//std::cout << "Eval: ReturnStatement" << std::endl;
+#ifdef DEBUG
+			std::cout << "Eval: ReturnStatement" << std::endl;
+#endif
 			std::shared_ptr<ast::ReturnStatement> returnStmt = std::dynamic_pointer_cast<ast::ReturnStatement>(node);
 			std::shared_ptr<objects::Object> val = Eval(returnStmt->pReturnValue, env);
 			if (isError(val))
@@ -380,38 +395,55 @@ namespace evaluator
 		}
 		else if (node->GetNodeType() == ast::NodeType::LetStatement)
 		{
-			//std::cout << "Eval: LetStatement" << std::endl;
+#ifdef DEBUG
+			std::cout << "Eval: LetStatement" << std::endl;
+#endif
 			std::shared_ptr<ast::LetStatement> lit = std::dynamic_pointer_cast<ast::LetStatement>(node);
 
-			//std::cout << "\t lit stmt=" << lit->String() << std::endl;
+#ifdef DEBUG
+			std::cout << "\t lit stmt=" << lit->String() << std::endl;
+#endif
 
 			std::shared_ptr<objects::Object> val = Eval(lit->pValue, env);
-			//std::cout << "\t lit get val=" << val->Inspect() << std::endl;
+
+#ifdef DEBUG
+			std::cout << "\t lit get val=" << val->Inspect() << std::endl;
+#endif
 
 			if (isError(val))
 			{
 				return val;
 			}
-			//std::cout << "\t lit set val to :" << lit->pName->Value << std::endl;
+#ifdef DEBUG
+			std::cout << "\t lit set val to :" << lit->pName->Value << std::endl;
+#endif
 			env->Set(lit->pName->Value, val);
 		}
 		// Expressions
 		else if (node->GetNodeType() == ast::NodeType::IntegerLiteral)
 		{
-			//std::cout << "Eval: IntegerLiteral" << std::endl;
+#ifdef DEBUG
+			std::cout << "Eval: IntegerLiteral" << std::endl;
+#endif
 			std::shared_ptr<ast::IntegerLiteral> integerLiteral = std::dynamic_pointer_cast<ast::IntegerLiteral>(node);
-			//std::cout << "\t integerLiteral Value=" << integerLiteral->Value << std::endl;
+
+#ifdef DEBUG
+			std::cout << "\t integerLiteral Value=" << integerLiteral->Value << std::endl;
+#endif
 			return std::make_shared<objects::Integer>(integerLiteral->Value);
 		}
 		else if (node->GetNodeType() == ast::NodeType::Boolean)
 		{
-			//std::cout << "Eval: Boolean" << std::endl;
+#ifdef DEBUG
+			std::cout << "Eval: Boolean" << std::endl;
+#endif
 			return nativeBoolToBooleanObject(std::dynamic_pointer_cast<ast::Boolean>(node)->Value);
 		}
 		else if (node->GetNodeType() == ast::NodeType::PrefixExpression)
 		{
-			//std::cout << "Eval: PrefixExpression" << std::endl;
-
+#ifdef DEBUG
+			std::cout << "Eval: PrefixExpression" << std::endl;
+#endif
 			std::shared_ptr<ast::PrefixExpression> infixObj = std::dynamic_pointer_cast<ast::PrefixExpression>(node);
 
 			std::shared_ptr<objects::Object> right = Eval(infixObj->pRight, env);
@@ -423,8 +455,9 @@ namespace evaluator
 		}
 		else if (node->GetNodeType() == ast::NodeType::InfixExpression)
 		{
-			//std::cout << "Eval: InfixExpression" << std::endl;
-
+#ifdef DEBUG
+			std::cout << "Eval: InfixExpression" << std::endl;
+#endif
 			std::shared_ptr<ast::InfixExpression> infixObj = std::dynamic_pointer_cast<ast::InfixExpression>(node);
 
 			std::shared_ptr<objects::Object> left = Eval(infixObj->pLeft, env);
@@ -443,25 +476,34 @@ namespace evaluator
 		}
 		else if (node->GetNodeType() == ast::NodeType::IfExpression)
 		{
-			//std::cout << "Eval: IfExpression" << std::endl;
+#ifdef DEBUG
+			std::cout << "Eval: IfExpression" << std::endl;
+#endif
 			std::shared_ptr<ast::IfExpression> x = std::dynamic_pointer_cast<ast::IfExpression>(node);
 			return evalIfExpression(x, env);
 		}
 		else if (node->GetNodeType() == ast::NodeType::Identifier)
 		{
-			//std::cout << "Eval: Identifier" << std::endl;
+#ifdef DEBUG
+			std::cout << "Eval: Identifier" << std::endl;
+#endif
 			std::shared_ptr<ast::Identifier> ident = std::dynamic_pointer_cast<ast::Identifier>(node);
-			//std::cout << "\t ident=" << ident->String() << std::endl;
+
+#ifdef DEBUG
+			std::cout << "\t ident=" << ident->String() << std::endl;
+#endif
+
 			return evalIdentifier(ident, env);
 		}
 		else if (node->GetNodeType() == ast::NodeType::FunctionLiteral)
 		{
-			//std::cout << "Eval: FunctionLiteral" << std::endl;
+#ifdef DEBUG
+			std::cout << "Eval: FunctionLiteral" << std::endl;
+#endif
 			std::shared_ptr<ast::FunctionLiteral> funcObj = std::dynamic_pointer_cast<ast::FunctionLiteral>(node);
 
 			std::shared_ptr<objects::Function> function = std::make_shared<objects::Function>();
 
-			// function->Parameters.resize(funcObj->v_pParameters.size());
 			std::for_each(funcObj->v_pParameters.begin(), funcObj->v_pParameters.end(), [&](std::shared_ptr<ast::Identifier> &x)
 						  { function->Parameters.push_back(x); });
 
@@ -472,7 +514,9 @@ namespace evaluator
 		}
 		else if (node->GetNodeType() == ast::NodeType::CallExpression)
 		{
-			//std::cout << "Eval: CallExpression" << std::endl;
+#ifdef DEBUG
+			std::cout << "Eval: CallExpression" << std::endl;
+#endif
 			std::shared_ptr<ast::CallExpression> callObj = std::dynamic_pointer_cast<ast::CallExpression>(node);
 
 			std::shared_ptr<objects::Object> function = Eval(callObj->pFunction, env);
