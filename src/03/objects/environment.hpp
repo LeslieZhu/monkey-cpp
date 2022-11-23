@@ -20,15 +20,17 @@ namespace objects
 		std::shared_ptr<Object> Get(std::string name)
 		{
 
+			/*
 			for (auto &obj : store)
 			{
 				std::cout << "\t" << obj.first << "->" << obj.second->Inspect() << std::endl;
 			}
+			*/
 
 			auto fit = store.find(name);
 			if (fit != store.end())
 			{
-				std::cout << "\t Get [" << fit->second->Inspect() << "] of " << name << std::endl;
+				//std::cout << "\t Get [" << fit->second->Inspect() << "] of " << name << std::endl;
 				return fit->second;
 			}
 			else if (outer != nullptr)
@@ -37,31 +39,33 @@ namespace objects
 			}
 			else
 			{
-				std::cout << "\t Get null of " << name << std::endl;
+				//std::cout << "\t Get null of " << name << std::endl;
 				return nullptr;
 			}
 		}
 
 		std::shared_ptr<Object> Set(std::string name, std::shared_ptr<Object> val)
 		{
-			std::cout << "\t Set get val=" << val->Inspect() << ",Type=" << val->TypeStr() << std::endl;
+			//std::cout << "\t Set get val=" << val->Inspect() << ",Type=" << val->TypeStr() << std::endl;
 
 			auto fit = store.find(name);
 			if (fit != store.end())
 			{
-				std::cout << "\t Set [" << val->Inspect() << "] of " << fit->first << std::endl;
+				//std::cout << "\t Set [" << val->Inspect() << "] of " << fit->first << std::endl;
 				fit->second = val;
 			}
 			else
 			{
-				std::cout << "\t Set insert [" << val->Inspect() << "] of " << name << std::endl;
+				//std::cout << "\t Set insert [" << val->Inspect() << "] of " << name << std::endl;
 				store.insert(std::make_pair(name, val));
 			}
 
+			/*
 			for (auto &obj : store)
 			{
 				std::cout << "\t" << obj.first << "->" << obj.second->Inspect() << std::endl;
 			}
+			*/
 
 			return val;
 		}
