@@ -64,11 +64,11 @@ namespace evaluator
 	{
 		if (input)
 		{
-			return std::make_shared<objects::Boolean>(true);
+			return TRUE_OBJ;
 		}
 		else
 		{
-			return std::make_shared<objects::Boolean>(false);
+			return FALSE_OBJ;
 		}
 	}
 
@@ -376,7 +376,7 @@ namespace evaluator
 			{
 				return val;
 			}
-			return std::dynamic_pointer_cast<objects::ReturnValue>(val);
+			return std::make_shared<objects::ReturnValue>(val);
 		}
 		else if (node->GetNodeType() == ast::NodeType::LetStatement)
 		{
@@ -412,7 +412,7 @@ namespace evaluator
 		{
 			std::cout << "Eval: PrefixExpression" << std::endl;
 
-			std::shared_ptr<ast::InfixExpression> infixObj = std::dynamic_pointer_cast<ast::InfixExpression>(node);
+			std::shared_ptr<ast::PrefixExpression> infixObj = std::dynamic_pointer_cast<ast::PrefixExpression>(node);
 
 			std::shared_ptr<objects::Object> right = Eval(infixObj->pRight, env);
 			if (isError(right))

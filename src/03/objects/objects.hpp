@@ -29,7 +29,6 @@ namespace objects
 		virtual ~Object() {}
 		virtual ObjectType Type() { return ObjectType::Null; }
 		virtual std::string Inspect() { return ""; }
-		virtual bool operator==([[maybe_unused]] const Object &rhs) { return false; }
 
 		std::string TypeStr()
 		{
@@ -68,10 +67,6 @@ namespace objects
 			oss << Value;
 			return oss.str();
 		}
-		virtual bool operator==(const Integer &rhs)
-		{
-			return Value == rhs.Value;
-		}
 	};
 
 	struct Boolean : Object
@@ -87,10 +82,6 @@ namespace objects
 			std::stringstream oss;
 			oss << Value; // True or False ?
 			return oss.str();
-		}
-		virtual bool operator==(const Boolean &rhs)
-		{
-			return Value == rhs.Value;
 		}
 	};
 
@@ -110,10 +101,6 @@ namespace objects
 		virtual ~ReturnValue() {}
 		virtual ObjectType Type() { return ObjectType::RETURN_VALUE; }
 		virtual std::string Inspect() { return Value->Inspect(); }
-		virtual bool operator==(const ReturnValue &rhs)
-		{
-			return Value == rhs.Value;
-		}
 	};
 
 	struct Error : Object
@@ -123,10 +110,6 @@ namespace objects
 		virtual ~Error() {}
 		virtual ObjectType Type() { return ObjectType::ERROR; }
 		virtual std::string Inspect() { return "ERROR: " + Message; }
-		virtual bool operator==(const Error &rhs)
-		{
-			return Message == rhs.Message;
-		}
 	};
 
 }
