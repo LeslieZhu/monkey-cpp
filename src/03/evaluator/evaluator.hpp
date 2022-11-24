@@ -160,7 +160,7 @@ namespace evaluator
 		}
 		else
 		{
-			return nullptr;
+			return NULL_OBJ;
 		}
 	}
 

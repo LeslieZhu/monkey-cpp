@@ -49,8 +49,8 @@ void testBooleanObject(std::shared_ptr<objects::Object> obj, bool expected)
 
 void testNullObject(std::shared_ptr<objects::Object> obj)
 {
-    // std::shared_ptr<objects::Null> result = std::dynamic_pointer_cast<objects::Null>(obj);
-    EXPECT_EQ(obj, nullptr);
+    std::shared_ptr<objects::Null> result = std::dynamic_pointer_cast<objects::Null>(obj);
+    EXPECT_NE(result, nullptr);
 }
 
 TEST(TestEvalIntegerExpression, BasicAssertions)
