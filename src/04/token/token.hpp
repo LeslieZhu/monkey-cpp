@@ -27,6 +27,7 @@ namespace token
         // Identifiers + literals
         const TokenType IDENT = "IDENT"; // add, foobar, x, y, ...
         const TokenType INT = "INT";     // 1343456
+        const TokenType STRING = "STRING"; // "foo bar"
 
         // Operators
         const TokenType ASSIGN = "=";

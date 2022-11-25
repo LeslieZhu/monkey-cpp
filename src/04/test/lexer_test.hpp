@@ -27,6 +27,8 @@ TEST(TestNextToken, BasicAssertions)
  
         10 == 10;
         10 != 9;
+        "foobar"
+        "foo bar"
         )"";
 
     std::vector<token::Token> tests{{token::types::LET, "let"},
@@ -102,6 +104,8 @@ TEST(TestNextToken, BasicAssertions)
                                     {token::types::NOT_EQ, "!="},
                                     {token::types::INT, "9"},
                                     {token::types::SEMICOLON, ";"},
+                                    {token::types::STRING, "foobar"},
+                                    {token::types::STRING, "foo bar"},
                                     {token::types::EndOF, ""}};
 
     auto lexer = lexer::New(input);

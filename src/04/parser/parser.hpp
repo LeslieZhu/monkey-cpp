@@ -263,6 +263,13 @@ namespace parser
             return pLit;
         }
 
+        std::shared_ptr<ast::Expression> parseStringLiteral()
+        {
+            std::shared_ptr<ast::StringLiteral> pLit = std::make_shared<ast::StringLiteral>(curToken);
+
+            return pLit;
+        }
+
         std::shared_ptr<ast::Expression> parsePrefixExpression()
         {
             std::shared_ptr<ast::PrefixExpression> pExpression = std::make_shared<ast::PrefixExpression>(curToken, curToken.Literal);
@@ -440,6 +447,7 @@ namespace parser
         pParser->prefixParseFns.clear();
         pParser->registerPrefix(token::types::IDENT, &Parser::parseIdentifier);
         pParser->registerPrefix(token::types::INT, &Parser::parseIntegerLiteral);
+        pParser->registerPrefix(token::types::STRING, &Parser::parseStringLiteral);
         pParser->registerPrefix(token::types::BANG, &Parser::parsePrefixExpression);
         pParser->registerPrefix(token::types::MINUS, &Parser::parsePrefixExpression);
         pParser->registerPrefix(token::types::TRUE, &Parser::parseBoolean);

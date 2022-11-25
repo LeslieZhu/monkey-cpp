@@ -20,6 +20,7 @@ namespace objects
 		ERROR,
 		INTEGER,
 		BOOLEAN,
+		STRING,
 		RETURN_VALUE,
 		FUNCTION
 	};
@@ -82,6 +83,20 @@ namespace objects
 			std::stringstream oss;
 			oss << (Value ? "true" : "false");
 			return oss.str();
+		}
+	};
+
+	struct String : Object
+	{
+		std::string Value;
+
+		String(std::string val) : Value(val) {}
+
+		virtual ~String() {}
+		virtual ObjectType Type() { return ObjectType::STRING; }
+		virtual std::string Inspect()
+		{
+			return Value;
 		}
 	};
 

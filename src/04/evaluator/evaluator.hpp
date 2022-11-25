@@ -439,6 +439,11 @@ namespace evaluator
 #endif
 			return nativeBoolToBooleanObject(std::dynamic_pointer_cast<ast::Boolean>(node)->Value);
 		}
+		else if(node->GetNodeType() == ast::NodeType::StringLiteral)
+		{
+			std::shared_ptr<ast::StringLiteral> stringLiteral = std::dynamic_pointer_cast<ast::StringLiteral>(node);
+			return std::make_shared<objects::String>(stringLiteral->Value);
+		}
 		else if (node->GetNodeType() == ast::NodeType::PrefixExpression)
 		{
 #ifdef DEBUG

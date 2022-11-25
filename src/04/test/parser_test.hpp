@@ -228,6 +228,31 @@ TEST(TestIntegerLiteralExpression, BasicAssertions)
 	EXPECT_STREQ(intStmt->TokenLiteral().c_str(), "5");
 }
 
+TEST(TestStringLiteralExpression, BasicAssertions)
+{
+	std::string input = "\"hello world\";";
+
+	std::unique_ptr<lexer::Lexer> pLexer = lexer::New(input);
+	std::unique_ptr<parser::Parser> pParser = parser::New(std::move(pLexer));
+	std::unique_ptr<ast::Program> pProgram{pParser->ParseProgram()};
+	printParserErrors(pParser->Errors());
+
+	EXPECT_EQ(pProgram->v_pStatements.size(), 1u);
+
+	std::shared_ptr<ast::Statement> stmt = pProgram->v_pStatements[0];
+	std::shared_ptr<ast::ExpressionStatement> expStmt = std::dynamic_pointer_cast<ast::ExpressionStatement>(stmt);
+
+	EXPECT_NE(expStmt, nullptr);
+
+	std::shared_ptr<ast::Expression> exp = expStmt->pExpression;
+	std::shared_ptr<ast::StringLiteral> strStmt = std::dynamic_pointer_cast<ast::StringLiteral>(exp);
+
+	EXPECT_NE(strStmt, nullptr);
+
+	EXPECT_STREQ(strStmt->Value.c_str(), "hello world");
+	EXPECT_STREQ(strStmt->TokenLiteral().c_str(), "hello world");
+}
+
 TEST(TestParsingPrefixExpressions, BasicAssertions)
 {
 	struct Input

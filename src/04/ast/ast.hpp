@@ -47,6 +47,7 @@ namespace ast
         BlockStatement,      // 代码块
         Boolean,             // 布尔
         IntegerLiteral,      // 整数
+        StringLiteral,       // 字符串
         PrefixExpression,    // 前缀表达式
         InfixExpression,     // 中缀表达式
         IfExpression,        // If表达式
@@ -237,6 +238,20 @@ namespace ast
         virtual std::string TokenLiteral() { return Token.Literal; }
         virtual std::string String() { return Token.Literal; }
         virtual NodeType GetNodeType() { return ast::NodeType::IntegerLiteral; }
+    };
+
+    struct StringLiteral : Expression
+    {
+        token::Token Token;
+        std::string Value;
+
+        StringLiteral(token::Token tok) : Token(tok), Value(tok.Literal) {}
+        virtual ~StringLiteral() {}
+
+        virtual void ExpressionNode() {}
+        virtual std::string TokenLiteral() { return Token.Literal; }
+        virtual std::string String() { return Token.Literal; }
+        virtual NodeType GetNodeType() { return ast::NodeType::StringLiteral; }
     };
 
     struct PrefixExpression : Expression

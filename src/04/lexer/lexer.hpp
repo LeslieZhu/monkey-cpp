@@ -88,6 +88,21 @@ namespace lexer
             return input.substr(oldPosition, position - oldPosition);
         }
 
+        std::string readString()
+        {
+            int oldPosition = position + 1;
+            while (true)
+            {
+                readChar();
+                if(ch == '"' || ch == 0)
+                {
+                    break;
+                }
+            }
+
+            return input.substr(oldPosition, position - oldPosition);
+        }
+
         std::string readNumber()
         {
             int oldPosition = position;
@@ -179,6 +194,12 @@ namespace lexer
             case ')':
                 tok = newToken(token::types::RPAREN, ch);
                 break;
+            case '"':
+            {
+                tok.Type = token::types::STRING;
+                tok.Literal = readString();
+            }
+            break;
             case 0:
             {
                 tok.Literal = "";

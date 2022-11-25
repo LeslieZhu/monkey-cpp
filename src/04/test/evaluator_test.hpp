@@ -30,6 +30,14 @@ void testIntegerObject(std::shared_ptr<objects::Object> obj, int64_t expected)
     EXPECT_EQ(result->Value, expected);
 }
 
+void testStringObject(std::shared_ptr<objects::Object> obj, std::string expected)
+{
+    std::shared_ptr<objects::String> result = std::dynamic_pointer_cast<objects::String>(obj);
+
+    EXPECT_NE(result, nullptr);
+    EXPECT_STREQ(result->Value.c_str(), expected.c_str());
+}
+
 void testBooleanObject(std::shared_ptr<objects::Object> obj, bool expected)
 {
     std::shared_ptr<objects::Boolean> result = std::dynamic_pointer_cast<objects::Boolean>(obj);
@@ -124,6 +132,31 @@ TEST(TestEvalBooleanExpression, BasicAssertions)
     {
         std::shared_ptr<objects::Object> evaluatedObj = testEval(item.input);
         testBooleanObject(evaluatedObj, item.expected);
+    }
+}
+
+TEST(TestEvalStringExpression, BasicAssertions)
+{
+    struct Input
+    {
+        std::string input;
+        std::string expected;
+    };
+
+    struct Input inputs[]
+    {
+        {"\"5\"", "5"},
+        {"\"10\"", "10"},
+        {"\"-5\"", "-5"},
+        {"\"-10\"", "-10"},
+        {"\"hello\"", "hello"},
+        {"\"hello world\"", "hello world"}
+    };
+
+    for (const auto &item : inputs)
+    {
+        std::shared_ptr<objects::Object> evaluatedObj = testEval(item.input);
+        testStringObject(evaluatedObj, item.expected);
     }
 }
 
