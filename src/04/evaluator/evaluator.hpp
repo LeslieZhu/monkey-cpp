@@ -213,6 +213,20 @@ namespace evaluator
 		}
 	}
 
+
+	std::shared_ptr<objects::Object> evalStringInfixExpression(std::string ops, std::shared_ptr<objects::Object> left, std::shared_ptr<objects::Object> right)
+	{
+		if(ops != "+")
+		{
+			return newError("unknown operator: " + left->TypeStr() + " " + ops + " " + right->TypeStr());
+		}
+		std::string leftValue = std::dynamic_pointer_cast<objects::String>(left)->Value;
+		std::string rightValue = std::dynamic_pointer_cast<objects::String>(right)->Value;
+
+		std::shared_ptr<objects::String> result = std::make_shared<objects::String>(leftValue + rightValue);
+		return result;
+	}
+
 	std::shared_ptr<objects::Object> evalMinusPrefixOperatorExpression(std::shared_ptr<objects::Object> right)
 	{
 		if (right->Type() != objects::ObjectType::INTEGER)
@@ -265,6 +279,10 @@ namespace evaluator
 		if (left->Type() == objects::ObjectType::INTEGER && right->Type() == objects::ObjectType::INTEGER)
 		{
 			return evalIntegerInfixExpression(ops, left, right);
+		}
+		else if (left->Type() == objects::ObjectType::STRING && right->Type() == objects::ObjectType::STRING)
+		{
+			return evalStringInfixExpression(ops, left, right);
 		}
 		else if (ops == "==")
 		{

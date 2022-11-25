@@ -43,6 +43,8 @@ namespace objects
 				return "INTEGER";
 			case ObjectType::BOOLEAN:
 				return "BOOLEAN";
+			case ObjectType::STRING:
+				return "STRING";
 			case ObjectType::RETURN_VALUE:
 				return "RETURN_VALUE";
 			case ObjectType::FUNCTION:
@@ -90,6 +92,7 @@ namespace objects
 	{
 		std::string Value;
 
+		String(): Value(""){}
 		String(std::string val) : Value(val) {}
 
 		virtual ~String() {}

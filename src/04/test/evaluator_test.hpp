@@ -160,6 +160,27 @@ TEST(TestEvalStringExpression, BasicAssertions)
     }
 }
 
+TEST(TestEvalStringConcatenation, BasicAssertions)
+{
+    struct Input
+    {
+        std::string input;
+        std::string expected;
+    };
+
+    struct Input inputs[]
+    {
+        {"\"hello\" + \" \" + \"world!\"", "hello world!"},
+        {"\"hello world\" + \"!\"", "hello world!"}
+    };
+
+    for (const auto &item : inputs)
+    {
+        std::shared_ptr<objects::Object> evaluatedObj = testEval(item.input);
+        testStringObject(evaluatedObj, item.expected);
+    }
+}
+
 TEST(TestEvalBangOperator, BasicAssertions)
 {
     struct Input
@@ -329,6 +350,10 @@ if (10 > 1) {
                 "foobar",
                 "identifier not found: foobar",
             },
+            {
+                "\"Hello\" - \"World\"",
+                "unknown operator: STRING - STRING"
+            }
     };
 
     for (const auto &item : inputs)
