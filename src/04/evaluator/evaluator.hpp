@@ -320,6 +320,30 @@ namespace evaluator
 		}
 	}
 
+	std::shared_ptr<objects::Object> evalArrayIndexExpression(std::shared_ptr<objects::Object> left, std::shared_ptr<objects::Object> index)
+	{
+		std::shared_ptr<objects::Array> arrayObj = std::dynamic_pointer_cast<objects::Array>(left);
+		auto idx = std::dynamic_pointer_cast<objects::Integer>(index)->Value;
+		auto max = static_cast<int64_t>(arrayObj->Elements.size() - 1);
+
+		if(idx < 0 || idx > max)
+		{
+			return NULL_OBJ;
+		}
+
+		return arrayObj->Elements[idx];
+	}
+
+	std::shared_ptr<objects::Object> evalIndexExpression(std::shared_ptr<objects::Object> left, std::shared_ptr<objects::Object> index)
+	{
+		if(left->Type() == objects::ObjectType::ARRAY && index->Type() == objects::ObjectType::INTEGER)
+		{
+			return evalArrayIndexExpression(left, index);
+		} else {
+			return newError("index operator not supported: " + left->TypeStr());
+		}
+	}
+
 	std::shared_ptr<objects::Object> evalBlockStatement(std::shared_ptr<ast::BlockStatement> block, std::shared_ptr<objects::Environment> env)
 	{
 		std::shared_ptr<objects::Object> result;
@@ -573,6 +597,35 @@ namespace evaluator
 			}
 
 			return applyFunction(function, args);
+		}
+		else if(node->GetNodeType() == ast::NodeType::ArrayLiteral)
+		{
+			std::shared_ptr<ast::ArrayLiteral> arrayObj = std::dynamic_pointer_cast<ast::ArrayLiteral>(node);
+			auto elements = evalExpressions(arrayObj->Elements, env);
+			if(elements.size() == 1 && isError(elements[0]))
+			{
+				return elements[0];
+			}
+
+			return std::make_shared<objects::Array>(elements);
+		}
+		else if(node->GetNodeType() == ast::NodeType::IndexExpression)
+		{
+			std::shared_ptr<ast::IndexExpression> idxObj = std::dynamic_pointer_cast<ast::IndexExpression>(node);
+
+			auto left = Eval(idxObj->Left, env);
+			if(isError(left))
+			{
+				return left;
+			}
+
+			auto index = Eval(idxObj->Index, env);
+			if(isError(index))
+			{
+				return index;
+			}
+
+			return evalIndexExpression(left, index);
 		}
 
 		return nullptr;

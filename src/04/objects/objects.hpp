@@ -22,6 +22,7 @@ namespace objects
 		STRING,
 		RETURN_VALUE,
 		FUNCTION,
+		ARRAY,
 		BUILTIN
 	};
 
@@ -49,6 +50,8 @@ namespace objects
 				return "RETURN_VALUE";
 			case ObjectType::FUNCTION:
 				return "FUNCTION";
+			case ObjectType::ARRAY:
+				return "ARRAY";
 			default:
 				return "BadType";
 			}
@@ -100,6 +103,26 @@ namespace objects
 		virtual std::string Inspect()
 		{
 			return Value;
+		}
+	};
+
+	struct Array : Object
+	{
+		std::vector<std::shared_ptr<Object>> Elements;
+
+		Array(std::vector<std::shared_ptr<Object>>& elements): Elements(elements){}
+		virtual ~Array() {}
+		virtual ObjectType Type() { return ObjectType::ARRAY; }
+		virtual std::string Inspect()
+		{
+			std::stringstream oss;
+			std::vector<std::string> items{};
+			for (auto &item : Elements)
+			{
+				items.push_back(item->Inspect());
+			}
+			oss << "[" << ast::Join(items, ", ") << "]";
+			return oss.str();
 		}
 	};
 

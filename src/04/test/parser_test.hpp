@@ -279,6 +279,29 @@ TEST(TestArrayLiteralExpression, BasicAssertions)
 	testInfixExpression(arrayStmt->Elements[2], 3, "+", 3);
 }
 
+TEST(TestIndexExpression, BasicAssertions)
+{
+	std::string input = "myArray[1 + 1]";
+
+	std::unique_ptr<lexer::Lexer> pLexer = lexer::New(input);
+	std::unique_ptr<parser::Parser> pParser = parser::New(std::move(pLexer));
+	std::unique_ptr<ast::Program> pProgram{pParser->ParseProgram()};
+	printParserErrors(pParser->Errors());
+
+	std::shared_ptr<ast::Statement> stmt = pProgram->v_pStatements[0];
+	std::shared_ptr<ast::ExpressionStatement> expStmt = std::dynamic_pointer_cast<ast::ExpressionStatement>(stmt);
+
+	EXPECT_NE(expStmt, nullptr);
+
+	std::shared_ptr<ast::Expression> exp = expStmt->pExpression;
+	std::shared_ptr<ast::IndexExpression> indexStmt = std::dynamic_pointer_cast<ast::IndexExpression>(exp);
+
+	EXPECT_NE(indexStmt, nullptr);
+
+	testIdentifier(indexStmt->Left, "myArray");
+	testInfixExpression(indexStmt->Index, 1, "+", 1);
+}
+
 TEST(TestParsingPrefixExpressions, BasicAssertions)
 {
 	struct Input
@@ -485,6 +508,14 @@ TEST(TestOperatorPrecedenceParsing, BasicAssertions)
 		{
 			"add(a + b + c * d / f + g)",
 				"add((((a + b) + ((c * d) / f)) + g))",
+		},
+		{
+			"a * [1, 2, 3, 4][b * c] * d",
+			"((a * ([1, 2, 3, 4][(b * c)])) * d)"
+		},
+		{
+			"add(a * b[2], b[1], 2 * [1,2][1])",
+			"add((a * (b[2])), (b[1]), (2 * ([1, 2][1])))"
 		}
 	};
 

@@ -22,7 +22,8 @@ namespace parser
         SUM,         // +
         PRODUCT,     // *
         PREFIX,      // -X or !X
-        CALL         // myFunction(X)
+        CALL,        // myFunction(X)
+        INDEX        // array[index]
     };
 
     std::map<token::TokenType, Priority> precedences{{token::types::EQ, Priority::EQUALS},
@@ -33,7 +34,8 @@ namespace parser
                                                 {token::types::MINUS, Priority::SUM},
                                                 {token::types::SLASH, Priority::PRODUCT},
                                                 {token::types::ASTERISK, Priority::PRODUCT},
-                                                {token::types::LPAREN, Priority::CALL}};
+                                                {token::types::LPAREN, Priority::CALL},
+                                                {token::types::LBRACKET, Priority::INDEX}};
 
     struct Parser
     {
@@ -442,6 +444,20 @@ namespace parser
             return pExp;
         }
 
+        std::shared_ptr<ast::Expression> parseIndexExpression(std::shared_ptr<ast::Expression> left)
+        {
+            std::shared_ptr<ast::IndexExpression> pExp = std::make_shared<ast::IndexExpression>(curToken, left);
+            nextToken();
+            pExp->Index = parseExpression(Priority::LOWEST);
+
+            if(!expectPeek(token::types::RBRACKET))
+            {
+                return nullptr;
+            }
+
+            return pExp;
+        }
+
         std::vector<std::shared_ptr<ast::Expression>> parseCallArguments()
         {
             std::vector<std::shared_ptr<ast::Expression>> args{};
@@ -505,6 +521,7 @@ namespace parser
         pParser->registerInfix(token::types::LT, &Parser::parseInfixExpression);
         pParser->registerInfix(token::types::GT, &Parser::parseInfixExpression);
         pParser->registerInfix(token::types::LPAREN, &Parser::parseCallExpression);
+        pParser->registerInfix(token::types::LBRACKET, &Parser::parseIndexExpression);
 
         // Read two tokens, so curToken and peekToken are both set
         pParser->nextToken();

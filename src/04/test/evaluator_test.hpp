@@ -486,3 +486,88 @@ TEST(TestBuiltinFunctions, BasicAssertions)
         }
     }
 }
+
+
+TEST(TestEvalArrayLiteral, BasicAssertions)
+{
+	std::string input = "[1, 2 * 2, 3 + 3]";
+
+    std::shared_ptr<objects::Object> evaluatedObj = testEval(input);
+
+    std::shared_ptr<objects::Array> result = std::dynamic_pointer_cast<objects::Array>(evaluatedObj);
+
+    EXPECT_NE(result, nullptr);
+    EXPECT_EQ(result->Elements.size(), 3u);
+
+    testIntegerObject(result->Elements[0], 1);
+    testIntegerObject(result->Elements[1], 4);
+    testIntegerObject(result->Elements[2], 6);
+}
+
+
+TEST(TestEvalArrayIndexExpression, BasicAssertions)
+{
+	struct Input
+    {
+        std::string input;
+        std::variant<int, void*> expected;
+    };
+
+    struct Input inputs[]
+    {
+        {
+            "[1, 2, 3][0]",
+            1,
+        },
+        {
+            "[1, 2, 3][1]",
+            2
+        },
+        {
+            "[1, 2, 3][2]",
+            3
+        },
+        {
+            "let i = 0; [1][i];",
+            1
+        },
+        {
+            "[1, 2, 3][1 + 1];",
+            3,
+        },
+        {
+            "let myArray = [1, 2, 3]; myArray[2];",
+            3,
+        },
+        {
+            "let myArray = [1, 2, 3]; myArray[0] + myArray[1] + myArray[2];",
+            6,
+        },
+        {
+            "let myArray = [1, 2, 3]; let i = myArray[0]; myArray[i]",
+            2,
+        },
+        {
+            "[1, 2, 3][3]",
+            nullptr
+        },
+        {
+            "[1, 2, 3][-1]",
+            nullptr
+        }
+    };
+
+    for (const auto &item : inputs)
+    {
+        std::shared_ptr<objects::Object> evaluatedObj = testEval(item.input);
+        if (std::holds_alternative<int>(item.expected))
+        {
+            int integer = std::get<int>(item.expected);
+            testIntegerObject(evaluatedObj, static_cast<int64_t>(integer));
+        }
+        else
+        {
+            testNullObject(evaluatedObj);
+        }
+    }
+}
