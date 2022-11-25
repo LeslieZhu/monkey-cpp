@@ -463,8 +463,64 @@ TEST(TestBuiltinFunctions, BasicAssertions)
         {"len(\"four\")", 4},
         {"len(\"hello world\")", 11},
         {"len(1)", "argument to 'len' not supported, got INTEGER"},
-        {"len(\"one\", \"two\")", "wrong number of arguments. got=2, want=1"}
-            
+        {"len(\"one\", \"two\")", "wrong number of arguments. got=2, want=1"},
+        {"first([1,2,3])", 1},
+        {"let myArray=[1,2,3]; first(myArray);", 1},
+        {"first(2)", "argument to 'first' must be ARRAY, got INTEGER"},
+        {"last([1,2,3]);", 3},
+        {"let myArray=[1,2,3]; last(myArray);", 3},
+        {"last(2)", "argument to 'last' must be ARRAY, got INTEGER"},
+        {"let a = [1, 2, 3, 4]; rest(a);", "[2, 3, 4]"},
+        {"let a = [1, 2, 3, 4]; rest(rest(a));", "[3, 4]"},
+        {"let a = [1, 2, 3, 4]; rest(rest(rest(a)));", "[4]"},
+        {"let a = [1, 2, 3, 4]; rest(rest(rest(rest(a))));", "[]"},
+        {"let a = [1, 2, 3, 4]; rest(rest(rest(rest(rest(a)))));", "null"},
+        {"let a = [1, 2, 3, 4]; rest(rest(rest(rest(rest(a))))); a;", "[1, 2, 3, 4]"},
+        {"let a = [1, 2, 3, 4]; let b = push(a, 5); a;", "[1, 2, 3, 4]"},
+        {"let a = [1, 2, 3, 4]; let b = push(a, 5); b;", "[1, 2, 3, 4, 5]"},
+        {
+            R""(
+let map = fn(arr,f){
+    let iter=fn(arr,accumulated){
+        if(len(arr) == 0){
+            return accumulated;
+        } else {
+            iter(rest(arr),push(accumulated,f(first(arr))));
+        }
+    }; 
+    iter(arr,[]);
+};
+
+let a = [1, 2, 3, 4];
+let double = fn(x){ x * 2 };
+map(a, double);
+            )"",
+            "[2, 4, 6, 8]"
+        },
+        {
+            R""(
+let reduce = fn(arr, initial, f) {
+    let iter = fn(arr, result) {
+        if(len(arr) == 0){
+            result;
+        } else {
+            iter(rest(arr), f(result, first(arr)));
+        }
+    };
+
+    iter(arr, initial);
+};
+
+let sum = fn(arr){
+    reduce(arr, 0, fn(initial, el) {
+        initial + el;
+    });
+};
+
+sum([1, 2, 3, 4, 5]);
+            )"",
+            15
+        }
     };
 
     for (const auto &item : inputs)
@@ -479,10 +535,23 @@ TEST(TestBuiltinFunctions, BasicAssertions)
         else
         {
             std::string strVal = std::get<std::string>(item.expected);
-            std::shared_ptr<objects::Error> result = std::dynamic_pointer_cast<objects::Error>(evaluatedObj);
 
-            EXPECT_NE(result, nullptr);
-            EXPECT_STREQ(result->Message.c_str(), strVal.c_str());
+            if(std::shared_ptr<objects::Array> arrObj = std::dynamic_pointer_cast<objects::Array>(evaluatedObj); arrObj != nullptr)
+            {
+                EXPECT_NE(arrObj, nullptr);
+                EXPECT_STREQ(arrObj->Inspect().c_str(), strVal.c_str());
+            }
+            else if(std::shared_ptr<objects::Error> errObj = std::dynamic_pointer_cast<objects::Error>(evaluatedObj); errObj != nullptr)
+            {
+                EXPECT_NE(errObj, nullptr);
+                EXPECT_STREQ(errObj->Message.c_str(), strVal.c_str());
+            }
+            else
+            {
+                std::shared_ptr<objects::Null> nullObj = std::dynamic_pointer_cast<objects::Null>(evaluatedObj);
+                EXPECT_NE(nullObj, nullptr);
+                EXPECT_STREQ(nullObj->Inspect().c_str(), strVal.c_str());
+            }
         }
     }
 }

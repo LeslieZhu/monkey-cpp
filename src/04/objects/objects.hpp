@@ -102,7 +102,7 @@ namespace objects
 		virtual ObjectType Type() { return ObjectType::STRING; }
 		virtual std::string Inspect()
 		{
-			return Value;
+			return "\"" + Value + "\"";
 		}
 	};
 
@@ -110,6 +110,7 @@ namespace objects
 	{
 		std::vector<std::shared_ptr<Object>> Elements;
 
+		Array(){}
 		Array(std::vector<std::shared_ptr<Object>>& elements): Elements(elements){}
 		virtual ~Array() {}
 		virtual ObjectType Type() { return ObjectType::ARRAY; }
@@ -165,6 +166,9 @@ namespace objects
 		virtual std::string Inspect() { return "builltin function"; }
 	};
 
+	static std::shared_ptr<objects::Null> NULL_OBJ = std::make_shared<objects::Null>();
+	static std::shared_ptr<objects::Boolean> TRUE_OBJ = std::make_shared<objects::Boolean>(true);
+	static std::shared_ptr<objects::Boolean> FALSE_OBJ = std::make_shared<objects::Boolean>(false);
 }
 
 #endif // H_OBJECTS_H

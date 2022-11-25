@@ -18,11 +18,6 @@
 
 namespace evaluator
 {
-
-	std::shared_ptr<objects::Null> NULL_OBJ = std::make_shared<objects::Null>();
-	std::shared_ptr<objects::Boolean> TRUE_OBJ = std::make_shared<objects::Boolean>(true);
-	std::shared_ptr<objects::Boolean> FALSE_OBJ = std::make_shared<objects::Boolean>(false);
-
 	std::shared_ptr<objects::Object> Eval(std::shared_ptr<ast::Node> node, std::shared_ptr<objects::Environment> env);
 
 	std::shared_ptr<objects::Error> newError(std::string msg)
@@ -43,15 +38,15 @@ namespace evaluator
 
 	bool isTruthy(std::shared_ptr<objects::Object> obj)
 	{
-		if (obj == NULL_OBJ)
+		if (obj == objects::NULL_OBJ)
 		{
 			return false;
 		}
-		else if (obj == TRUE_OBJ)
+		else if (obj == objects::TRUE_OBJ)
 		{
 			return true;
 		}
-		else if (obj == FALSE_OBJ)
+		else if (obj == objects::FALSE_OBJ)
 		{
 			return false;
 		}
@@ -65,11 +60,11 @@ namespace evaluator
 	{
 		if (input)
 		{
-			return TRUE_OBJ;
+			return objects::TRUE_OBJ;
 		}
 		else
 		{
-			return FALSE_OBJ;
+			return objects::FALSE_OBJ;
 		}
 	}
 
@@ -178,7 +173,7 @@ namespace evaluator
 		}
 		else
 		{
-			return NULL_OBJ;
+			return objects::NULL_OBJ;
 		}
 	}
 
@@ -258,21 +253,21 @@ namespace evaluator
 
 	std::shared_ptr<objects::Object> evalBangOperatorExpression(std::shared_ptr<objects::Object> right)
 	{
-		if (right == TRUE_OBJ)
+		if (right == objects::TRUE_OBJ)
 		{
-			return FALSE_OBJ;
+			return objects::FALSE_OBJ;
 		}
-		else if (right == FALSE_OBJ)
+		else if (right == objects::FALSE_OBJ)
 		{
-			return TRUE_OBJ;
+			return objects::TRUE_OBJ;
 		}
-		else if (right == NULL_OBJ)
+		else if (right == objects::NULL_OBJ)
 		{
-			return TRUE_OBJ;
+			return objects::TRUE_OBJ;
 		}
 		else
 		{
-			return FALSE_OBJ;
+			return objects::FALSE_OBJ;
 		}
 	}
 
@@ -328,7 +323,7 @@ namespace evaluator
 
 		if(idx < 0 || idx > max)
 		{
-			return NULL_OBJ;
+			return objects::NULL_OBJ;
 		}
 
 		return arrayObj->Elements[idx];
