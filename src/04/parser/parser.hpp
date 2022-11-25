@@ -265,9 +265,46 @@ namespace parser
 
         std::shared_ptr<ast::Expression> parseStringLiteral()
         {
-            std::shared_ptr<ast::StringLiteral> pLit = std::make_shared<ast::StringLiteral>(curToken);
+            std::shared_ptr<ast::StringLiteral> pStr = std::make_shared<ast::StringLiteral>(curToken);
 
-            return pLit;
+            return pStr;
+        }
+
+        std::vector<std::shared_ptr<ast::Expression>> parseExpressionList(token::TokenType tokEnd)
+        {
+            std::vector<std::shared_ptr<ast::Expression>> list{};
+
+            if(peekTokenIs(tokEnd))
+            {
+                nextToken();
+                return list;
+            }
+
+            nextToken();
+            list.push_back(parseExpression(Priority::LOWEST));
+
+            while(peekTokenIs(token::types::COMMA))
+            {
+                nextToken();
+                nextToken();
+                list.push_back(parseExpression(Priority::LOWEST));
+            }
+
+            if(!expectPeek(tokEnd))
+            {
+                return std::vector<std::shared_ptr<ast::Expression>>{};
+            }
+
+            return list;
+        }
+
+        std::shared_ptr<ast::Expression> parseArrayLiteral()
+        {
+            std::shared_ptr<ast::ArrayLiteral> pArray = std::make_shared<ast::ArrayLiteral>(curToken);
+            pArray->Elements = parseExpressionList(token::types::RBRACKET);
+
+            return pArray;
+
         }
 
         std::shared_ptr<ast::Expression> parsePrefixExpression()
@@ -400,7 +437,8 @@ namespace parser
         std::shared_ptr<ast::Expression> parseCallExpression(std::shared_ptr<ast::Expression> function)
         {
             std::shared_ptr<ast::CallExpression> pExp = std::make_shared<ast::CallExpression>(curToken, function);
-            pExp->pArguments = parseCallArguments();
+            //pExp->pArguments = parseCallArguments();
+            pExp->pArguments = parseExpressionList(token::types::RPAREN);
             return pExp;
         }
 
@@ -448,6 +486,7 @@ namespace parser
         pParser->registerPrefix(token::types::IDENT, &Parser::parseIdentifier);
         pParser->registerPrefix(token::types::INT, &Parser::parseIntegerLiteral);
         pParser->registerPrefix(token::types::STRING, &Parser::parseStringLiteral);
+        pParser->registerPrefix(token::types::LBRACKET, &Parser::parseArrayLiteral);
         pParser->registerPrefix(token::types::BANG, &Parser::parsePrefixExpression);
         pParser->registerPrefix(token::types::MINUS, &Parser::parsePrefixExpression);
         pParser->registerPrefix(token::types::TRUE, &Parser::parseBoolean);

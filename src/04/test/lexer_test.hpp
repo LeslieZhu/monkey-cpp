@@ -29,6 +29,7 @@ TEST(TestNextToken, BasicAssertions)
         10 != 9;
         "foobar"
         "foo bar"
+        [1, 2];
         )"";
 
     std::vector<token::Token> tests{{token::types::LET, "let"},
@@ -106,6 +107,14 @@ TEST(TestNextToken, BasicAssertions)
                                     {token::types::SEMICOLON, ";"},
                                     {token::types::STRING, "foobar"},
                                     {token::types::STRING, "foo bar"},
+
+                                    {token::types::LBRACKET, "["},
+                                    {token::types::INT, "1"},
+                                    {token::types::COMMA, ","},
+                                    {token::types::INT, "2"},
+                                    {token::types::RBRACKET, "]"},
+                                    {token::types::SEMICOLON, ";"},
+
                                     {token::types::EndOF, ""}};
 
     auto lexer = lexer::New(input);

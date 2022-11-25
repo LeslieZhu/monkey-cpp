@@ -52,6 +52,9 @@ namespace token
         const TokenType LBRACE = "{";
         const TokenType RBRACE = "}";
 
+        const TokenType LBRACKET = "[";
+        const TokenType RBRACKET = "]";
+
         // Keywords
         const TokenType FUNCTION = "FUNCTION";
         const TokenType LET = "LET";

@@ -253,6 +253,32 @@ TEST(TestStringLiteralExpression, BasicAssertions)
 	EXPECT_STREQ(strStmt->TokenLiteral().c_str(), "hello world");
 }
 
+TEST(TestArrayLiteralExpression, BasicAssertions)
+{
+	std::string input = "[1, 2 * 2, 3 + 3]";
+
+	std::unique_ptr<lexer::Lexer> pLexer = lexer::New(input);
+	std::unique_ptr<parser::Parser> pParser = parser::New(std::move(pLexer));
+	std::unique_ptr<ast::Program> pProgram{pParser->ParseProgram()};
+	printParserErrors(pParser->Errors());
+
+	EXPECT_EQ(pProgram->v_pStatements.size(), 1u);
+
+	std::shared_ptr<ast::Statement> stmt = pProgram->v_pStatements[0];
+	std::shared_ptr<ast::ExpressionStatement> expStmt = std::dynamic_pointer_cast<ast::ExpressionStatement>(stmt);
+
+	EXPECT_NE(expStmt, nullptr);
+
+	std::shared_ptr<ast::Expression> exp = expStmt->pExpression;
+	std::shared_ptr<ast::ArrayLiteral> arrayStmt = std::dynamic_pointer_cast<ast::ArrayLiteral>(exp);
+
+	EXPECT_NE(arrayStmt, nullptr);
+	EXPECT_EQ(arrayStmt->Elements.size(), 3u);
+	testIntegerLiteral(arrayStmt->Elements[0], 1);
+	testInfixExpression(arrayStmt->Elements[1], 2, "*", 2);
+	testInfixExpression(arrayStmt->Elements[2], 3, "+", 3);
+}
+
 TEST(TestParsingPrefixExpressions, BasicAssertions)
 {
 	struct Input
