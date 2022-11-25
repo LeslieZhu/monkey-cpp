@@ -14,6 +14,7 @@
 #include "ast/ast.hpp"
 #include "objects/objects.hpp"
 #include "objects/environment.hpp"
+#include "evaluator/builtins.hpp"
 
 namespace evaluator
 {
@@ -97,15 +98,20 @@ namespace evaluator
 
 	std::shared_ptr<objects::Object> applyFunction(std::shared_ptr<objects::Object> fn, std::vector<std::shared_ptr<objects::Object>> &args)
 	{
-		std::shared_ptr<objects::Function> function = std::dynamic_pointer_cast<objects::Function>(fn);
-		if (function == nullptr)
+		if (std::shared_ptr<objects::Function> function = std::dynamic_pointer_cast<objects::Function>(fn); function != nullptr)
+		{
+			std::shared_ptr<objects::Environment> extendedEnv = extendFunctionEnv(function, args);
+			std::shared_ptr<objects::Object> evaluated = Eval(function->Body, extendedEnv);
+			return unwrapReturnValue(evaluated);
+		}
+		else if (std::shared_ptr<objects::Builtin> builtin = std::dynamic_pointer_cast<objects::Builtin>(fn); builtin != nullptr)
+		{
+			return builtin->Fn(args);
+		}
+		else
 		{
 			return newError("not a function: " + fn->TypeStr());
 		}
-
-		std::shared_ptr<objects::Environment> extendedEnv = extendFunctionEnv(function, args);
-		std::shared_ptr<objects::Object> evaluated = Eval(function->Body, extendedEnv);
-		return unwrapReturnValue(evaluated);
 	}
 
 	std::vector<std::shared_ptr<objects::Object>> evalExpressions(std::vector<std::shared_ptr<ast::Expression>> exps, std::shared_ptr<objects::Environment> env)
@@ -133,14 +139,26 @@ namespace evaluator
 		std::cout << "\t\t evalIdentifier get by :" << node->Value << std::endl;
 #endif
 		std::shared_ptr<objects::Object> val = env->Get(node->Value);
-		if (val == nullptr)
+
+		if(val != nullptr)
 		{
-			return newError("identifier not found: " + node->Value);
-		}
 #ifdef DEBUG
 		std::cout << "\t\t evalIdentifier get: [" << val->Inspect() << "]" << std::endl;
 #endif
-		return val;
+			return val;
+		}
+
+		auto fit = evaluator::builtins.find(node->Value);
+		if(fit != evaluator::builtins.end())
+		{
+			auto builtin = fit->second;
+#ifdef DEBUG
+		std::cout << "\t\t evalIdentifier get: [" << builtin->Inspect() << "]" << std::endl;
+#endif
+			return builtin;
+		}
+
+		return newError("identifier not found: " + node->Value);
 	}
 
 	std::shared_ptr<objects::Object> evalIfExpression(std::shared_ptr<ast::IfExpression> ie, std::shared_ptr<objects::Environment> env)

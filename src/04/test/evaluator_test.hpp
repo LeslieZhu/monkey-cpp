@@ -447,3 +447,42 @@ ourFunction(20) + first + second;)"";
     std::shared_ptr<objects::Object> evaluatedObj = testEval(input);
     testIntegerObject(evaluatedObj, 70);
 }
+
+
+TEST(TestBuiltinFunctions, BasicAssertions)
+{
+    struct Input
+    {
+        std::string input;
+        std::variant<int, std::string> expected;
+    };
+
+    struct Input inputs[]
+    {
+        {"len(\"\")", 0},
+        {"len(\"four\")", 4},
+        {"len(\"hello world\")", 11},
+        {"len(1)", "argument to 'len' not supported, got INTEGER"},
+        {"len(\"one\", \"two\")", "wrong number of arguments. got=2, want=1"}
+            
+    };
+
+    for (const auto &item : inputs)
+    {
+        std::shared_ptr<objects::Object> evaluatedObj = testEval(item.input);
+
+        if (std::holds_alternative<int>(item.expected))
+        {
+            int integer = std::get<int>(item.expected);
+            testIntegerObject(evaluatedObj, static_cast<int64_t>(integer));
+        }
+        else
+        {
+            std::string strVal = std::get<std::string>(item.expected);
+            std::shared_ptr<objects::Error> result = std::dynamic_pointer_cast<objects::Error>(evaluatedObj);
+
+            EXPECT_NE(result, nullptr);
+            EXPECT_STREQ(result->Message.c_str(), strVal.c_str());
+        }
+    }
+}

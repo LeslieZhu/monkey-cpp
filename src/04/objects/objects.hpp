@@ -13,7 +13,6 @@
 
 namespace objects
 {
-
 	enum class ObjectType
 	{
 		Null,
@@ -22,7 +21,8 @@ namespace objects
 		BOOLEAN,
 		STRING,
 		RETURN_VALUE,
-		FUNCTION
+		FUNCTION,
+		BUILTIN
 	};
 
 	struct Object
@@ -128,6 +128,18 @@ namespace objects
 		virtual ~Error() {}
 		virtual ObjectType Type() { return ObjectType::ERROR; }
 		virtual std::string Inspect() { return "ERROR: " + Message; }
+	};
+
+	using BuiltinFunction = std::shared_ptr<objects::Object> (*)(std::vector<std::shared_ptr<objects::Object>>& args);
+
+	struct Builtin: Object
+	{
+		BuiltinFunction Fn;
+
+		Builtin(BuiltinFunction fn): Fn(fn){}
+		virtual ~Builtin(){}
+		virtual ObjectType Type() { return ObjectType::BUILTIN; }
+		virtual std::string Inspect() { return "builltin function"; }
 	};
 
 }
