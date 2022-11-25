@@ -306,7 +306,40 @@ namespace parser
             pArray->Elements = parseExpressionList(token::types::RBRACKET);
 
             return pArray;
+        }
 
+        std::shared_ptr<ast::Expression> parseHashLiteral()
+        {
+            std::shared_ptr<ast::HashLiteral> pHash = std::make_shared<ast::HashLiteral>(curToken);
+            
+            while(!peekTokenIs(token::types::RBRACE))
+            {
+                nextToken();
+                auto key = parseExpression(Priority::LOWEST);
+
+                if(!expectPeek(token::types::COLON))
+                {
+                    return nullptr;
+                }
+
+                nextToken();
+
+                auto value = parseExpression(Priority::LOWEST);
+
+                pHash->Pairs[key] = value;
+
+                if(!peekTokenIs(token::types::RBRACE) && !expectPeek(token::types::COMMA))
+                {
+                    return nullptr;
+                }
+            }
+
+            if(!expectPeek(token::types::RBRACE))
+            {
+                return nullptr;
+            }
+
+            return pHash;
         }
 
         std::shared_ptr<ast::Expression> parsePrefixExpression()
@@ -502,6 +535,7 @@ namespace parser
         pParser->registerPrefix(token::types::IDENT, &Parser::parseIdentifier);
         pParser->registerPrefix(token::types::INT, &Parser::parseIntegerLiteral);
         pParser->registerPrefix(token::types::STRING, &Parser::parseStringLiteral);
+        pParser->registerPrefix(token::types::LBRACE, &Parser::parseHashLiteral);
         pParser->registerPrefix(token::types::LBRACKET, &Parser::parseArrayLiteral);
         pParser->registerPrefix(token::types::BANG, &Parser::parsePrefixExpression);
         pParser->registerPrefix(token::types::MINUS, &Parser::parsePrefixExpression);

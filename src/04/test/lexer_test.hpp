@@ -30,6 +30,7 @@ TEST(TestNextToken, BasicAssertions)
         "foobar"
         "foo bar"
         [1, 2];
+        {"foo": "bar"}
         )"";
 
     std::vector<token::Token> tests{{token::types::LET, "let"},
@@ -114,6 +115,12 @@ TEST(TestNextToken, BasicAssertions)
                                     {token::types::INT, "2"},
                                     {token::types::RBRACKET, "]"},
                                     {token::types::SEMICOLON, ";"},
+
+                                    {token::types::LBRACE, "{"},
+                                    {token::types::STRING, "foo"},
+                                    {token::types::COLON, ":"},
+                                    {token::types::STRING, "bar"},
+                                    {token::types::RBRACE, "}"},
 
                                     {token::types::EndOF, ""}};
 

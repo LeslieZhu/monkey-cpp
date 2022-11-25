@@ -50,6 +50,7 @@ namespace ast
         StringLiteral,       // 字符串
         ArrayLiteral,        // 数组
         IndexExpression,     // 索引表达式
+        HashLiteral,         // 哈希表
         PrefixExpression,    // 前缀表达式
         InfixExpression,     // 中缀表达式
         IfExpression,        // If表达式
@@ -277,6 +278,29 @@ namespace ast
             return oss.str();
         }
         virtual NodeType GetNodeType() { return ast::NodeType::ArrayLiteral; }
+    };
+
+    struct HashLiteral : Expression
+    {
+        token::Token Token; // '{' Token
+        std::map<std::shared_ptr<Expression>, std::shared_ptr<Expression>> Pairs;
+
+        HashLiteral(token::Token tok) : Token(tok) {}
+        virtual ~HashLiteral() {}
+
+        virtual void ExpressionNode() {}
+        virtual std::string TokenLiteral() { return Token.Literal; }
+        virtual std::string String() { 
+            std::stringstream oss;
+            std::vector<std::string> items{};
+            for (auto &[key, val] : Pairs)
+            {
+                items.push_back(key->String() + ":" + val->String());
+            }
+            oss << "{" << Join(items, ", ") << "}";
+            return oss.str();
+        }
+        virtual NodeType GetNodeType() { return ast::NodeType::HashLiteral; }
     };
 
     struct IndexExpression : Expression

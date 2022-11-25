@@ -200,6 +200,9 @@ namespace lexer
             case ']':
                 tok = newToken(token::types::RBRACKET, ch);
                 break;
+            case ':':
+                tok = newToken(token::types::COLON, ch);
+                break;
             case '"':
             {
                 tok.Type = token::types::STRING;

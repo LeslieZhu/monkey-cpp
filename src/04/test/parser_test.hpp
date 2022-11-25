@@ -302,6 +302,107 @@ TEST(TestIndexExpression, BasicAssertions)
 	testInfixExpression(indexStmt->Index, 1, "+", 1);
 }
 
+
+TEST(TestParseHashLiteralStringKeys, BasicAssertions)
+{
+	std::string input = "{\"one\": 1, \"two\": 2, \"three\": 3}";
+
+	std::map<std::string, int64_t> expected{{"one", 1},
+											{"two", 2},
+											{"three", 3}};
+
+	std::unique_ptr<lexer::Lexer> pLexer = lexer::New(input);
+	std::unique_ptr<parser::Parser> pParser = parser::New(std::move(pLexer));
+	std::unique_ptr<ast::Program> pProgram{pParser->ParseProgram()};
+	printParserErrors(pParser->Errors());
+
+	EXPECT_EQ(pProgram->v_pStatements.size(), 1u);
+
+	std::shared_ptr<ast::Statement> stmt = pProgram->v_pStatements[0];
+	std::shared_ptr<ast::ExpressionStatement> expStmt = std::dynamic_pointer_cast<ast::ExpressionStatement>(stmt);
+
+	EXPECT_NE(expStmt, nullptr);
+
+	std::shared_ptr<ast::Expression> exp = expStmt->pExpression;
+	std::shared_ptr<ast::HashLiteral> hashStmt = std::dynamic_pointer_cast<ast::HashLiteral>(exp);
+
+	EXPECT_NE(hashStmt, nullptr);
+	EXPECT_EQ(hashStmt->Pairs.size(), 3u);
+
+	for(auto &[key, val]: hashStmt->Pairs)
+	{
+		std::shared_ptr<ast::StringLiteral> strStmt = std::dynamic_pointer_cast<ast::StringLiteral>(key);
+		EXPECT_NE(strStmt, nullptr);
+
+		testIntegerLiteral(val, expected[strStmt->String()]);
+	}
+}
+
+TEST(TestParseEmptyHashLiteral, BasicAssertions)
+{
+	std::string input = "{}";
+
+	std::unique_ptr<lexer::Lexer> pLexer = lexer::New(input);
+	std::unique_ptr<parser::Parser> pParser = parser::New(std::move(pLexer));
+	std::unique_ptr<ast::Program> pProgram{pParser->ParseProgram()};
+	printParserErrors(pParser->Errors());
+
+	EXPECT_EQ(pProgram->v_pStatements.size(), 1u);
+
+	std::shared_ptr<ast::Statement> stmt = pProgram->v_pStatements[0];
+	std::shared_ptr<ast::ExpressionStatement> expStmt = std::dynamic_pointer_cast<ast::ExpressionStatement>(stmt);
+
+	EXPECT_NE(expStmt, nullptr);
+
+	std::shared_ptr<ast::Expression> exp = expStmt->pExpression;
+	std::shared_ptr<ast::HashLiteral> hashStmt = std::dynamic_pointer_cast<ast::HashLiteral>(exp);
+
+	EXPECT_NE(hashStmt, nullptr);
+	EXPECT_EQ(hashStmt->Pairs.size(), 0u);
+}
+
+
+TEST(TestParseHashLiteralStringWithExpression, BasicAssertions)
+{
+	std::string input = "{\"one\": 0+1, \"two\": 10-8, \"three\": 15/5}";
+
+	using func = std::function<void(std::shared_ptr<ast::Expression>)>;
+
+	std::map<std::string, func> expected{
+		{"one",   [](std::shared_ptr<ast::Expression> e){testInfixExpression(e, 0, "+", 1);}},
+		{"two",   [](std::shared_ptr<ast::Expression> e){testInfixExpression(e, 10, "-", 8);}},
+		{"three", [](std::shared_ptr<ast::Expression> e){testInfixExpression(e, 15, "/", 5);}}};
+
+	std::unique_ptr<lexer::Lexer> pLexer = lexer::New(input);
+	std::unique_ptr<parser::Parser> pParser = parser::New(std::move(pLexer));
+	std::unique_ptr<ast::Program> pProgram{pParser->ParseProgram()};
+	printParserErrors(pParser->Errors());
+
+	EXPECT_EQ(pProgram->v_pStatements.size(), 1u);
+
+	std::shared_ptr<ast::Statement> stmt = pProgram->v_pStatements[0];
+	std::shared_ptr<ast::ExpressionStatement> expStmt = std::dynamic_pointer_cast<ast::ExpressionStatement>(stmt);
+
+	EXPECT_NE(expStmt, nullptr);
+
+	std::shared_ptr<ast::Expression> exp = expStmt->pExpression;
+	std::shared_ptr<ast::HashLiteral> hashStmt = std::dynamic_pointer_cast<ast::HashLiteral>(exp);
+
+	EXPECT_NE(hashStmt, nullptr);
+	EXPECT_EQ(hashStmt->Pairs.size(), 3u);
+
+	for(auto &[key, val]: hashStmt->Pairs)
+	{
+		std::shared_ptr<ast::StringLiteral> strStmt = std::dynamic_pointer_cast<ast::StringLiteral>(key);
+		EXPECT_NE(strStmt, nullptr);
+
+		func testFunc = expected[strStmt->String()];
+		EXPECT_NE(testFunc, nullptr);
+
+		testFunc(val);
+	}
+}
+
 TEST(TestParsingPrefixExpressions, BasicAssertions)
 {
 	struct Input
