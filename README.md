@@ -7,13 +7,14 @@ But re-write the interpreter with C++.
 - src/01: token and lexer
 - src/02: parser
 - src/03: evaluation
+- src/04: builtin funcs, string, array, hashmap
 
 # Run
 
 For example:
 
 ```
-$ cd src/03/
+$ cd src/04/
 $ mkdir build/
 $ cd build/
 $ cmake ..
