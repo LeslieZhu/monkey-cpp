@@ -1,8 +1,8 @@
-# Writing An Interpreter In C++: Monkey-CPP
+# Monkey: Writing An Interpreter/Compiler In C++
 
-Reference the book [Writing An Interpreter In Go](https://interpreterbook.com/).
+Reference the book [Writing An Interpreter In Go](https://interpreterbook.com/) and [Writing A Compiler In Go](https://compilerbook.com/).
 
-But re-write the interpreter with C++.
+But re-write the Monkey interpreter/compiler with C++.
 
 - src/01: token and lexer
 - src/02: parser
