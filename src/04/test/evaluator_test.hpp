@@ -640,3 +640,48 @@ TEST(TestEvalArrayIndexExpression, BasicAssertions)
         }
     }
 }
+
+
+TEST(TestEvalHashLiterals, BasicAssertions)
+{
+	std::string input = R""(
+let two = "two";
+
+{
+    "one": 10 - 9,
+    two: 1 + 1,
+    "thr" + "ee": 6 / 2,
+    4: 4,
+    true: 5,
+    false: 6
+}
+    )"";
+
+    std::map<objects::HashKey, int64_t> expected{
+        {objects::String("one").GetHashKey(), 1},
+        {objects::String("two").GetHashKey(), 2},
+        {objects::String("three").GetHashKey(), 3},
+        {objects::Integer(4).GetHashKey(), 4},
+        {objects::TRUE_OBJ->GetHashKey(), 5},
+        {objects::FALSE_OBJ->GetHashKey(), 6},
+    };
+
+    std::shared_ptr<objects::Object> evaluatedObj = testEval(input);
+
+    std::shared_ptr<objects::Hash> result = std::dynamic_pointer_cast<objects::Hash>(evaluatedObj);
+
+    EXPECT_NE(result, nullptr);
+    EXPECT_EQ(result->Pairs.size(), expected.size());
+
+    for(auto &[key, value]: expected)
+    {
+        auto fit = result->Pairs.find(key);
+        EXPECT_NE(fit, result->Pairs.end());
+
+        if(fit != result->Pairs.end())
+        {
+            auto hashpair = fit->second;
+            testIntegerObject(hashpair->Value, value);
+        }
+    }
+}

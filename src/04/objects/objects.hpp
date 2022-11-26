@@ -27,18 +27,26 @@ namespace objects
 		BUILTIN
 	};
 
-	struct HashKey{
+	struct HashKey
+	{
 		ObjectType Type;
 		uint64_t Value;
 
-		HashKey(ObjectType type, uint64_t val): Type(type), Value(val){}
+		HashKey(ObjectType type, uint64_t val) : Type(type), Value(val) {}
 
-		bool operator==(const HashKey& rhs) const{
+		bool operator==(const HashKey &rhs) const
+		{
 			return (Type == rhs.Type && Value == rhs.Value);
 		}
 
-		bool operator!=(const HashKey& rhs) const{
+		bool operator!=(const HashKey &rhs) const
+		{
 			return (Type != rhs.Type || Value != rhs.Value);
+		}
+
+		bool operator<(const HashKey &rhs) const
+		{
+			return (Value < rhs.Value);
 		}
 	};
 
@@ -111,7 +119,7 @@ namespace objects
 
 		virtual ~Boolean() {}
 		virtual ObjectType Type() { return ObjectType::BOOLEAN; }
-		virtual bool Hashable(){ return false; }
+		virtual bool Hashable(){ return true; }
 		virtual std::string Inspect()
 		{
 			std::stringstream oss;
@@ -140,7 +148,7 @@ namespace objects
 
 		virtual ~String() {}
 		virtual ObjectType Type() { return ObjectType::STRING; }
-		virtual bool Hashable(){ return false; }
+		virtual bool Hashable(){ return true; }
 		virtual std::string Inspect()
 		{
 			return "\"" + Value + "\"";
@@ -210,6 +218,34 @@ namespace objects
 		virtual ~Builtin(){}
 		virtual ObjectType Type() { return ObjectType::BUILTIN; }
 		virtual std::string Inspect() { return "builltin function"; }
+	};
+
+	struct HashPair
+	{
+		std::shared_ptr<Object> Key;
+		std::shared_ptr<Object> Value;
+
+		HashPair(std::shared_ptr<Object> key, std::shared_ptr<Object> val): Key(key), Value(val){}
+	};
+
+	struct Hash: Object
+	{
+		std::map<HashKey, std::shared_ptr<HashPair>> Pairs;
+
+		Hash(std::map<HashKey, std::shared_ptr<HashPair>>& pairs): Pairs(pairs){}
+		virtual ~Hash(){}
+		virtual ObjectType Type() { return ObjectType::HASH; }
+		virtual std::string Inspect() 
+		{ 
+			std::stringstream oss;
+			std::vector<std::string> items{};
+			for (auto &[key, pair] : Pairs)
+			{
+				items.push_back(pair->Key->Inspect() + ": " + pair->Value->Inspect());
+			}
+			oss << "{" << ast::Join(items, ", ") << "}";
+			return oss.str(); 
+		}
 	};
 
 	static std::shared_ptr<objects::Null> NULL_OBJ = std::make_shared<objects::Null>();

@@ -339,6 +339,37 @@ namespace evaluator
 		}
 	}
 
+
+	std::shared_ptr<objects::Object> evalHashLiteral(std::shared_ptr<ast::HashLiteral> hashNode, std::shared_ptr<objects::Environment> env)
+	{
+		std::map<objects::HashKey, std::shared_ptr<objects::HashPair>> pairs{};
+
+		for(auto &[keyNode, valueNode]: hashNode->Pairs)
+		{
+			auto key = Eval(keyNode, env);
+			if(isError(key))
+			{
+				return key;
+			}
+
+			if(!key->Hashable())
+			{
+				return newError("unusable as hash key: " + key->TypeStr());
+			}
+
+			auto value = Eval(valueNode, env);
+			if(isError(value))
+			{
+				return value;
+			}
+
+			auto hashed = key->GetHashKey();
+			pairs[hashed] = std::make_shared<objects::HashPair>(key, value);
+		}
+
+		return std::make_shared<objects::Hash>(pairs);
+	}
+
 	std::shared_ptr<objects::Object> evalBlockStatement(std::shared_ptr<ast::BlockStatement> block, std::shared_ptr<objects::Environment> env)
 	{
 		std::shared_ptr<objects::Object> result;
@@ -621,6 +652,11 @@ namespace evaluator
 			}
 
 			return evalIndexExpression(left, index);
+		}
+		else if(node->GetNodeType() == ast::NodeType::HashLiteral)
+		{
+			std::shared_ptr<ast::HashLiteral> hashObj = std::dynamic_pointer_cast<ast::HashLiteral>(node);
+			return evalHashLiteral(hashObj, env);
 		}
 
 		return nullptr;
