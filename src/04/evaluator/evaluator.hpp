@@ -329,11 +329,35 @@ namespace evaluator
 		return arrayObj->Elements[idx];
 	}
 
+	std::shared_ptr<objects::Object> evalHashIndexExpression(std::shared_ptr<objects::Object> left, std::shared_ptr<objects::Object> index)
+	{
+		std::shared_ptr<objects::Hash> hashObj = std::dynamic_pointer_cast<objects::Hash>(left);
+
+		if(!index->Hashable())
+		{
+			return newError("unusable as hash key: " + index->TypeStr());
+		}
+
+		auto hashed = index->GetHashKey();
+
+		auto fit = hashObj->Pairs.find(hashed);
+		if(fit == hashObj->Pairs.end())
+		{
+			return objects::NULL_OBJ;
+		}
+
+		return fit->second->Value;
+	}
+
 	std::shared_ptr<objects::Object> evalIndexExpression(std::shared_ptr<objects::Object> left, std::shared_ptr<objects::Object> index)
 	{
 		if(left->Type() == objects::ObjectType::ARRAY && index->Type() == objects::ObjectType::INTEGER)
 		{
 			return evalArrayIndexExpression(left, index);
+		}
+		else if(left->Type() == objects::ObjectType::HASH)
+		{
+			return evalHashIndexExpression(left, index);
 		} else {
 			return newError("index operator not supported: " + left->TypeStr());
 		}

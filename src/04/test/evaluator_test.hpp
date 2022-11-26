@@ -353,6 +353,12 @@ if (10 > 1) {
             {
                 "\"Hello\" - \"World\"",
                 "unknown operator: STRING - STRING"
+            },
+            {
+                R""(
+                    {"name": "Monkey"}[fn(x){ x }];
+                )"",
+                "unusable as hash key: FUNCTION"
             }
     };
 
@@ -682,6 +688,77 @@ let two = "two";
         {
             auto hashpair = fit->second;
             testIntegerObject(hashpair->Value, value);
+        }
+    }
+}
+
+
+TEST(TestEvalHashIndexExpression, BasicAssertions)
+{
+	struct Input
+    {
+        std::string input;
+        std::variant<int, void*> expected;
+    };
+
+    struct Input inputs[]
+    {
+        {
+            R""(
+                {"foo": 5}["foo"]
+            )"", 
+            5
+        },
+        {
+            R""(
+                {"foo": 5}["bar"]
+            )"",
+            nullptr
+        },
+        {
+            R""(
+                let key = "foo";
+                {"foo": 5}[key]
+            )"",
+            5
+        },
+        {
+            R""(
+                {}["foo"]
+            )"",
+            nullptr
+        },
+        {
+            R""(
+                {5: 5}[5]
+            )"",
+            5
+        },
+        {
+            R""(
+                {true: 5}[true]
+            )"",
+            5
+        },
+        {
+            R""(
+                {false: 5}[false]
+            )"",
+            5
+        }
+    };
+
+    for (const auto &item : inputs)
+    {
+        std::shared_ptr<objects::Object> evaluatedObj = testEval(item.input);
+        if (std::holds_alternative<int>(item.expected))
+        {
+            int integer = std::get<int>(item.expected);
+            testIntegerObject(evaluatedObj, static_cast<int64_t>(integer));
+        }
+        else
+        {
+            testNullObject(evaluatedObj);
         }
     }
 }
