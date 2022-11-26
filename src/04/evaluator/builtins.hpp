@@ -123,6 +123,16 @@ namespace evaluator
         }
     }
 
+    std::shared_ptr<objects::Object> BuiltinFunc_Puts([[maybe_unused]] std::vector<std::shared_ptr<objects::Object>>& args)
+    {
+        for(const auto& obj: args)
+        {
+            std::cout << obj->Inspect() << std::endl;
+        }
+        
+        return objects::NULL_OBJ;
+    }
+
     std::map<std::string, std::shared_ptr<objects::Builtin>> builtins
     {
         {
@@ -139,6 +149,9 @@ namespace evaluator
         },
         {
             "push", std::make_shared<objects::Builtin>(&BuiltinFunc_Push)
+        },
+        {
+            "puts", std::make_shared<objects::Builtin>(&BuiltinFunc_Puts)
         }
     };
 
