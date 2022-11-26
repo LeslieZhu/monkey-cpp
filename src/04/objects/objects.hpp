@@ -23,14 +23,35 @@ namespace objects
 		RETURN_VALUE,
 		FUNCTION,
 		ARRAY,
+		HASH,
 		BUILTIN
+	};
+
+	struct HashKey{
+		ObjectType Type;
+		uint64_t Value;
+
+		HashKey(ObjectType type, uint64_t val): Type(type), Value(val){}
+
+		bool operator==(const HashKey& rhs) const{
+			return (Type == rhs.Type && Value == rhs.Value);
+		}
+
+		bool operator!=(const HashKey& rhs) const{
+			return (Type != rhs.Type || Value != rhs.Value);
+		}
 	};
 
 	struct Object
 	{
 		virtual ~Object() {}
 		virtual ObjectType Type() { return ObjectType::Null; }
+		virtual bool Hashable(){ return false; }
 		virtual std::string Inspect() { return ""; }
+
+		virtual HashKey GetHashKey() {
+			return HashKey(Type(), 0);
+		}
 
 		std::string TypeStr()
 		{
@@ -52,6 +73,8 @@ namespace objects
 				return "FUNCTION";
 			case ObjectType::ARRAY:
 				return "ARRAY";
+			case ObjectType::HASH:
+				return "HASH";
 			default:
 				return "BadType";
 			}
@@ -67,11 +90,16 @@ namespace objects
 
 		virtual ~Integer() {}
 		virtual ObjectType Type() { return ObjectType::INTEGER; }
+		virtual bool Hashable(){ return true; }
 		virtual std::string Inspect()
 		{
 			std::stringstream oss;
 			oss << Value;
 			return oss.str();
+		}
+
+		virtual HashKey GetHashKey() {
+			return HashKey(Type(), static_cast<uint64_t>(Value));
 		}
 	};
 
@@ -83,11 +111,23 @@ namespace objects
 
 		virtual ~Boolean() {}
 		virtual ObjectType Type() { return ObjectType::BOOLEAN; }
+		virtual bool Hashable(){ return false; }
 		virtual std::string Inspect()
 		{
 			std::stringstream oss;
 			oss << (Value ? "true" : "false");
 			return oss.str();
+		}
+
+		virtual HashKey GetHashKey() {
+			if (Value)
+			{
+				return HashKey(Type(), 1);
+			}
+			else
+			{
+				return HashKey(Type(), 0);
+			}
 		}
 	};
 
@@ -100,9 +140,15 @@ namespace objects
 
 		virtual ~String() {}
 		virtual ObjectType Type() { return ObjectType::STRING; }
+		virtual bool Hashable(){ return false; }
 		virtual std::string Inspect()
 		{
 			return "\"" + Value + "\"";
+		}
+
+		virtual HashKey GetHashKey() {
+			auto intVal = std::hash<std::string>{}(Value);
+			return HashKey(Type(), static_cast<uint64_t>(intVal));
 		}
 	};
 

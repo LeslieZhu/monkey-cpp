@@ -3,6 +3,7 @@
 #include "test/lexer_test.hpp"
 #include "test/ast_test.hpp"
 #include "test/parser_test.hpp"
+#include "test/objects_test.hpp"
 #include "test/evaluator_test.hpp"
 
 int main(int argc, char **argv)
