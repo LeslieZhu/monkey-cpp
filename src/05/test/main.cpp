@@ -5,6 +5,7 @@
 #include "test/parser_test.hpp"
 #include "test/objects_test.hpp"
 #include "test/evaluator_test.hpp"
+#include "test/code_test.hpp"
 
 int main(int argc, char **argv)
 {

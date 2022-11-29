@@ -241,6 +241,7 @@ namespace objects
 			std::vector<std::string> items{};
 			for (auto &[key, pair] : Pairs)
 			{
+				[[maybe_unused]] auto x = key;
 				items.push_back(pair->Key->Inspect() + ": " + pair->Value->Inspect());
 			}
 			oss << "{" << ast::Join(items, ", ") << "}";
