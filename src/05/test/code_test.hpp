@@ -80,10 +80,7 @@ TEST(TestInstructionsString, BasicTest)
     bytecode::Instructions concated = bytecode::Instructions{};
     for(auto &vins: instructions)
     {
-        for(auto &ins: vins)
-        {
-            concated.push_back(ins);
-        }
+        concated.insert(concated.end(), vins.begin(), vins.end());
     }
 
     std::string concatedStr = bytecode::InstructionsString(concated);

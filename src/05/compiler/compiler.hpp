@@ -107,10 +107,8 @@ namespace compiler
         int addInstruction(bytecode::Instructions ins)
         {
             auto posNewInstruction = instructions.size();
-
-            for(auto &item: ins){
-                instructions.push_back(item);
-            }
+            
+            instructions.insert(instructions.end(), ins.begin(), ins.end());
             return posNewInstruction;
         }
 

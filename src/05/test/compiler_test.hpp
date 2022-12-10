@@ -47,10 +47,7 @@ bytecode::Instructions concatInstructions(std::vector<bytecode::Instructions>& s
 
     for(auto &vins: s)
     {
-        for(auto &ins: vins)
-        {
-            out.push_back(ins);
-        }
+        out.insert(out.end(), vins.begin(), vins.end());
     }
 
     return out;

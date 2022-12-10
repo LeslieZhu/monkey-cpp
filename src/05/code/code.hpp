@@ -134,7 +134,7 @@ namespace bytecode
         return instruction;
     }
 
-    std::pair<std::vector<int>, int> ReadOperands(std::shared_ptr<Definition> def, Instructions &ins, int pos) // offset start with '0'
+    std::pair<std::vector<int>, int> ReadOperands(std::shared_ptr<Definition> def, Instructions &ins, int pos)
     {
         int size = def->OperandWidths.size();
         std::vector<int> operands(size);
