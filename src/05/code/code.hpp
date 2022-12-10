@@ -9,6 +9,7 @@
 #include <fstream>
 #include <sstream>
 #include <iomanip>
+#include <cstring>
 
 namespace bytecode
 {
