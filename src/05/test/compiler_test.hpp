@@ -87,6 +87,9 @@ TEST(TestIntegerArithmetic, BasicAssertions)
                 },
                 {
                     bytecode::Make(bytecode::OpcodeType::OpConstant, {1})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpAdd, {})
                 }
             }
         }

@@ -36,6 +36,13 @@ TEST(TestMaker, BasicAssertions)
             {
                 static_cast<bytecode::Opcode>(bytecode::OpcodeType::OpConstant), opTest1, opTest2
             }
+        },
+        {
+            bytecode::OpcodeType::OpAdd,
+            {},
+            {
+                static_cast<bytecode::Opcode>(bytecode::OpcodeType::OpAdd)
+            }
         }
     };
 
@@ -55,7 +62,7 @@ TEST(TestInstructionsString, BasicTest)
 {
     std::vector<bytecode::Instructions> instructions{
         {
-            bytecode::Make(bytecode::OpcodeType::OpConstant, {1})
+            bytecode::Make(bytecode::OpcodeType::OpAdd,{})
         },
         {
             bytecode::Make(bytecode::OpcodeType::OpConstant, {2})
@@ -65,9 +72,9 @@ TEST(TestInstructionsString, BasicTest)
         }
     };
 
-    std::string expected = R""(0000 OpConstant 1
-0003 OpConstant 2
-0006 OpConstant 65535
+    std::string expected = R""(0000 OpAdd
+0001 OpConstant 2
+0004 OpConstant 65535
 )"";
 
     bytecode::Instructions concated = bytecode::Instructions{};

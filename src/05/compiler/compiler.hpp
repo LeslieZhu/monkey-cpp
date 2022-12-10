@@ -70,6 +70,14 @@ namespace compiler
                 {
                     return resultObj;
                 }
+
+                if (infixObj->Operator == "+")
+                {
+                    emit(bytecode::OpcodeType::OpAdd, {});
+                } 
+                else {
+                    return evaluator::newError("unknow operator: " + infixObj->Operator);
+                }
             }
             else if(node->GetNodeType() == ast::NodeType::IntegerLiteral)
             {

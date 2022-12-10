@@ -35,6 +35,7 @@ namespace bytecode
     enum class OpcodeType : Opcode
     {
         OpConstant = 1,
+        OpAdd,
     };
 
     //using Instructions = std::vector<OpcodeType>;
@@ -44,12 +45,14 @@ namespace bytecode
         std::string Name;
         std::vector<int> OperandWidths;
 
+        Definition(const std::string &name) : Name(name) {}
         Definition(const std::string &name, const int &width) : Name(name) { OperandWidths.push_back(width); }
         ~Definition() { OperandWidths.clear(); }
     };
 
     static const std::map<OpcodeType, std::shared_ptr<Definition>> definitions{
         {OpcodeType::OpConstant, std::make_shared<Definition>("OpConstant", 2)},
+        {OpcodeType::OpAdd, std::make_shared<Definition>("OpAdd")},
     };
 
     std::shared_ptr<Definition> Lookup(OpcodeType op){
@@ -170,6 +173,8 @@ namespace bytecode
 
         switch(operandCount)
         {
+            case 0:
+                return def->Name;
             case 1:
                 {
                     oss << def->Name << " " << operands[0];

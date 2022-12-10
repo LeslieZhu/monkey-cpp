@@ -54,6 +54,14 @@ namespace vm
             return nullptr;
         }
 
+        std::shared_ptr<objects::Object> Pop()
+        {
+            auto obj = stack[sp - 1];
+            sp -= 1;
+
+            return obj;
+        }
+
         std::shared_ptr<objects::Object> Run()
         {
             int size = instructions.size();
@@ -64,14 +72,27 @@ namespace vm
                 switch(op)
                 {
                     case bytecode::OpcodeType::OpConstant:
-                        uint16_t constIndex;
-                        bytecode::ReadUint16(instructions, ip+1, constIndex);
-                        ip += 2;
-                        auto result = Push(constants[constIndex]);
-                        if(evaluator::isError(result))
                         {
-                            return result;
+                            uint16_t constIndex;
+                            bytecode::ReadUint16(instructions, ip+1, constIndex);
+                            ip += 2;
+                            auto result = Push(constants[constIndex]);
+                            if(evaluator::isError(result))
+                            {
+                                return result;
+                            }
                         }
+                        break;
+                    case bytecode::OpcodeType::OpAdd:
+                        {
+                            auto right = Pop();
+                            auto left = Pop();
+                            auto rightObj = std::dynamic_pointer_cast<objects::Integer>(right);
+                            auto leftObj = std::dynamic_pointer_cast<objects::Integer>(left);
+                            auto result = leftObj->Value + rightObj->Value;
+                            Push(std::make_shared<objects::Integer>(result));
+                        }
+                        break;
                 }
             }
 
