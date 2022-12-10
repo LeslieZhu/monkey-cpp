@@ -7,8 +7,10 @@
 
 #include "lexer/lexer.hpp"
 #include "parser/parser.hpp"
-#include "objects/environment.hpp"
+//#include "objects/environment.hpp"
 #include "evaluator/evaluator.hpp"
+#include "compiler/compiler.hpp"
+#include "vm/vm.hpp"
 
 namespace repl
 {
@@ -41,7 +43,7 @@ namespace repl
 
     void Start()
     {
-        auto env = objects::NewEnvironment();
+        //auto env = objects::NewEnvironment();
 
         std::string line;
         while (true)
@@ -68,12 +70,31 @@ namespace repl
 
             std::unique_ptr<ast::Node> astNode(reinterpret_cast<ast::Node *>(pProgram.release()));
 
-            auto evaluated = evaluator::Eval(std::move(astNode), env);
+            /* auto evaluated = evaluator::Eval(std::move(astNode), env);
 
             if (evaluated != nullptr)
             {
                 std::cout << evaluated->Inspect() << std::endl;
+            } */
+
+            auto comp = compiler::New();
+            auto result = comp->Compile(std::move(astNode));
+            if(evaluator::isError(result))
+            {
+                std::cout << "Woops! Compilation failed: \n" + result->Inspect() << std::endl;
+                continue;
             }
+
+            auto machine = vm::New(comp->Bytecode());
+            auto runResult = machine->Run();
+            if(evaluator::isError(runResult))
+            {
+                std::cout << "Woops! Executing bytecode failed: \n" + runResult->Inspect() << std::endl;
+                continue;
+            }
+
+            auto stackTop = machine->StackTop();
+            std::cout << stackTop->Inspect() << std::endl;
         }
     }
 }
