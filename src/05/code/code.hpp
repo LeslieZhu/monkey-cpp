@@ -62,6 +62,23 @@ namespace bytecode
         return fit->second;
     }
 
+    void ReadUint16(Instructions &ins, int offset, uint16_t& uint16Value)
+    {
+        memcpy(&uint16Value, (unsigned char*)(&ins[offset]), sizeof(uint16Value));
+    }
+
+    void WriteUint16(Instructions &ins, int offset, uint16_t& uint16Value)
+    {
+        if(bytecode::BinaryEndian() == bytecode::BinaryEndianType::SMALLENDIAN) // must use BIGENDIAN
+        {
+            unsigned char *p = (unsigned char *)&uint16Value;
+            unsigned char tmp = *(&p[0]);
+            p[0] = p[1];
+            p[1] = tmp;
+        }
+        memcpy(&ins[offset], (unsigned char *)(&uint16Value), sizeof(uint16Value));
+    }
+
     std::vector<Opcode> Make(OpcodeType op, std::vector<int> operands)
     {
         auto def = Lookup(op);
@@ -88,7 +105,7 @@ namespace bytecode
                 case 2:
                     uint16_t uint16Value = static_cast<uint16_t>(operands[i]);
 
-                    if(bytecode::BinaryEndian() == bytecode::BinaryEndianType::SMALLENDIAN) // must use BIGENDIAN
+                    /* if(bytecode::BinaryEndian() == bytecode::BinaryEndianType::SMALLENDIAN) // must use BIGENDIAN
                     {
                         unsigned char *p = (unsigned char*)&uint16Value;
                         unsigned char tmp = *(&p[0]);
@@ -96,7 +113,8 @@ namespace bytecode
                         p[1] = tmp;
                     }
 
-                    memcpy(&instruction[offset], (unsigned char *)(&uint16Value), sizeof(uint16Value));
+                    memcpy(&instruction[offset], (unsigned char *)(&uint16Value), sizeof(uint16Value)); */
+                    WriteUint16(instruction, offset, uint16Value);
                     break;
             }
             offset += width;
@@ -119,7 +137,8 @@ namespace bytecode
                 case 2:
                     {
                         uint16_t uint16Value;
-                        memcpy(&uint16Value, (unsigned char*)(&ins[offset]), sizeof(uint16Value));
+                        //memcpy(&uint16Value, (unsigned char*)(&ins[offset]), sizeof(uint16Value));
+                        ReadUint16(ins, offset, uint16Value);
                         operands[i] = static_cast<int>(uint16Value);
                     }
                     break;
