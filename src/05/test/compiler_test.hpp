@@ -97,11 +97,11 @@ TEST(TestIntegerArithmetic, BasicAssertions)
         std::unique_ptr<ast::Node> astNode = TestHelper(test.input);
         std::shared_ptr<compiler::Compiler> compiler = compiler::New();
         
-        std::shared_ptr<objects::Error> errorObj = compiler->Compile(std::move(astNode));
-        EXPECT_NE(errorObj, nullptr);
+        auto resultObj = compiler->Compile(std::move(astNode));
+
+        EXPECT_EQ(resultObj, nullptr);
 
         std::shared_ptr<compiler::ByteCode> bytecodeObj = compiler->Bytecode();
-
         
         testInstructions(test.expectedInstructions, bytecodeObj->Instructions);
         testConstans(test.expectedConstants, bytecodeObj->Constants);
