@@ -15,13 +15,13 @@ extern void testIntegerObject(std::shared_ptr<objects::Object> obj, int64_t expe
 std::unique_ptr<ast::Node> TestHelper(const std::string& input)
 {
     std::unique_ptr<lexer::Lexer> pLexer = lexer::New(input);
-		std::unique_ptr<parser::Parser> pParser = parser::New(std::move(pLexer));
-		std::unique_ptr<ast::Program> pProgram{pParser->ParseProgram()};
-		printParserErrors(pParser->Errors());
+    std::unique_ptr<parser::Parser> pParser = parser::New(std::move(pLexer));
+    std::unique_ptr<ast::Program> pProgram{pParser->ParseProgram()};
+    printParserErrors(pParser->Errors());
 
-        std::unique_ptr<ast::Node> astNode(reinterpret_cast<ast::Node *>(pProgram.release()));
+    std::unique_ptr<ast::Node> astNode(reinterpret_cast<ast::Node *>(pProgram.release()));
 
-        return astNode;
+    return astNode;
 }
 
 void testConstans(std::vector<std::variant<int>> expected, std::vector<std::shared_ptr<objects::Object>> actual)
