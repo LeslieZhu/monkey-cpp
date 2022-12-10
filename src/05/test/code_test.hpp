@@ -65,11 +65,10 @@ TEST(TestInstructionsString, BasicTest)
         }
     };
 
-    std::string expected = R""(
-        0000 OpConstant 1
-        0003 OpConstant 2
-        0006 OpConstant 65535
-    )"";
+    std::string expected = R""(0000 OpConstant 1
+0003 OpConstant 2
+0006 OpConstant 65535
+)"";
 
     bytecode::Instructions concated = bytecode::Instructions{};
     for(auto &vins: instructions)
@@ -80,7 +79,9 @@ TEST(TestInstructionsString, BasicTest)
         }
     }
 
-    EXPECT_STREQ(bytecode::InstructionsString(concated).c_str(), expected.c_str());
+    std::string concatedStr = bytecode::InstructionsString(concated);
+
+    EXPECT_STREQ(concatedStr.c_str(), expected.c_str());
 }
 
 TEST(TestReadOperands, BasicTest)
@@ -102,7 +103,7 @@ TEST(TestReadOperands, BasicTest)
     {
         std::vector<bytecode::Opcode> instruction = bytecode::Make(test.op, test.Operands);
         std::shared_ptr<bytecode::Definition> def = bytecode::Lookup(test.op);
-        std::pair<std::vector<bytecode::Opcode>, int> operandRead = ReadOperands(def, instruction);
+        std::pair<std::vector<int>, int> operandRead = ReadOperands(def, instruction, 1);
 
         EXPECT_EQ(operandRead.second, test.byteRead);
 

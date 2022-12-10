@@ -6,7 +6,9 @@
 #include <vector>
 #include <map>
 #include <memory>
-#include <arpa/inet.h>
+#include <fstream>
+#include <sstream>
+#include <iomanip>
 
 namespace bytecode
 {
@@ -30,15 +32,12 @@ namespace bytecode
     using Opcode = uint8_t;
     using Instructions = std::vector<Opcode>;
 
-    std::string InstructionsString(Instructions& instructions)
-    {
-        return "";
-    }
-
     enum class OpcodeType : Opcode
     {
         OpConstant = 1,
     };
+
+    //using Instructions = std::vector<OpcodeType>;
 
     struct Definition
     {
@@ -131,11 +130,11 @@ namespace bytecode
         return instruction;
     }
 
-    std::pair<std::vector<Opcode>, int> ReadOperands(std::shared_ptr<Definition> def, Instructions &ins)
+    std::pair<std::vector<int>, int> ReadOperands(std::shared_ptr<Definition> def, Instructions &ins, int pos) // offset start with '0'
     {
         int size = def->OperandWidths.size();
-        std::vector<Opcode> operands = Make({}, {size});
-        int offset = 1;
+        std::vector<int> operands(size);
+        int offset = 0;
 
         for (int i = 0; i < size; i++)
         {
@@ -145,8 +144,7 @@ namespace bytecode
                 case 2:
                     {
                         uint16_t uint16Value;
-                        //memcpy(&uint16Value, (unsigned char*)(&ins[offset]), sizeof(uint16Value));
-                        ReadUint16(ins, offset, uint16Value);
+                        ReadUint16(ins, pos, uint16Value);
                         operands[i] = static_cast<int>(uint16Value);
                     }
                     break;
@@ -156,6 +154,58 @@ namespace bytecode
         }
 
         return std::make_pair(operands, offset);
+    }
+
+    std::string fmtInstruction(std::shared_ptr<Definition> def, std::vector<int> operands)
+    {
+        std::stringstream oss;
+
+        unsigned long operandCount = def->OperandWidths.size();
+
+        if(operands.size() != operandCount)
+        {
+            oss << "ERROR: operand len " << operands.size() << " dose not match defined " << operandCount << "\n";
+            return oss.str();
+        }
+
+        switch(operandCount)
+        {
+            case 1:
+                {
+                    oss << def->Name << " " << operands[0];
+                    return oss.str();
+                }
+                break;
+        }
+
+        oss << "ERROR: unhandled operandCount for " << def->Name << "\n";
+        return oss.str();
+    }
+
+    std::string InstructionsString(Instructions& ins)
+    {
+        std::stringstream oss;
+
+        int i = 0, size = ins.size();
+        while(i < size)
+        {
+            auto def = Lookup(static_cast<OpcodeType>(ins[i]));
+            if(def == nullptr)
+            {
+                std::cout << "ERROR: can not Lookup this: " << unsigned(ins[i]) << std::endl;
+                i += 1;
+                continue;
+            }
+
+            auto operands = ReadOperands(def, ins, i+1);
+
+            oss << std::setw(4) << std::setfill('0') << i << " ";
+            oss << fmtInstruction(def, operands.first) << "\n";
+
+            i += (1 + operands.second);
+        }
+
+        return oss.str();
     }
 }
 
