@@ -65,11 +65,19 @@ namespace bytecode
     void ReadUint16(Instructions &ins, int offset, uint16_t& uint16Value)
     {
         memcpy(&uint16Value, (unsigned char*)(&ins[offset]), sizeof(uint16Value));
+
+        if(bytecode::BinaryEndian() == bytecode::BinaryEndianType::SMALLENDIAN) // from BIGENDIAN
+        {
+            unsigned char *p = (unsigned char *)&uint16Value;
+            unsigned char tmp = *(&p[0]);
+            p[0] = p[1];
+            p[1] = tmp;
+        }
     }
 
     void WriteUint16(Instructions &ins, int offset, uint16_t& uint16Value)
     {
-        if(bytecode::BinaryEndian() == bytecode::BinaryEndianType::SMALLENDIAN) // must use BIGENDIAN
+        if(bytecode::BinaryEndian() == bytecode::BinaryEndianType::SMALLENDIAN) // to BIGENDIAN
         {
             unsigned char *p = (unsigned char *)&uint16Value;
             unsigned char tmp = *(&p[0]);
