@@ -28,7 +28,12 @@ namespace bytecode
     }
 
     using Opcode = uint8_t;
-    using Instructions = Opcode[];
+    using Instructions = std::vector<Opcode>;
+
+    std::string InstructionsString(Instructions& instructions)
+    {
+        return "";
+    }
 
     enum class OpcodeType : Opcode
     {
@@ -90,7 +95,7 @@ namespace bytecode
                         p[0] = p[1];
                         p[1] = tmp;
                     }
-                    
+
                     memcpy(&instruction[offset], (unsigned char *)(&uint16Value), sizeof(uint16Value));
                     break;
             }
@@ -100,7 +105,31 @@ namespace bytecode
         return instruction;
     }
 
-    
+    std::pair<std::vector<Opcode>, int> ReadOperands(std::shared_ptr<Definition> def, Instructions &ins)
+    {
+        int size = def->OperandWidths.size();
+        std::vector<Opcode> operands = Make({}, {size});
+        int offset = 1;
+
+        for (int i = 0; i < size; i++)
+        {
+            auto width = def->OperandWidths[i];
+            switch(width)
+            {
+                case 2:
+                    {
+                        uint16_t uint16Value;
+                        memcpy(&uint16Value, (unsigned char*)(&ins[offset]), sizeof(uint16Value));
+                        operands[i] = static_cast<int>(uint16Value);
+                    }
+                    break;
+            }
+
+            offset += width;
+        }
+
+        return std::make_pair(operands, offset);
+    }
 }
 
 #endif // H_CODE_H

@@ -6,6 +6,7 @@
 #include "test/objects_test.hpp"
 #include "test/evaluator_test.hpp"
 #include "test/code_test.hpp"
+#include "test/compiler_test.hpp"
 
 int main(int argc, char **argv)
 {
