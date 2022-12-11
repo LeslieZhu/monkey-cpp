@@ -30,16 +30,8 @@ void testExpectedObject(std::variant<int> expected, std::shared_ptr<objects::Obj
     }
 }
 
-
-TEST(testVMIntegerArithmetic, basicTest)
+void runVmTests(std::vector<vmTestCases>& tests)
 {
-    struct vmTestCases tests[]
-    {
-        {"1", 1},
-        {"2", 2},
-        {"1 + 2", 3}
-    };
-
     for(auto &test: tests)
     {
         std::unique_ptr<ast::Node> astNode = TestHelper(test.input);
@@ -57,5 +49,16 @@ TEST(testVMIntegerArithmetic, basicTest)
         auto stackElem = vm->StackTop();
         testExpectedObject(test.expected, stackElem);
     }
+}
+
+
+TEST(testVMIntegerArithmetic, basicTest)
+{
+    std::vector<vmTestCases> tests{
+        {"1", 1},
+        {"2", 2},
+        {"1 + 2", 3}};
+
+    runVmTests(tests);  
 }
 
