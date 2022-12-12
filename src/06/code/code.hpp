@@ -49,6 +49,9 @@ namespace bytecode
         OpEqual, // ==
         OpNotEqual, // !=
         OpGreaterThan, // >
+
+        OpMinus, // -
+        OpBang, // !
     };
 
     std::string OpcodeTypeStr(OpcodeType op)
@@ -85,6 +88,9 @@ namespace bytecode
         {OpcodeType::OpEqual, std::make_shared<Definition>("OpEqual")},
         {OpcodeType::OpNotEqual, std::make_shared<Definition>("OpNotEqual")},
         {OpcodeType::OpGreaterThan, std::make_shared<Definition>("OpGreaterThan")},
+
+        {OpcodeType::OpMinus, std::make_shared<Definition>("OpMinus")},
+        {OpcodeType::OpBang, std::make_shared<Definition>("OpBang")},
     };
 
     std::shared_ptr<Definition> Lookup(OpcodeType op){

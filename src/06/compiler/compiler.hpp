@@ -76,7 +76,7 @@ namespace compiler
 
                     
                     emit(bytecode::OpcodeType::OpGreaterThan, {});
-                    
+
                     return nullptr;
                 }
 
@@ -122,6 +122,27 @@ namespace compiler
                 }
                 else {
                     return evaluator::newError("unknow operator: " + infixObj->Operator);
+                }
+            }
+            else if(node->GetNodeType() == ast::NodeType::PrefixExpression)
+            {
+                std::shared_ptr<ast::PrefixExpression> prefixObj = std::dynamic_pointer_cast<ast::PrefixExpression>(node);
+                auto resultObj = Compile(prefixObj->pRight);
+                if (evaluator::isError(resultObj))
+                {
+                    return resultObj;
+                }
+
+                if(prefixObj->Operator == "!")
+                {
+                    emit(bytecode::OpcodeType::OpBang, {});
+                }
+                else if(prefixObj->Operator == "-")
+                {
+                    emit(bytecode::OpcodeType::OpMinus, {});
+                }
+                else{
+                    return evaluator::newError("unknow operator: " + prefixObj->Operator);
                 }
             }
             else if(node->GetNodeType() == ast::NodeType::IntegerLiteral)

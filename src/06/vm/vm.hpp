@@ -134,6 +134,24 @@ namespace vm
                             }
                         }
                         break;
+                    case bytecode::OpcodeType::OpBang:
+                        {
+                            auto result = executeBangOperator();
+                            if(evaluator::isError(result))
+                            {
+                                return result;
+                            }
+                        }
+                        break;
+                    case bytecode::OpcodeType::OpMinus:
+                        {
+                            auto result = executeMinusOperator();
+                            if(evaluator::isError(result))
+                            {
+                                return result;
+                            }
+                        }
+                        break;
                 }
             }
 
@@ -151,6 +169,36 @@ namespace vm
             } else {
                 return evaluator::newError("unsupported types for binary operaction: " + left->TypeStr() + " " + right->TypeStr());
             }
+        }
+
+        std::shared_ptr<objects::Object> executeBangOperator()
+        {
+            auto operand = Pop();
+
+            if(operand == objects::TRUE_OBJ)
+            {
+                return Push(objects::FALSE_OBJ);
+            }
+            else if(operand == objects::FALSE_OBJ)
+            {
+                return Push(objects::TRUE_OBJ);
+            }
+            else
+            {
+                return Push(objects::FALSE_OBJ);
+            }
+        }
+
+        std::shared_ptr<objects::Object> executeMinusOperator()
+        {
+            auto operand = Pop();
+
+            if(operand->Type() != objects::ObjectType::INTEGER)
+            {
+                return evaluator::newError("unsupported type for negation: " + operand->TypeStr());
+            }
+            auto integerObj = std::dynamic_pointer_cast<objects::Integer>(operand);
+            return Push(std::make_shared<objects::Integer>(-1 * integerObj->Value));
         }
 
         std::shared_ptr<objects::Object> executeBInaryIntegerOperaction(bytecode::OpcodeType op,

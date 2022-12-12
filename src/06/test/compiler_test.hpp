@@ -183,6 +183,21 @@ TEST(TestIntegerArithmetic, BasicAssertions)
                 }
             }
         },
+        {
+            "-1",
+            {1},
+            {
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpConstant, {0})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpMinus, {})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpPop, {})
+                }
+            }
+        },
     };
 
     for(auto &test: tests)
@@ -331,6 +346,21 @@ TEST(TestCompileBooleanExpression, BasicAssertions)
                 },
                 {
                     bytecode::Make(bytecode::OpcodeType::OpNotEqual, {})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpPop, {})
+                }
+            }
+        },
+        {
+            "!true",
+            {},
+            {
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpTrue, {})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpBang, {})
                 },
                 {
                     bytecode::Make(bytecode::OpcodeType::OpPop, {})

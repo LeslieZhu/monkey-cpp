@@ -73,7 +73,11 @@ TEST(testVMIntegerArithmetic, basicTest)
         {"2 * 2 *2 * 2 * 2", 32},
         {"5 * 2 + 10", 20},
         {"5 + 2 * 10", 25},
-        {"5 * (2 + 10)", 60}
+        {"5 * (2 + 10)", 60},
+        {"-5", -5},
+        {"-10", -10},
+        {"-50 + 100 + -50", 0},
+        {"(5 + 10 * 2 + 15 / 3) * 2 + -10", 50},
         };
 
     runVmTests(tests);  
@@ -101,6 +105,12 @@ TEST(testVMBooleanExpression, basicTest)
         {"(1 < 2) == false", false},
         {"(1 > 2) == true", false},
         {"(1 > 2) == false", true},
+        {"!true", false},
+        {"!false", true},
+        {"!5", false},
+        {"!!true", true},
+        {"!!false", false},
+        {"!!5", true}
         };
 
     runVmTests(tests);  
