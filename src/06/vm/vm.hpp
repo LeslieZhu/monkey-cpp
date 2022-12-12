@@ -89,13 +89,15 @@ namespace vm
                         }
                         break;
                     case bytecode::OpcodeType::OpAdd:
+                    case bytecode::OpcodeType::OpSub:
+                    case bytecode::OpcodeType::OpMul:
+                    case bytecode::OpcodeType::OpDiv:
                         {
-                            auto right = Pop();
-                            auto left = Pop();
-                            auto rightObj = std::dynamic_pointer_cast<objects::Integer>(right);
-                            auto leftObj = std::dynamic_pointer_cast<objects::Integer>(left);
-                            auto result = leftObj->Value + rightObj->Value;
-                            Push(std::make_shared<objects::Integer>(result));
+                            auto result = executeBinaryOperaction(op);
+                            if(evaluator::isError(result))
+                            {
+                                return result;
+                            }
                         }
                         break;
                     case bytecode::OpcodeType::OpPop:
@@ -107,6 +109,53 @@ namespace vm
             }
 
             return nullptr;
+        }
+
+        std::shared_ptr<objects::Object> executeBinaryOperaction(bytecode::OpcodeType op)
+        {
+            auto right = Pop();
+            auto left = Pop();
+            auto rightObj = std::dynamic_pointer_cast<objects::Integer>(right);
+            auto leftObj = std::dynamic_pointer_cast<objects::Integer>(left);
+
+            if(left->Type() == objects::ObjectType::INTEGER && right->Type() == objects::ObjectType::INTEGER)
+            {
+                return executeBInaryIntegerOperaction(op, left, right);
+            } else {
+                return evaluator::newError("unsupported types for binary operaction: " + left->TypeStr() + " " + right->TypeStr());
+            }
+        }
+
+        std::shared_ptr<objects::Object> executeBInaryIntegerOperaction(bytecode::OpcodeType op,
+                                                                        std::shared_ptr<objects::Object> left,
+                                                                        std::shared_ptr<objects::Object> right)
+        {
+            auto rightObj = std::dynamic_pointer_cast<objects::Integer>(right);
+            auto leftObj = std::dynamic_pointer_cast<objects::Integer>(left);
+
+            int64_t result = 0;
+
+            switch (op)
+            {
+            case bytecode::OpcodeType::OpAdd:
+                result = leftObj->Value + rightObj->Value;
+                break;
+            case bytecode::OpcodeType::OpSub:
+                result = leftObj->Value - rightObj->Value;
+                break;
+            case bytecode::OpcodeType::OpMul:
+                result = leftObj->Value * rightObj->Value;
+                break;
+            case bytecode::OpcodeType::OpDiv:
+                result = leftObj->Value / rightObj->Value;
+                break;
+            
+            default:
+                return evaluator::newError("unknow integer operator: " + bytecode::OpcodeTypeStr(op));
+                break;
+            }
+
+            return Push(std::make_shared<objects::Integer>(result));
         }
     };
 

@@ -76,6 +76,18 @@ namespace compiler
                 {
                     emit(bytecode::OpcodeType::OpAdd, {});
                 } 
+                else if (infixObj->Operator == "-")
+                {
+                    emit(bytecode::OpcodeType::OpSub, {});
+                }
+                else if (infixObj->Operator == "*")
+                {
+                    emit(bytecode::OpcodeType::OpMul, {});
+                }
+                else if (infixObj->Operator == "/")
+                {
+                    emit(bytecode::OpcodeType::OpDiv, {});
+                }
                 else {
                     return evaluator::newError("unknow operator: " + infixObj->Operator);
                 }
