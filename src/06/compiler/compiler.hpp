@@ -60,6 +60,26 @@ namespace compiler
             {
                 std::shared_ptr<ast::InfixExpression> infixObj = std::dynamic_pointer_cast<ast::InfixExpression>(node);
 
+                if (infixObj->Operator == "<")
+                {
+                    auto resultObj = Compile(infixObj->pRight);
+                    if (evaluator::isError(resultObj))
+                    {
+                        return resultObj;
+                    }
+
+                    resultObj = Compile(infixObj->pLeft);
+                    if (evaluator::isError(resultObj))
+                    {
+                        return resultObj;
+                    }
+
+                    
+                    emit(bytecode::OpcodeType::OpGreaterThan, {});
+                    
+                    return nullptr;
+                }
+
                 auto resultObj = Compile(infixObj->pLeft);
                 if (evaluator::isError(resultObj))
                 {
@@ -87,6 +107,18 @@ namespace compiler
                 else if (infixObj->Operator == "/")
                 {
                     emit(bytecode::OpcodeType::OpDiv, {});
+                }
+                else if (infixObj->Operator == ">")
+                {
+                    emit(bytecode::OpcodeType::OpGreaterThan, {});
+                }
+                else if (infixObj->Operator == "==")
+                {
+                    emit(bytecode::OpcodeType::OpEqual, {});
+                }
+                else if (infixObj->Operator == "!=")
+                {
+                    emit(bytecode::OpcodeType::OpNotEqual, {});
                 }
                 else {
                     return evaluator::newError("unknow operator: " + infixObj->Operator);

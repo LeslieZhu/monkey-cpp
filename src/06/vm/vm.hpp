@@ -123,6 +123,17 @@ namespace vm
                             }
                         }
                         break;
+                    case bytecode::OpcodeType::OpEqual:
+                    case bytecode::OpcodeType::OpNotEqual:
+                    case bytecode::OpcodeType::OpGreaterThan:
+                        {
+                            auto result = executeComparison(op);
+                            if(evaluator::isError(result))
+                            {
+                                return result;
+                            }
+                        }
+                        break;
                 }
             }
 
@@ -133,8 +144,6 @@ namespace vm
         {
             auto right = Pop();
             auto left = Pop();
-            auto rightObj = std::dynamic_pointer_cast<objects::Integer>(right);
-            auto leftObj = std::dynamic_pointer_cast<objects::Integer>(left);
 
             if(left->Type() == objects::ObjectType::INTEGER && right->Type() == objects::ObjectType::INTEGER)
             {
@@ -174,6 +183,54 @@ namespace vm
             }
 
             return Push(std::make_shared<objects::Integer>(result));
+        }
+
+        std::shared_ptr<objects::Object> executeComparison(bytecode::OpcodeType op)
+        {
+            auto right = Pop();
+            auto left = Pop();
+
+            if(left->Type() == objects::ObjectType::INTEGER && right->Type() == objects::ObjectType::INTEGER)
+            {
+                return executeIntegerComparison(op, left, right);
+            } 
+
+            switch (op)
+            {
+            case bytecode::OpcodeType::OpEqual:
+                return Push(evaluator::nativeBoolToBooleanObject(right == left));
+                break;
+            case bytecode::OpcodeType::OpNotEqual:
+                return Push(evaluator::nativeBoolToBooleanObject(right != left));
+                break;
+            
+            default:
+                return evaluator::newError("unknow operator: " + bytecode::OpcodeTypeStr(op) + " (" + left->TypeStr() + " " + right->TypeStr() + ")");
+            }
+        }
+
+        std::shared_ptr<objects::Object> executeIntegerComparison(bytecode::OpcodeType op,
+                                                                        std::shared_ptr<objects::Object> left,
+                                                                        std::shared_ptr<objects::Object> right)
+        {
+            auto rightObj = std::dynamic_pointer_cast<objects::Integer>(right);
+            auto leftObj = std::dynamic_pointer_cast<objects::Integer>(left);
+
+            switch (op)
+            {
+            case bytecode::OpcodeType::OpEqual:
+                return Push(evaluator::nativeBoolToBooleanObject(rightObj->Value == leftObj->Value));
+                break;
+            case bytecode::OpcodeType::OpNotEqual:
+                return Push(evaluator::nativeBoolToBooleanObject(rightObj->Value != leftObj->Value));
+                break;
+            case bytecode::OpcodeType::OpGreaterThan:
+                return Push(evaluator::nativeBoolToBooleanObject(leftObj->Value > rightObj->Value));
+                break;
+
+            default:
+                return evaluator::newError("unknow operator: " + bytecode::OpcodeTypeStr(op));
+            }
         }
     };
 

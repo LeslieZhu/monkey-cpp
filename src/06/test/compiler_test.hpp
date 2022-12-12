@@ -183,6 +183,28 @@ TEST(TestIntegerArithmetic, BasicAssertions)
                 }
             }
         },
+    };
+
+    for(auto &test: tests)
+    {
+        std::unique_ptr<ast::Node> astNode = TestHelper(test.input);
+        std::shared_ptr<compiler::Compiler> compiler = compiler::New();
+        
+        auto resultObj = compiler->Compile(std::move(astNode));
+
+        EXPECT_EQ(resultObj, nullptr);
+
+        std::shared_ptr<compiler::ByteCode> bytecodeObj = compiler->Bytecode();
+        
+        testInstructions(test.expectedInstructions, bytecodeObj->Instructions);
+        testConstans(test.expectedConstants, bytecodeObj->Constants);
+    }
+}
+
+TEST(TestCompileBooleanExpression, BasicAssertions)
+{
+    struct CompilerTestCase  tests[]
+    {
         {
             "true",
             {},
@@ -201,6 +223,114 @@ TEST(TestIntegerArithmetic, BasicAssertions)
             {
                 {
                     bytecode::Make(bytecode::OpcodeType::OpFalse, {})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpPop, {})
+                }
+            }
+        },
+        {
+            "1 > 2",
+            {1, 2},
+            {
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpConstant, {0})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpConstant, {1})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpGreaterThan, {})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpPop, {})
+                }
+            }
+        },
+        {
+            "1 < 2",
+            {2, 1},
+            {
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpConstant, {0})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpConstant, {1})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpGreaterThan, {})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpPop, {})
+                }
+            }
+        },
+        {
+            "1 == 2",
+            {1, 2},
+            {
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpConstant, {0})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpConstant, {1})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpEqual, {})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpPop, {})
+                }
+            }
+        },
+        {
+            "1 != 2",
+            {1, 2},
+            {
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpConstant, {0})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpConstant, {1})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpNotEqual, {})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpPop, {})
+                }
+            }
+        },
+        {
+            "true == false",
+            {},
+            {
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpTrue, {})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpFalse, {})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpEqual, {})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpPop, {})
+                }
+            }
+        },
+        {
+            "true != false",
+            {},
+            {
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpTrue, {})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpFalse, {})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpNotEqual, {})
                 },
                 {
                     bytecode::Make(bytecode::OpcodeType::OpPop, {})
