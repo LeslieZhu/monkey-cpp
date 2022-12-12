@@ -37,6 +37,7 @@ namespace bytecode
     {
         OpConstant = 1,
         OpAdd,
+        OpPop,
     };
 
     //using Instructions = std::vector<OpcodeType>;
@@ -54,6 +55,7 @@ namespace bytecode
     static const std::map<OpcodeType, std::shared_ptr<Definition>> definitions{
         {OpcodeType::OpConstant, std::make_shared<Definition>("OpConstant", 2)},
         {OpcodeType::OpAdd, std::make_shared<Definition>("OpAdd")},
+        {OpcodeType::OpPop, std::make_shared<Definition>("OpPop")},
     };
 
     std::shared_ptr<Definition> Lookup(OpcodeType op){

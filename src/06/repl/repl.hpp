@@ -93,7 +93,8 @@ namespace repl
                 continue;
             }
 
-            auto stackTop = machine->StackTop();
+            // auto stackTop = machine->StackTop();
+            auto stackTop = machine->LastPoppedStackElem();
             std::cout << stackTop->Inspect() << std::endl;
         }
     }

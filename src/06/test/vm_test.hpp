@@ -46,7 +46,8 @@ void runVmTests(std::vector<vmTestCases>& tests)
         auto vmresult = vm->Run();
         EXPECT_EQ(vmresult, nullptr);
 
-        auto stackElem = vm->StackTop();
+        // auto stackElem = vm->StackTop();
+        auto stackElem = vm->LastPoppedStackElem();
         testExpectedObject(test.expected, stackElem);
     }
 }

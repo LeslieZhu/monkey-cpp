@@ -54,6 +54,7 @@ namespace compiler
                 {
                     return resultObj;
                 }
+                emit(bytecode::OpcodeType::OpPop, {});
             }
             else if(node->GetNodeType() == ast::NodeType::InfixExpression)
             {

@@ -31,6 +31,11 @@ namespace vm
             sp = 0;
         }
 
+        std::shared_ptr<objects::Object> LastPoppedStackElem()
+        {
+            return stack[sp];
+        }
+
         std::shared_ptr<objects::Object> StackTop()
         {
             if(sp == 0)
@@ -91,6 +96,11 @@ namespace vm
                             auto leftObj = std::dynamic_pointer_cast<objects::Integer>(left);
                             auto result = leftObj->Value + rightObj->Value;
                             Push(std::make_shared<objects::Integer>(result));
+                        }
+                        break;
+                    case bytecode::OpcodeType::OpPop:
+                        {
+                            Pop();
                         }
                         break;
                 }
