@@ -400,7 +400,7 @@ TEST(TestCompileIfExpression, BasicAssertions)
                 },
                 {
                     // 0001
-                    bytecode::Make(bytecode::OpcodeType::OpJumpNotTruthy, {7})
+                    bytecode::Make(bytecode::OpcodeType::OpJumpNotTruthy, {10})
                 },
                 {
                     // 0004
@@ -408,14 +408,22 @@ TEST(TestCompileIfExpression, BasicAssertions)
                 },
                 {
                     // 0007
-                    bytecode::Make(bytecode::OpcodeType::OpPop, {})
+                    bytecode::Make(bytecode::OpcodeType::OpJump, {11})
                 },
                 {
-                    // 0008
-                    bytecode::Make(bytecode::OpcodeType::OpConstant, {1})
+                    // 0010
+                    bytecode::Make(bytecode::OpcodeType::OpNull, {})
                 },
                 {
                     // 0011
+                    bytecode::Make(bytecode::OpcodeType::OpPop, {})
+                },
+                {
+                    // 0012
+                    bytecode::Make(bytecode::OpcodeType::OpConstant, {1})
+                },
+                {
+                    // 0015
                     bytecode::Make(bytecode::OpcodeType::OpPop, {})
                 },
             }

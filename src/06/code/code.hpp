@@ -55,6 +55,8 @@ namespace bytecode
 
         OpJumpNotTruthy,
         OpJump,
+
+        OpNull, // null
     };
 
     std::string OpcodeTypeStr(OpcodeType op)
@@ -97,6 +99,8 @@ namespace bytecode
 
         {OpcodeType::OpJumpNotTruthy, std::make_shared<Definition>("OpJumpNotTruthy", 2)},
         {OpcodeType::OpJump, std::make_shared<Definition>("OpJump", 2)},
+
+        {OpcodeType::OpNull, std::make_shared<Definition>("OpNull")},
     };
 
     std::shared_ptr<Definition> Lookup(OpcodeType op){

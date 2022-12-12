@@ -192,18 +192,17 @@ namespace compiler
                     removeLastPop();
                 }
 
+                auto jumpPos = emit(bytecode::OpcodeType::OpJump, {9999});
+
+                auto afterConsequencePos = instructions.size();
+                changeOperand(jumpNotTruthyPos, afterConsequencePos);
+
                 if(ifObj->pAlternative == nullptr)
                 {
-                    auto afterConsequencePos = instructions.size();
-                    changeOperand(jumpNotTruthyPos, afterConsequencePos);
+                    emit(bytecode::OpcodeType::OpNull, {});
                 }
                 else
                 {
-                    auto jumpPos = emit(bytecode::OpcodeType::OpJump, {9999});
-
-                    auto afterConsequencePos = instructions.size();
-                    changeOperand(jumpNotTruthyPos, afterConsequencePos);
-
                     resultObj = Compile(ifObj->pAlternative);
                     if (evaluator::isError(resultObj))
                     {
@@ -214,10 +213,10 @@ namespace compiler
                     {
                         removeLastPop();
                     }
-
-                    afterConsequencePos = instructions.size();
-                    changeOperand(jumpPos, afterConsequencePos);
                 }
+
+                afterConsequencePos = instructions.size();
+                changeOperand(jumpPos, afterConsequencePos);
             }
             else if(node->GetNodeType() == ast::NodeType::IntegerLiteral)
             {

@@ -172,6 +172,13 @@ namespace vm
                             }
                         }
                         break;
+                    case bytecode::OpcodeType::OpNull:
+                        auto result = Push(objects::NULL_OBJ);
+                        if(evaluator::isError(result))
+                        {
+                            return result;
+                        }
+                        break;
                 }
             }
 

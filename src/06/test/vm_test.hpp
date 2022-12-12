@@ -16,13 +16,14 @@ extern void printParserErrors(std::vector<std::string> errors);
 extern void testIntegerObject(std::shared_ptr<objects::Object> obj, int64_t expected);
 extern std::unique_ptr<ast::Node> TestHelper(const std::string& input);
 extern void testBooleanObject(std::shared_ptr<objects::Object> obj, bool expected);
+extern void testNullObject(std::shared_ptr<objects::Object> obj);
 
 struct vmTestCases{
     std::string input;
-    std::variant<int, bool> expected;
+    std::variant<int, bool, void*> expected;
 };
 
-void testExpectedObject(std::variant<int, bool> expected, std::shared_ptr<objects::Object> actual)
+void testExpectedObject(std::variant<int, bool, void*> expected, std::shared_ptr<objects::Object> actual)
 {
     if(std::holds_alternative<int>(expected))
     {
@@ -33,6 +34,10 @@ void testExpectedObject(std::variant<int, bool> expected, std::shared_ptr<object
     {
         bool val = std::get<bool>(expected);
         testBooleanObject(actual, val);
+    }
+    else
+    {
+        testNullObject(actual);
     }
 }
 
@@ -126,7 +131,10 @@ TEST(testVMConditionals, basicTest)
         {"if(1) { 10 }", 10},
         {"if(1 < 2){ 10}", 10},
         {"if(1 < 2){ 10 } else { 20 }", 10},
-        {"if(1 > 2){ 10 } else { 20 }", 20}
+        {"if(1 > 2){ 10 } else { 20 }", 20},
+        {"if( 1 > 2) { 10 }", nullptr},
+        {"if( false ){ 10 }", nullptr},
+        {"if((if (false) { 10 })){ 10 } else { 20 }", 20}
         };
 
     runVmTests(tests);  
