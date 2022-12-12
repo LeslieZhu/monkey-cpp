@@ -15,18 +15,24 @@
 extern void printParserErrors(std::vector<std::string> errors);
 extern void testIntegerObject(std::shared_ptr<objects::Object> obj, int64_t expected);
 extern std::unique_ptr<ast::Node> TestHelper(const std::string& input);
+extern void testBooleanObject(std::shared_ptr<objects::Object> obj, bool expected);
 
 struct vmTestCases{
     std::string input;
-    std::variant<int> expected;
+    std::variant<int, bool> expected;
 };
 
-void testExpectedObject(std::variant<int> expected, std::shared_ptr<objects::Object> actual)
+void testExpectedObject(std::variant<int, bool> expected, std::shared_ptr<objects::Object> actual)
 {
     if(std::holds_alternative<int>(expected))
     {
         int val = std::get<int>(expected);
         testIntegerObject(actual, static_cast<int64_t>(val));
+    }
+    else if(std::holds_alternative<bool>(expected))
+    {
+        bool val = std::get<bool>(expected);
+        testBooleanObject(actual, val);
     }
 }
 
@@ -68,6 +74,16 @@ TEST(testVMIntegerArithmetic, basicTest)
         {"5 * 2 + 10", 20},
         {"5 + 2 * 10", 25},
         {"5 * (2 + 10)", 60}
+        };
+
+    runVmTests(tests);  
+}
+
+TEST(testVMBooleanExpression, basicTest)
+{
+    std::vector<vmTestCases> tests{
+        {"true", true},
+        {"false", false},
         };
 
     runVmTests(tests);  

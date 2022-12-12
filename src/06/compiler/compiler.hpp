@@ -99,6 +99,16 @@ namespace compiler
                 auto pos = addConstant(integerObj);
                 emit(bytecode::OpcodeType::OpConstant, {pos});
             }
+            else if(node->GetNodeType() == ast::NodeType::Boolean)
+            {
+                auto boolAst = std::dynamic_pointer_cast<ast::Boolean>(node);
+                if(boolAst->Value)
+                {
+                    emit(bytecode::OpcodeType::OpTrue,{});
+                } else {
+                    emit(bytecode::OpcodeType::OpFalse,{});
+                }
+            }
 
 
             return nullptr;

@@ -42,6 +42,9 @@ namespace bytecode
         OpSub, // '-'
         OpMul, // '*'
         OpDiv, // '/'
+
+        OpTrue, // true
+        OpFalse, // false
     };
 
     std::string OpcodeTypeStr(OpcodeType op)
@@ -66,10 +69,14 @@ namespace bytecode
     static const std::map<OpcodeType, std::shared_ptr<Definition>> definitions{
         {OpcodeType::OpConstant, std::make_shared<Definition>("OpConstant", 2)},
         {OpcodeType::OpPop, std::make_shared<Definition>("OpPop")},
+
         {OpcodeType::OpAdd, std::make_shared<Definition>("OpAdd")},
         {OpcodeType::OpSub, std::make_shared<Definition>("OpSub")},
         {OpcodeType::OpMul, std::make_shared<Definition>("OpMul")},
         {OpcodeType::OpDiv, std::make_shared<Definition>("OpDiv")},
+
+        {OpcodeType::OpTrue, std::make_shared<Definition>("OpTrue")},
+        {OpcodeType::OpFalse, std::make_shared<Definition>("OpFalse")},
     };
 
     std::shared_ptr<Definition> Lookup(OpcodeType op){

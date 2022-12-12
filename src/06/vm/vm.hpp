@@ -105,6 +105,24 @@ namespace vm
                             Pop();
                         }
                         break;
+                    case bytecode::OpcodeType::OpTrue:
+                        {
+                            auto result = Push(objects::TRUE_OBJ);
+                            if(evaluator::isError(result))
+                            {
+                                return result;
+                            }
+                        }
+                        break;
+                    case bytecode::OpcodeType::OpFalse:
+                        {
+                            auto result = Push(objects::FALSE_OBJ);
+                            if(evaluator::isError(result))
+                            {
+                                return result;
+                            }
+                        }
+                        break;
                 }
             }
 

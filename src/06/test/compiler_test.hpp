@@ -183,6 +183,30 @@ TEST(TestIntegerArithmetic, BasicAssertions)
                 }
             }
         },
+        {
+            "true",
+            {},
+            {
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpTrue, {})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpPop, {})
+                }
+            }
+        },
+        {
+            "false",
+            {},
+            {
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpFalse, {})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpPop, {})
+                }
+            }
+        },
     };
 
     for(auto &test: tests)
