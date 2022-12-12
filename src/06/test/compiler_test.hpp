@@ -384,3 +384,94 @@ TEST(TestCompileBooleanExpression, BasicAssertions)
         testConstans(test.expectedConstants, bytecodeObj->Constants);
     }
 }
+
+
+TEST(TestCompileIfExpression, BasicAssertions)
+{
+    struct CompilerTestCase  tests[]
+    {
+        {
+            "if( true ){ 10 }; 3333;",
+            {10, 3333},
+            {
+                {
+                    // 0000
+                    bytecode::Make(bytecode::OpcodeType::OpTrue, {})
+                },
+                {
+                    // 0001
+                    bytecode::Make(bytecode::OpcodeType::OpJumpNotTruthy, {7})
+                },
+                {
+                    // 0004
+                    bytecode::Make(bytecode::OpcodeType::OpConstant, {0})
+                },
+                {
+                    // 0007
+                    bytecode::Make(bytecode::OpcodeType::OpPop, {})
+                },
+                {
+                    // 0008
+                    bytecode::Make(bytecode::OpcodeType::OpConstant, {1})
+                },
+                {
+                    // 0011
+                    bytecode::Make(bytecode::OpcodeType::OpPop, {})
+                },
+            }
+        },
+        {
+            "if( true ){ 10 } else { 20 }; 3333;",
+            {10, 20, 3333},
+            {
+                {
+                    // 0000
+                    bytecode::Make(bytecode::OpcodeType::OpTrue, {})
+                },
+                {
+                    // 0001
+                    bytecode::Make(bytecode::OpcodeType::OpJumpNotTruthy, {10})
+                },
+                {
+                    // 0004
+                    bytecode::Make(bytecode::OpcodeType::OpConstant, {0})
+                },
+                {
+                    // 0007
+                    bytecode::Make(bytecode::OpcodeType::OpJump, {13})
+                },
+                {
+                    // 0010
+                    bytecode::Make(bytecode::OpcodeType::OpConstant, {1})
+                },
+                {
+                    // 0013
+                    bytecode::Make(bytecode::OpcodeType::OpPop, {})
+                },
+                {
+                    // 0014
+                    bytecode::Make(bytecode::OpcodeType::OpConstant, {2})
+                },
+                {
+                    // 0017
+                    bytecode::Make(bytecode::OpcodeType::OpPop, {})
+                },
+            }
+        },
+    };
+
+    for(auto &test: tests)
+    {
+        std::unique_ptr<ast::Node> astNode = TestHelper(test.input);
+        std::shared_ptr<compiler::Compiler> compiler = compiler::New();
+        
+        auto resultObj = compiler->Compile(std::move(astNode));
+
+        EXPECT_EQ(resultObj, nullptr);
+
+        std::shared_ptr<compiler::ByteCode> bytecodeObj = compiler->Bytecode();
+        
+        testInstructions(test.expectedInstructions, bytecodeObj->Instructions);
+        testConstans(test.expectedConstants, bytecodeObj->Constants);
+    }
+}

@@ -152,6 +152,26 @@ namespace vm
                             }
                         }
                         break;
+                    case bytecode::OpcodeType::OpJump:
+                        {
+                            uint16_t pos;
+                            bytecode::ReadUint16(instructions, ip+1, pos);
+                            ip = pos - 1;
+                        }
+                        break;
+                    case bytecode::OpcodeType::OpJumpNotTruthy:
+                        {
+                            uint16_t pos;
+                            bytecode::ReadUint16(instructions, ip+1, pos);
+                            ip += 2;
+                            
+                            auto condition = Pop();
+                            if(!evaluator::isTruthy(condition))
+                            {
+                                ip = pos - 1;
+                            }
+                        }
+                        break;
                 }
             }
 

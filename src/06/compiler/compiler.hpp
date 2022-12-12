@@ -24,10 +24,21 @@ namespace compiler
         }
     };
 
+    struct EmittedInstruction{
+        bytecode::OpcodeType Opcode;
+        int Position;
+
+        EmittedInstruction(){}
+        EmittedInstruction(bytecode::OpcodeType op, int pos): Opcode(op), Position(pos){}
+    };
+
     struct Compiler
     {
         bytecode::Instructions instructions;
         std::vector<std::shared_ptr<objects::Object>> constants;
+
+        EmittedInstruction lastInstruction;
+        EmittedInstruction prevInstruction;
 
         Compiler(){}
 
@@ -37,6 +48,18 @@ namespace compiler
             {
                 std::shared_ptr<ast::Program> program = std::dynamic_pointer_cast<ast::Program>(node);
                 for(auto &stmt: program->v_pStatements)
+                {
+                    auto resultObj = Compile(stmt);
+                    if(evaluator::isError(resultObj))
+                    {
+                        return resultObj;
+                    }
+                }
+            }
+            else if(node->GetNodeType() == ast::NodeType::BlockStatement)
+            {
+                std::shared_ptr<ast::BlockStatement> blockObj = std::dynamic_pointer_cast<ast::BlockStatement>(node);
+                for(auto &stmt: blockObj->v_pStatements)
                 {
                     auto resultObj = Compile(stmt);
                     if(evaluator::isError(resultObj))
@@ -145,6 +168,57 @@ namespace compiler
                     return evaluator::newError("unknow operator: " + prefixObj->Operator);
                 }
             }
+            else if(node->GetNodeType() == ast::NodeType::IfExpression)
+            {
+                std::shared_ptr<ast::IfExpression> ifObj = std::dynamic_pointer_cast<ast::IfExpression>(node);
+
+                auto resultObj = Compile(ifObj->pCondition);
+                if (evaluator::isError(resultObj))
+                {
+                    return resultObj;
+                }
+
+                // 预设一个偏移量方便后续回填
+                auto jumpNotTruthyPos =  emit(bytecode::OpcodeType::OpJumpNotTruthy, {9999});
+
+                resultObj = Compile(ifObj->pConsequence);
+                if (evaluator::isError(resultObj))
+                {
+                    return resultObj;
+                }
+
+                if(lastInstructionIsPop())
+                {
+                    removeLastPop();
+                }
+
+                if(ifObj->pAlternative == nullptr)
+                {
+                    auto afterConsequencePos = instructions.size();
+                    changeOperand(jumpNotTruthyPos, afterConsequencePos);
+                }
+                else
+                {
+                    auto jumpPos = emit(bytecode::OpcodeType::OpJump, {9999});
+
+                    auto afterConsequencePos = instructions.size();
+                    changeOperand(jumpNotTruthyPos, afterConsequencePos);
+
+                    resultObj = Compile(ifObj->pAlternative);
+                    if (evaluator::isError(resultObj))
+                    {
+                        return resultObj;
+                    }
+
+                    if (lastInstructionIsPop())
+                    {
+                        removeLastPop();
+                    }
+
+                    afterConsequencePos = instructions.size();
+                    changeOperand(jumpPos, afterConsequencePos);
+                }
+            }
             else if(node->GetNodeType() == ast::NodeType::IntegerLiteral)
             {
                 std::shared_ptr<ast::IntegerLiteral> integerLiteral = std::dynamic_pointer_cast<ast::IntegerLiteral>(node);
@@ -177,6 +251,8 @@ namespace compiler
         {
             auto ins = bytecode::Make(op, operands);
             auto pos = addInstruction(ins);
+
+            setLastInstruction(op, pos);        
             return pos;
         }
 
@@ -186,6 +262,39 @@ namespace compiler
             
             instructions.insert(instructions.end(), ins.begin(), ins.end());
             return posNewInstruction;
+        }
+
+        void setLastInstruction(bytecode::OpcodeType op, int pos)
+        {
+            prevInstruction = lastInstruction;
+            lastInstruction = EmittedInstruction(op, pos);
+        }
+
+        bool lastInstructionIsPop()
+        {
+            return (lastInstruction.Opcode == bytecode::OpcodeType::OpPop);
+        }
+
+        void removeLastPop()
+        {
+            instructions.assign(instructions.begin(), instructions.begin() + lastInstruction.Position);
+            lastInstruction = prevInstruction;
+        }
+
+        void replaceInstruction(int pos, const bytecode::Instructions& newInstruction)
+        {
+            for (int i = 0, size = newInstruction.size(); i < size; i++)
+            {
+                instructions[pos + i] = newInstruction[i];
+            }
+        }
+
+        void changeOperand(int opPos, int operand)
+        {
+            bytecode::OpcodeType op = static_cast<bytecode::OpcodeType>(instructions[opPos]);
+            auto newInstruction = bytecode::Make(op, {operand});
+
+            replaceInstruction(opPos, newInstruction);
         }
 
         std::shared_ptr<ByteCode> Bytecode()
