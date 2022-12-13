@@ -619,3 +619,84 @@ TEST(TestCompileStringExpression, BasicAssertions)
 
     runCompilerTests(tests);
 }
+
+TEST(TestCompileArrayLiterals, BasicAssertions)
+{
+    std::vector<CompilerTestCase>  tests
+    {
+        {
+            "[]",
+            {},
+            {
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpArray, {0})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpPop, {})
+                },
+            }
+        },
+        {
+            "[1, 2, 3]",
+            {1,2,3},
+            {
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpConstant, {0})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpConstant, {1})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpConstant, {2})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpArray, {3})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpPop, {})
+                },
+            }
+        },
+        {
+            "[1+2, 3-4, 5*6]",
+            {1,2,3,4,5,6},
+            {
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpConstant, {0})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpConstant, {1})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpAdd, {})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpConstant, {2})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpConstant, {3})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpSub, {})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpConstant, {4})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpConstant, {5})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpMul, {})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpArray, {3})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpPop, {})
+                },
+            }
+        },
+    };
+
+    runCompilerTests(tests);
+}

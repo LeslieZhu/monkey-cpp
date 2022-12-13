@@ -269,6 +269,20 @@ namespace compiler
                 auto pos = addConstant(strObj);
                 emit(bytecode::OpcodeType::OpConstant, {pos});
             }
+            else if(node->GetNodeType() == ast::NodeType::ArrayLiteral)
+            {
+                std::shared_ptr<ast::ArrayLiteral> arrayLiteral = std::dynamic_pointer_cast<ast::ArrayLiteral>(node);
+                for(auto &stmt: arrayLiteral->Elements)
+                {
+                    auto resultObj = Compile(stmt);
+                    if (evaluator::isError(resultObj))
+                    {
+                        return resultObj;
+                    }
+                }
+
+                emit(bytecode::OpcodeType::OpArray, {static_cast<int>(arrayLiteral->Elements.size())});
+            }
 
 
             return nullptr;

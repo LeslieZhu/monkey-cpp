@@ -204,6 +204,22 @@ namespace vm
                             }
                         }
                         break;
+                    case bytecode::OpcodeType::OpArray:
+                        {
+                            uint16_t numElements;
+                            bytecode::ReadUint16(instructions, ip+1, numElements);
+                            ip += 2;
+
+                            auto arrayObj = buildArray(sp - numElements, sp);
+                            sp -= numElements; // 移出
+
+                            auto result = Push(arrayObj);
+                            if(evaluator::isError(result))
+                            {
+                               return result;
+                            }
+                        }
+                        break;
                 }
             }
 
@@ -359,6 +375,17 @@ namespace vm
             default:
                 return evaluator::newError("unknow operator: " + bytecode::OpcodeTypeStr(op));
             }
+        }
+
+        std::shared_ptr<objects::Object> buildArray(const int& startIndex, const int& endIndex)
+        {
+            std::vector<std::shared_ptr<objects::Object>> elements(endIndex - startIndex);
+            for(int i=startIndex; i < endIndex; i++)
+            {
+                elements[i - startIndex] = stack[i];
+            }
+
+            return std::make_shared<objects::Array>(elements);
         }
     };
 

@@ -39,7 +39,13 @@ void testExpectedObject(std::variant<int, bool, std::string, void*> expected, st
     else if(std::holds_alternative<std::string>(expected))
     {
         std::string val = std::get<std::string>(expected);
-        testStringObject(actual, val);
+        if(std::shared_ptr<objects::Array> arrObj = std::dynamic_pointer_cast<objects::Array>(actual); arrObj != nullptr)
+        {
+            EXPECT_NE(arrObj, nullptr);
+            EXPECT_STREQ(arrObj->Inspect().c_str(), val.c_str());
+        } else {
+            testStringObject(actual, val);
+        }
     }
     else
     {
@@ -167,3 +173,15 @@ TEST(testVMStringExpression, basicTest)
 
     runVmTests(tests);  
 }
+
+TEST(testVMArrayLiterals, basicTest)
+{
+    std::vector<vmTestCases> tests{
+        {"[]", "[]"},
+        {"[1, 2, 3]", "[1, 2, 3]"},
+        {"[1+2, 3*4, 5+6]", "[3, 12, 11]"}
+        };
+
+    runVmTests(tests);  
+}
+
