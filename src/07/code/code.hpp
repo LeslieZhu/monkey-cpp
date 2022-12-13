@@ -63,6 +63,7 @@ namespace bytecode
 
         OpArray,
         OpHash,
+        OpIndex,
     };
 
     std::string OpcodeTypeStr(OpcodeType op)
@@ -155,6 +156,8 @@ namespace bytecode
 
         {OpcodeType::OpArray, std::make_shared<Definition>("OpArray", 2)},
         {OpcodeType::OpHash, std::make_shared<Definition>("OpHash", 2)},
+
+        {OpcodeType::OpIndex, std::make_shared<Definition>("OpIndex")},
     };
 
     std::shared_ptr<Definition> Lookup(OpcodeType op){
@@ -233,6 +236,11 @@ namespace bytecode
         }
 
         return instruction;
+    }
+
+    std::vector<Opcode> Make(OpcodeType op)
+    {
+        return Make(op, {});
     }
 
     std::pair<std::vector<int>, int> ReadOperands(std::shared_ptr<Definition> def, Instructions &ins, int pos)

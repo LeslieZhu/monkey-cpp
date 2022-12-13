@@ -788,3 +788,76 @@ TEST(TestCompileHashLiterals, BasicAssertions)
 
     runCompilerTests(tests);
 }
+
+
+TEST(TestCompileIndexExpressions, BasicAssertions)
+{
+    std::vector<CompilerTestCase>  tests
+    {
+        {
+            "[1, 2, 3][1 + 1]",
+            {1, 2, 3, 1, 1},
+            {
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpConstant, {0})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpConstant, {1})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpConstant, {2})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpArray, {3})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpConstant, {3})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpConstant, {4})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpAdd, {})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpIndex, {})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpPop, {})
+                },
+            }
+        },
+        {
+            "{1: 2}[2 - 1]",
+            {1,2,2,1},
+            {
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpConstant, {0})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpConstant, {1})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpHash, {2})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpConstant, {2})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpConstant, {3})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpSub)
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpIndex)
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpPop, {})
+                },
+            }
+        },
+    };
+
+    runCompilerTests(tests);
+}

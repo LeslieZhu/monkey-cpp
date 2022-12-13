@@ -246,6 +246,18 @@ namespace vm
                             }
                         }
                         break;
+                    case bytecode::OpcodeType::OpIndex:
+                        {
+                            auto index = Pop();
+                            auto left = Pop();
+
+                            auto result = executeIndexExpression(left, index);
+                            if(evaluator::isError(result))
+                            {
+                               return result;
+                            }
+                        }
+                        break;
                 }
             }
 
@@ -259,11 +271,11 @@ namespace vm
 
             if(left->Type() == objects::ObjectType::INTEGER && right->Type() == objects::ObjectType::INTEGER)
             {
-                return executeBInaryIntegerOperaction(op, left, right);
+                return executeBinaryIntegerOperaction(op, left, right);
             } 
             else if(left->Type() == objects::ObjectType::STRING && right->Type() == objects::ObjectType::STRING)
             {
-                return executeBInaryStringOperaction(op, left, right);
+                return executeBinaryStringOperaction(op, left, right);
             }
             else {
                 return evaluator::newError("unsupported types for binary operaction: " + left->TypeStr() + " " + right->TypeStr());
@@ -300,7 +312,7 @@ namespace vm
             return Push(std::make_shared<objects::Integer>(-1 * integerObj->Value));
         }
 
-        std::shared_ptr<objects::Object> executeBInaryIntegerOperaction(bytecode::OpcodeType op,
+        std::shared_ptr<objects::Object> executeBinaryIntegerOperaction(bytecode::OpcodeType op,
                                                                         std::shared_ptr<objects::Object> left,
                                                                         std::shared_ptr<objects::Object> right)
         {
@@ -332,7 +344,7 @@ namespace vm
             return Push(std::make_shared<objects::Integer>(result));
         }
 
-        std::shared_ptr<objects::Object> executeBInaryStringOperaction(bytecode::OpcodeType op,
+        std::shared_ptr<objects::Object> executeBinaryStringOperaction(bytecode::OpcodeType op,
                                                                         std::shared_ptr<objects::Object> left,
                                                                         std::shared_ptr<objects::Object> right)
         {
@@ -400,6 +412,36 @@ namespace vm
 
             default:
                 return evaluator::newError("unknow operator: " + bytecode::OpcodeTypeStr(op));
+            }
+        }
+
+        std::shared_ptr<objects::Object> executeIndexExpression(std::shared_ptr<objects::Object> left,
+                                                                std::shared_ptr<objects::Object> index)
+        {
+            if(left->Type() == objects::ObjectType::ARRAY && index->Type() == objects::ObjectType::INTEGER)
+            {
+                auto result = evaluator::evalArrayIndexExpression(left, index);
+                if (evaluator::isError(result))
+                {
+                    return result;
+                }
+
+                return Push(result);
+                
+            }
+            else if(left->Type() == objects::ObjectType::HASH)
+            {
+                auto result = evaluator::evalHashIndexExpression(left, index);
+                if (evaluator::isError(result))
+                {
+                    return result;
+                }
+
+                return Push(result);
+            }
+            else 
+            {
+                return evaluator::newError("index operator not supported: " + left->TypeStr());
             }
         }
 

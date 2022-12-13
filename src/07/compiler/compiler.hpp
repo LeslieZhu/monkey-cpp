@@ -313,6 +313,24 @@ namespace compiler
 
                 emit(bytecode::OpcodeType::OpHash, {2 * static_cast<int>(hashLiteral->Pairs.size())});              
             }
+            else if(node->GetNodeType() == ast::NodeType::IndexExpression)
+            {
+                std::shared_ptr<ast::IndexExpression> indexObj = std::dynamic_pointer_cast<ast::IndexExpression>(node);
+
+                auto resultObj = Compile(indexObj->Left);
+                if (evaluator::isError(resultObj))
+                {
+                    return resultObj;
+                }
+
+                resultObj = Compile(indexObj->Index);
+                if (evaluator::isError(resultObj))
+                {
+                    return resultObj;
+                }
+
+                emit(bytecode::OpcodeType::OpIndex);
+            }
 
 
             return nullptr;
@@ -331,6 +349,11 @@ namespace compiler
 
             setLastInstruction(op, pos);        
             return pos;
+        }
+
+        int emit(bytecode::OpcodeType op)
+        {
+            return emit(op, {});
         }
 
         int addInstruction(bytecode::Instructions ins)
