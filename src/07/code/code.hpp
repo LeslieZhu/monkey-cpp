@@ -57,6 +57,9 @@ namespace bytecode
         OpJump,
 
         OpNull, // null
+
+        OpGetGlobal,
+        OpSetGlobal,
     };
 
     std::string OpcodeTypeStr(OpcodeType op)
@@ -101,6 +104,9 @@ namespace bytecode
         {OpcodeType::OpJump, std::make_shared<Definition>("OpJump", 2)},
 
         {OpcodeType::OpNull, std::make_shared<Definition>("OpNull")},
+
+        {OpcodeType::OpGetGlobal, std::make_shared<Definition>("OpGetGlobal", 2)},
+        {OpcodeType::OpSetGlobal, std::make_shared<Definition>("OpSetGlobal", 2)},
     };
 
     std::shared_ptr<Definition> Lookup(OpcodeType op){

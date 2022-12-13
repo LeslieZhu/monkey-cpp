@@ -70,6 +70,24 @@ struct CompilerTestCase{
     std::vector<bytecode::Instructions> expectedInstructions;
 };
 
+void runCompilerTests(std::vector<CompilerTestCase>& tests)
+{
+    for(auto &test: tests)
+    {
+        std::unique_ptr<ast::Node> astNode = TestHelper(test.input);
+        std::shared_ptr<compiler::Compiler> compiler = compiler::New();
+        
+        auto resultObj = compiler->Compile(std::move(astNode));
+
+        EXPECT_EQ(resultObj, nullptr);
+
+        std::shared_ptr<compiler::ByteCode> bytecodeObj = compiler->Bytecode();
+        
+        testInstructions(test.expectedInstructions, bytecodeObj->Instructions);
+        testConstans(test.expectedConstants, bytecodeObj->Constants);
+    }
+}
+
 
 TEST(TestIntegerArithmetic, BasicAssertions)
 {
@@ -482,4 +500,73 @@ TEST(TestCompileIfExpression, BasicAssertions)
         testInstructions(test.expectedInstructions, bytecodeObj->Instructions);
         testConstans(test.expectedConstants, bytecodeObj->Constants);
     }
+}
+
+TEST(TestCompileGlobalStatements, BasicAssertions)
+{
+    std::vector<CompilerTestCase>  tests
+    {
+        {
+            "let one = 1; let two = 2;",
+            {1,2},
+            {
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpConstant, {0})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpSetGlobal, {0})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpConstant, {1})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpSetGlobal, {1})
+                },
+            }
+        },
+        {
+            "let one = 1; one;",
+            {1},
+            {
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpConstant, {0})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpSetGlobal, {0})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpGetGlobal, {0})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpPop, {})
+                },
+            }
+        },
+        {
+            "let one = 1; let two = one; two;",
+            {1},
+            {
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpConstant, {0})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpSetGlobal, {0})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpGetGlobal, {0})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpSetGlobal, {1})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpGetGlobal, {1})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpPop, {})
+                },
+            }
+        },
+    };
+
+    runCompilerTests(tests);
 }

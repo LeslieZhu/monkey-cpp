@@ -10,6 +10,7 @@
 #include "objects/objects.hpp"
 #include "code/code.hpp"
 #include "evaluator/evaluator.hpp"
+#include "compiler/symbol_table.hpp"
 
 namespace compiler
 {
@@ -40,7 +41,11 @@ namespace compiler
         EmittedInstruction lastInstruction;
         EmittedInstruction prevInstruction;
 
-        Compiler(){}
+        std::shared_ptr<compiler::SymbolTable> symbolTable;
+
+        Compiler(){
+            symbolTable = compiler::NewSymbolTable();
+        }
 
         std::shared_ptr<objects::Error> Compile([[maybe_unused]] std::shared_ptr<ast::Node> node)
         {
@@ -217,6 +222,28 @@ namespace compiler
 
                 afterConsequencePos = instructions.size();
                 changeOperand(jumpPos, afterConsequencePos);
+            }
+            else if(node->GetNodeType() == ast::NodeType::LetStatement)
+            {
+                std::shared_ptr<ast::LetStatement> letObj = std::dynamic_pointer_cast<ast::LetStatement>(node);
+                auto resultObj = Compile(letObj->pValue);
+                if (evaluator::isError(resultObj))
+                {
+                    return resultObj;
+                }
+
+                auto symbol = symbolTable->Define(letObj->pName->Value);
+                emit(bytecode::OpcodeType::OpSetGlobal, {symbol->Index});
+            }
+            else if(node->GetNodeType() == ast::NodeType::Identifier)
+            {
+                std::shared_ptr<ast::Identifier> identObj = std::dynamic_pointer_cast<ast::Identifier>(node);
+                auto symbol = symbolTable->Resolve(identObj->Value);
+                if(symbol == nullptr)
+                {
+                    return evaluator::newError("undefined variable " + identObj->Value);
+                }
+                emit(bytecode::OpcodeType::OpGetGlobal, {symbol->Index});
             }
             else if(node->GetNodeType() == ast::NodeType::IntegerLiteral)
             {
