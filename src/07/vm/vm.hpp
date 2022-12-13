@@ -15,9 +15,11 @@
 namespace vm
 {
     const int StackSize = 2048;
+    const int GlobalsSize = 65536;
 
     struct VM{
         std::vector<std::shared_ptr<objects::Object>> constants;
+        std::vector<std::shared_ptr<objects::Object>> globals;
         bytecode::Instructions instructions;
 
         std::vector<std::shared_ptr<objects::Object>> stack;
@@ -27,6 +29,7 @@ namespace vm
         constants(objs),
         instructions(ins)
         {
+            globals.resize(GlobalsSize);
             stack.resize(StackSize);
             sp = 0;
         }
@@ -173,10 +176,32 @@ namespace vm
                         }
                         break;
                     case bytecode::OpcodeType::OpNull:
-                        auto result = Push(objects::NULL_OBJ);
-                        if(evaluator::isError(result))
                         {
-                            return result;
+                            auto result = Push(objects::NULL_OBJ);
+                            if(evaluator::isError(result))
+                            {
+                                return result;
+                            }
+                        }
+                        break;
+                    case bytecode::OpcodeType::OpSetGlobal:
+                        {
+                            uint16_t globalIndex;
+                            bytecode::ReadUint16(instructions, ip+1, globalIndex);
+                            ip += 2;
+                            globals[globalIndex] = Pop();
+                        }
+                        break;
+                    case bytecode::OpcodeType::OpGetGlobal:
+                        {
+                            uint16_t globalIndex;
+                            bytecode::ReadUint16(instructions, ip+1, globalIndex);
+                            ip += 2;
+                            auto result = Push(globals[globalIndex]);
+                            if(evaluator::isError(result))
+                            {
+                               return result;
+                            }
                         }
                         break;
                 }

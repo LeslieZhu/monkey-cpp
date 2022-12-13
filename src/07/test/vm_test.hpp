@@ -139,3 +139,14 @@ TEST(testVMConditionals, basicTest)
 
     runVmTests(tests);  
 }
+
+TEST(testVMGlobalLetStatements, basicTest)
+{
+    std::vector<vmTestCases> tests{
+        {"let one = 1; one", 1},
+        {"let one = 1; let two = 2; one + two;", 3},
+        {"let one = 1; let two = one + one; one + two;", 3}
+        };
+
+    runVmTests(tests);  
+}
