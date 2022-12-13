@@ -218,7 +218,12 @@ namespace vm
             if(left->Type() == objects::ObjectType::INTEGER && right->Type() == objects::ObjectType::INTEGER)
             {
                 return executeBInaryIntegerOperaction(op, left, right);
-            } else {
+            } 
+            else if(left->Type() == objects::ObjectType::STRING && right->Type() == objects::ObjectType::STRING)
+            {
+                return executeBInaryStringOperaction(op, left, right);
+            }
+            else {
                 return evaluator::newError("unsupported types for binary operaction: " + left->TypeStr() + " " + right->TypeStr());
             }
         }
@@ -283,6 +288,29 @@ namespace vm
             }
 
             return Push(std::make_shared<objects::Integer>(result));
+        }
+
+        std::shared_ptr<objects::Object> executeBInaryStringOperaction(bytecode::OpcodeType op,
+                                                                        std::shared_ptr<objects::Object> left,
+                                                                        std::shared_ptr<objects::Object> right)
+        {
+            auto rightObj = std::dynamic_pointer_cast<objects::String>(right);
+            auto leftObj = std::dynamic_pointer_cast<objects::String>(left);
+
+            std::string result;
+
+            switch (op)
+            {
+            case bytecode::OpcodeType::OpAdd:
+                result = leftObj->Value + rightObj->Value;
+                break;
+            
+            default:
+                return evaluator::newError("unknow string operator: " + bytecode::OpcodeTypeStr(op));
+                break;
+            }
+
+            return Push(std::make_shared<objects::String>(result));
         }
 
         std::shared_ptr<objects::Object> executeComparison(bytecode::OpcodeType op)

@@ -262,6 +262,13 @@ namespace compiler
                     emit(bytecode::OpcodeType::OpFalse,{});
                 }
             }
+            else if(node->GetNodeType() == ast::NodeType::StringLiteral)
+            {
+                std::shared_ptr<ast::StringLiteral> stringLiteral = std::dynamic_pointer_cast<ast::StringLiteral>(node);
+                auto strObj = std::make_shared<objects::String>(stringLiteral->Value);
+                auto pos = addConstant(strObj);
+                emit(bytecode::OpcodeType::OpConstant, {pos});
+            }
 
 
             return nullptr;

@@ -11,6 +11,7 @@
 
 extern void printParserErrors(std::vector<std::string> errors);
 extern void testIntegerObject(std::shared_ptr<objects::Object> obj, int64_t expected);
+extern void testStringObject(std::shared_ptr<objects::Object> obj, std::string expected);
 
 std::unique_ptr<ast::Node> TestHelper(const std::string& input)
 {
@@ -24,7 +25,7 @@ std::unique_ptr<ast::Node> TestHelper(const std::string& input)
     return astNode;
 }
 
-void testConstans(std::vector<std::variant<int>> expected, std::vector<std::shared_ptr<objects::Object>> actual)
+void testConstans(std::vector<std::variant<int, std::string>> expected, std::vector<std::shared_ptr<objects::Object>> actual)
 {
     EXPECT_EQ(expected.size(), actual.size());
 
@@ -35,6 +36,11 @@ void testConstans(std::vector<std::variant<int>> expected, std::vector<std::shar
         {
             int64_t val = static_cast<int64_t>(std::get<int>(constant));
             testIntegerObject(actual[i], val);
+        }
+        else if(std::holds_alternative<std::string>(constant))
+        {
+            std::string val = std::get<std::string>(constant);
+            testStringObject(actual[i], val);
         }
 
         i += 1;
@@ -66,7 +72,7 @@ void testInstructions(std::vector<bytecode::Instructions>& expected, bytecode::I
 
 struct CompilerTestCase{
     std::string input;
-    std::vector<std::variant<int>> expectedConstants;
+    std::vector<std::variant<int, std::string>> expectedConstants;
     std::vector<bytecode::Instructions> expectedInstructions;
 };
 
@@ -560,6 +566,49 @@ TEST(TestCompileGlobalStatements, BasicAssertions)
                 },
                 {
                     bytecode::Make(bytecode::OpcodeType::OpGetGlobal, {1})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpPop, {})
+                },
+            }
+        },
+    };
+
+    runCompilerTests(tests);
+}
+
+TEST(TestCompileStringExpression, BasicAssertions)
+{
+    std::vector<CompilerTestCase>  tests
+    {
+        {
+            R""(
+                "monkey"
+            )"",
+            {"monkey"},
+            {
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpConstant, {0})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpPop, {})
+                },
+            }
+        },
+        {
+            R""(
+                "mon" + "key"
+            )"",
+            {"mon","key"},
+            {
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpConstant, {0})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpConstant, {1})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpAdd, {})
                 },
                 {
                     bytecode::Make(bytecode::OpcodeType::OpPop, {})

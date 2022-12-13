@@ -64,9 +64,47 @@ namespace bytecode
 
     std::string OpcodeTypeStr(OpcodeType op)
     {
-        std::stringstream oss;
-        oss << static_cast<int>(op);
-        return oss.str();
+        switch(op)
+        {
+            case OpcodeType::OpConstant:
+                return "OpConstant";
+            case OpcodeType::OpPop:
+                return "OpPop";
+            case OpcodeType::OpAdd:
+                return "+";
+            case OpcodeType::OpSub:
+                return "-";
+            case OpcodeType::OpMul:
+                return "*";
+            case OpcodeType::OpDiv:
+                return "/";
+            case OpcodeType::OpTrue:
+                return "OpTrue";
+            case OpcodeType::OpFalse:
+                return "OpFalse";
+            case OpcodeType::OpEqual:
+                return "==";
+            case OpcodeType::OpNotEqual:
+                return "!=";
+            case OpcodeType::OpGreaterThan:
+                return ">";
+            case OpcodeType::OpMinus:
+                return "-";
+            case OpcodeType::OpBang:
+                return "!";
+            case OpcodeType::OpJumpNotTruthy:
+                return "OpJumpNotTruthy";
+            case OpcodeType::OpJump:
+                return "OpJump";
+            case OpcodeType::OpNull:
+                return "OpNull";
+            case OpcodeType::OpGetGlobal:
+                return "OpGetGlobal";
+            case OpcodeType::OpSetGlobal:
+                return "OpSetGlobal";
+            default:
+                return std::to_string(static_cast<int>(op));
+        }
     }
 
     //using Instructions = std::vector<OpcodeType>;

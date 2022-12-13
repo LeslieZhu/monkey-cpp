@@ -17,13 +17,14 @@ extern void testIntegerObject(std::shared_ptr<objects::Object> obj, int64_t expe
 extern std::unique_ptr<ast::Node> TestHelper(const std::string& input);
 extern void testBooleanObject(std::shared_ptr<objects::Object> obj, bool expected);
 extern void testNullObject(std::shared_ptr<objects::Object> obj);
+extern void testStringObject(std::shared_ptr<objects::Object> obj, std::string expected);
 
 struct vmTestCases{
     std::string input;
-    std::variant<int, bool, void*> expected;
+    std::variant<int, bool, std::string, void*> expected;
 };
 
-void testExpectedObject(std::variant<int, bool, void*> expected, std::shared_ptr<objects::Object> actual)
+void testExpectedObject(std::variant<int, bool, std::string, void*> expected, std::shared_ptr<objects::Object> actual)
 {
     if(std::holds_alternative<int>(expected))
     {
@@ -34,6 +35,11 @@ void testExpectedObject(std::variant<int, bool, void*> expected, std::shared_ptr
     {
         bool val = std::get<bool>(expected);
         testBooleanObject(actual, val);
+    }
+    else if(std::holds_alternative<std::string>(expected))
+    {
+        std::string val = std::get<std::string>(expected);
+        testStringObject(actual, val);
     }
     else
     {
@@ -146,6 +152,17 @@ TEST(testVMGlobalLetStatements, basicTest)
         {"let one = 1; one", 1},
         {"let one = 1; let two = 2; one + two;", 3},
         {"let one = 1; let two = one + one; one + two;", 3}
+        };
+
+    runVmTests(tests);  
+}
+
+TEST(testVMStringExpression, basicTest)
+{
+    std::vector<vmTestCases> tests{
+        {"\"monkey\"", "monkey"},
+        {"\"mon\" + \"key\";", "monkey"},
+        {"\"mon\" + \"key\" + \"banana\";", "monkeybanana"}
         };
 
     runVmTests(tests);  
