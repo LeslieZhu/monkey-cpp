@@ -333,6 +333,15 @@ namespace compiler
     {
         return std::make_shared<Compiler>();
     }
+
+    std::shared_ptr<Compiler> NewWithState(std::shared_ptr<compiler::SymbolTable> symbolTable,
+                                           std::vector<std::shared_ptr<objects::Object>>& constants)
+    {
+        std::shared_ptr<Compiler> compiler = New();
+        compiler->symbolTable = symbolTable;
+        compiler->constants = constants;
+        return compiler;
+    }
 }
 
 #endif // H_COMPILER_H

@@ -45,6 +45,10 @@ namespace repl
     {
         //auto env = objects::NewEnvironment();
 
+        std::vector<std::shared_ptr<objects::Object>> constants{};
+        std::vector<std::shared_ptr<objects::Object>> globals(vm::GlobalsSize);
+        auto symbolTable = compiler::NewSymbolTable();
+
         std::string line;
         while (true)
         {
@@ -77,7 +81,8 @@ namespace repl
                 std::cout << evaluated->Inspect() << std::endl;
             } */
 
-            auto comp = compiler::New();
+            //auto comp = compiler::New();
+            auto comp = compiler::NewWithState(symbolTable, constants);
             auto result = comp->Compile(std::move(astNode));
             if(evaluator::isError(result))
             {
@@ -85,7 +90,10 @@ namespace repl
                 continue;
             }
 
-            auto machine = vm::New(comp->Bytecode());
+            //auto machine = vm::New(comp->Bytecode());
+            auto code = comp->Bytecode();
+            auto machine = vm::NewWithGlobalsStore(code, globals);
+
             auto runResult = machine->Run();
             if(evaluator::isError(runResult))
             {
@@ -96,6 +104,9 @@ namespace repl
             // auto stackTop = machine->StackTop();
             auto stackTop = machine->LastPoppedStackElem();
             std::cout << stackTop->Inspect() << std::endl;
+
+            constants = code->Constants;
+            globals = machine->globals;
         }
     }
 }

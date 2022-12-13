@@ -338,6 +338,14 @@ namespace vm
     {
         return std::make_shared<VM>(bytecode->Constants, bytecode->Instructions);
     }
+
+    std::shared_ptr<VM> NewWithGlobalsStore(std::shared_ptr<compiler::ByteCode> bytecode,
+                                            std::vector<std::shared_ptr<objects::Object>>& s)
+    {
+        std::shared_ptr<VM> vm = New(bytecode);
+        vm->globals = s;
+        return vm;
+    }
 }
 
 
