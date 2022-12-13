@@ -5,6 +5,7 @@
 #include <vector>
 #include <map>
 #include <memory>
+#include <algorithm>
 
 #include "ast/ast.hpp"
 #include "objects/objects.hpp"
@@ -282,6 +283,35 @@ namespace compiler
                 }
 
                 emit(bytecode::OpcodeType::OpArray, {static_cast<int>(arrayLiteral->Elements.size())});
+            }
+            else if(node->GetNodeType() == ast::NodeType::HashLiteral)
+            {
+                std::shared_ptr<ast::HashLiteral> hashLiteral = std::dynamic_pointer_cast<ast::HashLiteral>(node);
+
+                std::vector<std::shared_ptr<ast::Expression>> keys{};
+                for(auto &pair: hashLiteral->Pairs)
+                {
+                    keys.push_back(pair.first);
+                }
+
+                std::sort(keys.begin(), keys.end(), [](const auto &lhs, const auto& rhs){ return lhs->String() < rhs->String(); });
+
+                for(auto &key: keys)
+                {
+                    auto resultObj = Compile(key);
+                    if (evaluator::isError(resultObj))
+                    {
+                        return resultObj;
+                    }
+
+                    resultObj = Compile(hashLiteral->Pairs[key]);
+                    if (evaluator::isError(resultObj))
+                    {
+                        return resultObj;
+                    }
+                }  
+
+                emit(bytecode::OpcodeType::OpHash, {2 * static_cast<int>(hashLiteral->Pairs.size())});              
             }
 
 

@@ -43,7 +43,13 @@ void testExpectedObject(std::variant<int, bool, std::string, void*> expected, st
         {
             EXPECT_NE(arrObj, nullptr);
             EXPECT_STREQ(arrObj->Inspect().c_str(), val.c_str());
-        } else {
+        } 
+        else if(std::shared_ptr<objects::Hash> hashObj = std::dynamic_pointer_cast<objects::Hash>(actual); hashObj != nullptr)
+        {
+            EXPECT_NE(hashObj, nullptr);
+            EXPECT_STREQ(hashObj->Inspect().c_str(), val.c_str());
+        }
+        else {
             testStringObject(actual, val);
         }
     }
@@ -185,3 +191,13 @@ TEST(testVMArrayLiterals, basicTest)
     runVmTests(tests);  
 }
 
+TEST(testVMHashLiterals, basicTest)
+{
+    std::vector<vmTestCases> tests{
+        {"{}", "{}"},
+        {"{1: 2, 2: 3}", "{1: 2, 2: 3}"},
+        {"{1 + 1: 2 * 2, 3 + 3: 4 * 4}", "{2: 4, 6: 16}"}
+        };
+
+    runVmTests(tests);  
+}

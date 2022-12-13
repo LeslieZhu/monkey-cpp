@@ -211,9 +211,35 @@ namespace vm
                             ip += 2;
 
                             auto arrayObj = buildArray(sp - numElements, sp);
+                            if(evaluator::isError(arrayObj))
+                            {
+                               return arrayObj;
+                            }
+
                             sp -= numElements; // 移出
 
                             auto result = Push(arrayObj);
+                            if(evaluator::isError(result))
+                            {
+                               return result;
+                            }
+                        }
+                        break;
+                    case bytecode::OpcodeType::OpHash:
+                        {
+                            uint16_t numElements;
+                            bytecode::ReadUint16(instructions, ip+1, numElements);
+                            ip += 2;
+
+                            auto hashObj = buildHash(sp - numElements, sp);
+                            if(evaluator::isError(hashObj))
+                            {
+                               return hashObj;
+                            }
+
+                            sp -= numElements;
+
+                            auto result = Push(hashObj);
                             if(evaluator::isError(result))
                             {
                                return result;
@@ -386,6 +412,28 @@ namespace vm
             }
 
             return std::make_shared<objects::Array>(elements);
+        }
+
+        std::shared_ptr<objects::Object> buildHash(const int& startIndex, const int& endIndex)
+        {
+            std::map<objects::HashKey, std::shared_ptr<objects::HashPair>> hashPairs;
+            
+            for(int i=startIndex; i < endIndex; i += 2)
+            {
+                auto key = stack[i];
+                auto value = stack[i+1];
+
+                auto pair = std::make_shared<objects::HashPair>(key, value);
+
+                if(!key->Hashable())
+                {
+                    return evaluator::newError("unusable as hash type: " + key->TypeStr());
+                }
+
+                hashPairs[key->GetHashKey()] = pair;
+            }
+
+            return std::make_shared<objects::Hash>(hashPairs);
         }
     };
 

@@ -62,6 +62,7 @@ namespace bytecode
         OpSetGlobal,
 
         OpArray,
+        OpHash,
     };
 
     std::string OpcodeTypeStr(OpcodeType op)
@@ -106,6 +107,8 @@ namespace bytecode
                 return "OpSetGlobal";
             case OpcodeType::OpArray:
                 return "OpArray";
+            case OpcodeType::OpHash:
+                return "OpHash";
             default:
                 return std::to_string(static_cast<int>(op));
         }
@@ -151,6 +154,7 @@ namespace bytecode
         {OpcodeType::OpSetGlobal, std::make_shared<Definition>("OpSetGlobal", 2)},
 
         {OpcodeType::OpArray, std::make_shared<Definition>("OpArray", 2)},
+        {OpcodeType::OpHash, std::make_shared<Definition>("OpHash", 2)},
     };
 
     std::shared_ptr<Definition> Lookup(OpcodeType op){
