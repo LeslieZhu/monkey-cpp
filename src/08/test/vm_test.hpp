@@ -172,9 +172,9 @@ TEST(testVMGlobalLetStatements, basicTest)
 TEST(testVMStringExpression, basicTest)
 {
     std::vector<vmTestCases> tests{
-        {"\"monkey\"", "monkey"},
-        {"\"mon\" + \"key\";", "monkey"},
-        {"\"mon\" + \"key\" + \"banana\";", "monkeybanana"}
+        {"\"monkey\"", "monkey"s},
+        {"\"mon\" + \"key\";", "monkey"s},
+        {"\"mon\" + \"key\" + \"banana\";", "monkeybanana"s}
         };
 
     runVmTests(tests);  
@@ -183,9 +183,9 @@ TEST(testVMStringExpression, basicTest)
 TEST(testVMArrayLiterals, basicTest)
 {
     std::vector<vmTestCases> tests{
-        {"[]", "[]"},
-        {"[1, 2, 3]", "[1, 2, 3]"},
-        {"[1+2, 3*4, 5+6]", "[3, 12, 11]"}
+        {"[]", "[]"s},
+        {"[1, 2, 3]", "[1, 2, 3]"s},
+        {"[1+2, 3*4, 5+6]", "[3, 12, 11]"s}
         };
 
     runVmTests(tests);  
@@ -194,9 +194,9 @@ TEST(testVMArrayLiterals, basicTest)
 TEST(testVMHashLiterals, basicTest)
 {
     std::vector<vmTestCases> tests{
-        {"{}", "{}"},
-        {"{1: 2, 2: 3}", "{1: 2, 2: 3}"},
-        {"{1 + 1: 2 * 2, 3 + 3: 4 * 4}", "{2: 4, 6: 16}"}
+        {"{}", "{}"s},
+        {"{1: 2, 2: 3}", "{1: 2, 2: 3}"s},
+        {"{1 + 1: 2 * 2, 3 + 3: 4 * 4}", "{2: 4, 6: 16}"s}
         };
 
     runVmTests(tests);  
