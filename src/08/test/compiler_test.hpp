@@ -25,28 +25,6 @@ std::unique_ptr<ast::Node> TestHelper(const std::string& input)
     return astNode;
 }
 
-void testConstans(std::vector<std::variant<int, std::string>> expected, std::vector<std::shared_ptr<objects::Object>> actual)
-{
-    EXPECT_EQ(expected.size(), actual.size());
-
-    int i = 0;
-    for(auto &constant: expected)
-    {
-        if(std::holds_alternative<int>(constant))
-        {
-            int64_t val = static_cast<int64_t>(std::get<int>(constant));
-            testIntegerObject(actual[i], val);
-        }
-        else if(std::holds_alternative<std::string>(constant))
-        {
-            std::string val = std::get<std::string>(constant);
-            testStringObject(actual[i], val);
-        }
-
-        i += 1;
-    }
-}
-
 bytecode::Instructions concatInstructions(std::vector<bytecode::Instructions>& s)
 {
     bytecode::Instructions out{};
@@ -70,9 +48,41 @@ void testInstructions(std::vector<bytecode::Instructions>& expected, bytecode::I
     }
 }
 
+void testConstans(std::vector<std::variant<int, std::string, std::vector<bytecode::Instructions>>> expected,
+                  std::vector<std::shared_ptr<objects::Object>> actual)
+{
+    EXPECT_EQ(expected.size(), actual.size());
+
+    int i = 0;
+    for(auto &constant: expected)
+    {
+        if(std::holds_alternative<int>(constant))
+        {
+            int64_t val = static_cast<int64_t>(std::get<int>(constant));
+            testIntegerObject(actual[i], val);
+        }
+        else if(std::holds_alternative<std::string>(constant))
+        {
+            std::string val = std::get<std::string>(constant);
+            testStringObject(actual[i], val);
+        }
+        else if(std::holds_alternative<std::vector<bytecode::Instructions>>(constant))
+        {
+            std::vector<bytecode::Instructions> ins = std::get<std::vector<bytecode::Instructions>>(constant);
+
+            std::shared_ptr<objects::CompiledFunction> funcObj = std::dynamic_pointer_cast<objects::CompiledFunction>(actual[i]);
+            EXPECT_NE(funcObj, nullptr);
+
+            testInstructions(ins, funcObj->Instructions);
+        }
+
+        i += 1;
+    }
+}
+
 struct CompilerTestCase{
     std::string input;
-    std::vector<std::variant<int, std::string>> expectedConstants;
+    std::vector<std::variant<int, std::string, std::vector<bytecode::Instructions>>> expectedConstants;
     std::vector<bytecode::Instructions> expectedInstructions;
 };
 
@@ -861,3 +871,32 @@ TEST(TestCompileIndexExpressions, BasicAssertions)
 
     runCompilerTests(tests);
 }
+
+
+TEST(TestCompileFunctions, BasicAssertions)
+{
+    std::vector<bytecode::Instructions> ins{
+        {bytecode::Make(bytecode::OpcodeType::OpConstant, {0})},
+        {bytecode::Make(bytecode::OpcodeType::OpConstant, {1})},
+        {bytecode::Make(bytecode::OpcodeType::OpAdd)},
+        {bytecode::Make(bytecode::OpcodeType::OpReturnValue)},
+    };
+
+    std::vector<CompilerTestCase> tests
+    {
+        {
+            "fn(){ return 5 + 10}",
+            {
+                5, 
+                10, 
+                ins
+            },
+            {
+                {bytecode::Make(bytecode::OpcodeType::OpConstant, {2})},
+                {bytecode::Make(bytecode::OpcodeType::OpPop)},
+            }
+        },
+    };
+
+    runCompilerTests(tests);
+} 

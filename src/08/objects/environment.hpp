@@ -8,6 +8,7 @@
 #include <memory>
 
 #include "objects/objects.hpp"
+#include "code/code.hpp"
 
 namespace objects
 {
@@ -126,6 +127,19 @@ namespace objects
 
 			oss << "fn(" << ast::Join(params, ", ") << ") {\n"
 				<< Body->String() << "\n}";
+			return oss.str();
+		}
+	};
+
+	struct CompiledFunction: Object
+	{
+		bytecode::Instructions Instructions;
+
+		virtual ObjectType Type() { return ObjectType::COMPILED_FUNCTION; }
+		virtual std::string Inspect()
+		{
+			std::stringstream oss;
+			oss << this;
 			return oss.str();
 		}
 	};

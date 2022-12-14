@@ -35,7 +35,7 @@ namespace bytecode
 
     enum class OpcodeType : Opcode
     {
-        OpConstant = 1,
+        OpConstant = 0,
         OpPop,
 
         OpAdd, // '+'
@@ -64,6 +64,10 @@ namespace bytecode
         OpArray,
         OpHash,
         OpIndex,
+
+        OpCall,
+        OpReturnValue,
+        OpReturn,   // return null
     };
 
     std::string OpcodeTypeStr(OpcodeType op)
@@ -110,6 +114,14 @@ namespace bytecode
                 return "OpArray";
             case OpcodeType::OpHash:
                 return "OpHash";
+            case OpcodeType::OpIndex:
+                return "OpIndex";
+            case OpcodeType::OpCall:
+                return "OpCall";
+            case OpcodeType::OpReturnValue:
+                return "OpReturnValue";
+            case OpcodeType::OpReturn:
+                return "OpReturn";
             default:
                 return std::to_string(static_cast<int>(op));
         }
@@ -158,6 +170,10 @@ namespace bytecode
         {OpcodeType::OpHash, std::make_shared<Definition>("OpHash", 2)},
 
         {OpcodeType::OpIndex, std::make_shared<Definition>("OpIndex")},
+
+        {OpcodeType::OpCall, std::make_shared<Definition>("OpCall")},
+        {OpcodeType::OpReturnValue, std::make_shared<Definition>("OpReturnValue")},
+        {OpcodeType::OpReturn, std::make_shared<Definition>("OpReturn")},
     };
 
     std::shared_ptr<Definition> Lookup(OpcodeType op){

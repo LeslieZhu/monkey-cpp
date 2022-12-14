@@ -24,7 +24,8 @@ namespace objects
 		FUNCTION,
 		ARRAY,
 		HASH,
-		BUILTIN
+		BUILTIN,
+		COMPILED_FUNCTION,
 	};
 
 	struct HashKey
