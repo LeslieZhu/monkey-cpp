@@ -11,27 +11,32 @@
 #include "compiler/compiler.hpp"
 #include "code/code.hpp"
 #include "evaluator/evaluator.hpp"
+#include "vm/frame.hpp"
 
 namespace vm
 {
+    const int FrameSize = 1024;
     const int StackSize = 2048;
     const int GlobalsSize = 65536;
 
     struct VM{
         std::vector<std::shared_ptr<objects::Object>> constants;
         std::vector<std::shared_ptr<objects::Object>> globals;
-        bytecode::Instructions instructions;
 
         std::vector<std::shared_ptr<objects::Object>> stack;
         int sp; // 始终指向调用栈的下一个空闲位置，栈顶的值是stack[sp-1]
 
-        VM(std::vector<std::shared_ptr<objects::Object>>& objs, bytecode::Instructions& ins):
+        std::vector<std::shared_ptr<Frame>> frames;
+        int frameIndex;
+
+        VM(std::vector<std::shared_ptr<objects::Object>>& objs, std::vector<std::shared_ptr<Frame>>& f):
         constants(objs),
-        instructions(ins)
+        frames(f)
         {
             globals.resize(GlobalsSize);
             stack.resize(StackSize);
             sp = 0;
+            frameIndex = 1;
         }
 
         std::shared_ptr<objects::Object> LastPoppedStackElem()
@@ -72,10 +77,21 @@ namespace vm
 
         std::shared_ptr<objects::Object> Run()
         {
-            int size = instructions.size();
-            for(int ip=0; ip < size; ip++)
+            auto frame = currentFrame();
+
+            int ip;
+            bytecode::OpcodeType op;
+
+            bytecode::Instructions instructions = frame->Instruction();
+            int ins_size = frame->Instruction().size();
+
+            while(frame->ip < ins_size - 1) // frame->ip start with -1
             {
-                bytecode::OpcodeType op = static_cast<bytecode::OpcodeType>(instructions[ip]);
+                frame->ip += 1;
+
+                ip = frame->ip;
+                //instructions = frame->Instruction();
+                op = static_cast<bytecode::OpcodeType>(instructions[ip]);
 
                 switch(op)
                 {
@@ -83,7 +99,7 @@ namespace vm
                         {
                             uint16_t constIndex;
                             bytecode::ReadUint16(instructions, ip+1, constIndex);
-                            ip += 2;
+                            frame->ip += 2;
                             auto result = Push(constants[constIndex]);
                             if(evaluator::isError(result))
                             {
@@ -159,19 +175,19 @@ namespace vm
                         {
                             uint16_t pos;
                             bytecode::ReadUint16(instructions, ip+1, pos);
-                            ip = pos - 1;
+                            frame->ip = pos - 1;
                         }
                         break;
                     case bytecode::OpcodeType::OpJumpNotTruthy:
                         {
                             uint16_t pos;
                             bytecode::ReadUint16(instructions, ip+1, pos);
-                            ip += 2;
+                            frame->ip += 2;
                             
                             auto condition = Pop();
                             if(!evaluator::isTruthy(condition))
                             {
-                                ip = pos - 1;
+                                frame->ip = pos - 1;
                             }
                         }
                         break;
@@ -188,7 +204,7 @@ namespace vm
                         {
                             uint16_t globalIndex;
                             bytecode::ReadUint16(instructions, ip+1, globalIndex);
-                            ip += 2;
+                            frame->ip += 2;
                             globals[globalIndex] = Pop();
                         }
                         break;
@@ -196,7 +212,7 @@ namespace vm
                         {
                             uint16_t globalIndex;
                             bytecode::ReadUint16(instructions, ip+1, globalIndex);
-                            ip += 2;
+                            frame->ip += 2;
                             auto result = Push(globals[globalIndex]);
                             if(evaluator::isError(result))
                             {
@@ -208,7 +224,7 @@ namespace vm
                         {
                             uint16_t numElements;
                             bytecode::ReadUint16(instructions, ip+1, numElements);
-                            ip += 2;
+                            frame->ip += 2;
 
                             auto arrayObj = buildArray(sp - numElements, sp);
                             if(evaluator::isError(arrayObj))
@@ -229,7 +245,7 @@ namespace vm
                         {
                             uint16_t numElements;
                             bytecode::ReadUint16(instructions, ip+1, numElements);
-                            ip += 2;
+                            frame->ip += 2;
 
                             auto hashObj = buildHash(sp - numElements, sp);
                             if(evaluator::isError(hashObj))
@@ -477,11 +493,34 @@ namespace vm
 
             return std::make_shared<objects::Hash>(hashPairs);
         }
+
+        std::shared_ptr<Frame> currentFrame()
+        {
+            return frames[frameIndex - 1];
+        }
+
+        void pushFrame(std::shared_ptr<Frame> f)
+        {
+            frames[frameIndex] = f;
+            frameIndex += 1;
+        }
+
+        std::shared_ptr<Frame> popFrame()
+        {
+            frameIndex -= 1;
+            return frames[frameIndex];
+        }
     };
 
     std::shared_ptr<VM> New(std::shared_ptr<compiler::ByteCode> bytecode)
     {
-        return std::make_shared<VM>(bytecode->Constants, bytecode->Instructions);
+        auto mainFn = std::make_shared<objects::CompiledFunction>(bytecode->Instructions);
+        auto mainFrame = NewFrame(mainFn);
+
+        std::vector<std::shared_ptr<Frame>> frames(FrameSize);
+        frames[0] = mainFrame;
+
+        return std::make_shared<VM>(bytecode->Constants, frames);
     }
 
     std::shared_ptr<VM> NewWithGlobalsStore(std::shared_ptr<compiler::ByteCode> bytecode,
