@@ -379,6 +379,18 @@ namespace compiler
 
                 emit(bytecode::OpcodeType::OpReturnValue);
             }
+            else if(node->GetNodeType() == ast::NodeType::CallExpression)
+            {
+                std::shared_ptr<ast::CallExpression> callObj = std::dynamic_pointer_cast<ast::CallExpression>(node);
+
+                auto resultObj = Compile(callObj->pFunction);
+                if (evaluator::isError(resultObj))
+                {
+                    return resultObj;
+                }
+
+                emit(bytecode::OpcodeType::OpCall);
+            }
 
 
             return nullptr;

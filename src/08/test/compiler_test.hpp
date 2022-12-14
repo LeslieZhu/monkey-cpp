@@ -891,6 +891,14 @@ TEST(TestCompileFunctions, BasicAssertions)
         {
             {bytecode::Make(bytecode::OpcodeType::OpReturn)},
         },
+        {
+            {bytecode::Make(bytecode::OpcodeType::OpConstant, {0})},
+            {bytecode::Make(bytecode::OpcodeType::OpReturnValue)},
+        },
+        {
+            {bytecode::Make(bytecode::OpcodeType::OpConstant, {0})},
+            {bytecode::Make(bytecode::OpcodeType::OpReturnValue)},
+        },
     };
 
     std::vector<CompilerTestCase> tests
@@ -938,6 +946,32 @@ TEST(TestCompileFunctions, BasicAssertions)
             },
             {
                 {bytecode::Make(bytecode::OpcodeType::OpConstant, {0})},
+                {bytecode::Make(bytecode::OpcodeType::OpPop)},
+            }
+        },
+        {
+            "fn(){ 24 }()",
+            {
+                24,
+                ins[3]
+            },
+            {
+                {bytecode::Make(bytecode::OpcodeType::OpConstant, {1})},
+                {bytecode::Make(bytecode::OpcodeType::OpCall)},
+                {bytecode::Make(bytecode::OpcodeType::OpPop)},
+            }
+        },
+        {
+            "let noArg = fn(){ 24 }; noArg();",
+            {
+                24,
+                ins[4]
+            },
+            {
+                {bytecode::Make(bytecode::OpcodeType::OpConstant, {1})},
+                {bytecode::Make(bytecode::OpcodeType::OpSetGlobal, {0})},
+                {bytecode::Make(bytecode::OpcodeType::OpGetGlobal, {0})},
+                {bytecode::Make(bytecode::OpcodeType::OpCall)},
                 {bytecode::Make(bytecode::OpcodeType::OpPop)},
             }
         },
