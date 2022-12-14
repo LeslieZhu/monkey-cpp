@@ -875,11 +875,22 @@ TEST(TestCompileIndexExpressions, BasicAssertions)
 
 TEST(TestCompileFunctions, BasicAssertions)
 {
-    std::vector<bytecode::Instructions> ins{
-        {bytecode::Make(bytecode::OpcodeType::OpConstant, {0})},
-        {bytecode::Make(bytecode::OpcodeType::OpConstant, {1})},
-        {bytecode::Make(bytecode::OpcodeType::OpAdd)},
-        {bytecode::Make(bytecode::OpcodeType::OpReturnValue)},
+    std::vector<std::vector<bytecode::Instructions>> ins{
+        {
+            {bytecode::Make(bytecode::OpcodeType::OpConstant, {0})},
+            {bytecode::Make(bytecode::OpcodeType::OpConstant, {1})},
+            {bytecode::Make(bytecode::OpcodeType::OpAdd)},
+            {bytecode::Make(bytecode::OpcodeType::OpReturnValue)},
+        },
+        {
+            {bytecode::Make(bytecode::OpcodeType::OpConstant, {0})},
+            {bytecode::Make(bytecode::OpcodeType::OpPop)},
+            {bytecode::Make(bytecode::OpcodeType::OpConstant, {1})},
+            {bytecode::Make(bytecode::OpcodeType::OpReturnValue)},
+        },
+        {
+            {bytecode::Make(bytecode::OpcodeType::OpReturn)},
+        },
     };
 
     std::vector<CompilerTestCase> tests
@@ -889,10 +900,44 @@ TEST(TestCompileFunctions, BasicAssertions)
             {
                 5, 
                 10, 
-                ins
+                ins[0]
             },
             {
                 {bytecode::Make(bytecode::OpcodeType::OpConstant, {2})},
+                {bytecode::Make(bytecode::OpcodeType::OpPop)},
+            }
+        },
+        {
+            "fn(){ 5 + 10}",
+            {
+                5, 
+                10, 
+                ins[0]
+            },
+            {
+                {bytecode::Make(bytecode::OpcodeType::OpConstant, {2})},
+                {bytecode::Make(bytecode::OpcodeType::OpPop)},
+            }
+        },
+        {
+            "fn(){ 1; 2}",
+            {
+                1, 
+                2, 
+                ins[1]
+            },
+            {
+                {bytecode::Make(bytecode::OpcodeType::OpConstant, {2})},
+                {bytecode::Make(bytecode::OpcodeType::OpPop)},
+            }
+        },
+        {
+            "fn(){}",
+            {
+                ins[2]
+            },
+            {
+                {bytecode::Make(bytecode::OpcodeType::OpConstant, {0})},
                 {bytecode::Make(bytecode::OpcodeType::OpPop)},
             }
         },
@@ -900,3 +945,36 @@ TEST(TestCompileFunctions, BasicAssertions)
 
     runCompilerTests(tests);
 } 
+
+
+TEST(testCompilerScopes, basic)
+{
+    std::shared_ptr<compiler::Compiler> compiler = compiler::New();
+
+    EXPECT_EQ(compiler->scopeIndex, 0);
+
+    compiler->emit(bytecode::OpcodeType::OpMul);
+
+    compiler->enterScope();
+
+    EXPECT_EQ(compiler->scopeIndex, 1);
+
+    compiler->emit(bytecode::OpcodeType::OpSub);
+
+    EXPECT_EQ(compiler->scopes[compiler->scopeIndex]->instructions.size(), 1u);
+
+    auto last = compiler->scopes[compiler->scopeIndex]->lastInstruction;
+    EXPECT_EQ(last.Opcode, bytecode::OpcodeType::OpSub);
+
+    compiler->leaveScope();
+
+    EXPECT_EQ(compiler->scopeIndex, 0);
+    compiler->emit(bytecode::OpcodeType::OpAdd);
+    EXPECT_EQ(compiler->scopes[compiler->scopeIndex]->instructions.size(), 2u);
+
+    last = compiler->scopes[compiler->scopeIndex]->lastInstruction;
+    EXPECT_EQ(last.Opcode, bytecode::OpcodeType::OpAdd);
+
+    auto previous = compiler->scopes[compiler->scopeIndex]->prevInstruction;
+    EXPECT_EQ(previous.Opcode, bytecode::OpcodeType::OpMul);
+}

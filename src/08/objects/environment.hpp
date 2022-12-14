@@ -135,6 +135,7 @@ namespace objects
 	{
 		bytecode::Instructions Instructions;
 
+		CompiledFunction(bytecode::Instructions& ins): Instructions(ins){}
 		virtual ObjectType Type() { return ObjectType::COMPILED_FUNCTION; }
 		virtual std::string Inspect()
 		{

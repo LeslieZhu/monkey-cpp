@@ -34,18 +34,26 @@ namespace compiler
         EmittedInstruction(bytecode::OpcodeType op, int pos): Opcode(op), Position(pos){}
     };
 
-    struct Compiler
-    {
+    struct CompilationScope{
         bytecode::Instructions instructions;
-        std::vector<std::shared_ptr<objects::Object>> constants;
-
         EmittedInstruction lastInstruction;
         EmittedInstruction prevInstruction;
+    };
 
+    struct Compiler
+    {
+        std::vector<std::shared_ptr<objects::Object>> constants;
         std::shared_ptr<compiler::SymbolTable> symbolTable;
+
+        std::vector<std::shared_ptr<CompilationScope>> scopes;
+        int scopeIndex;
 
         Compiler(){
             symbolTable = compiler::NewSymbolTable();
+
+            auto mainScope = std::make_shared<CompilationScope>();
+            scopes.push_back(mainScope);
+            scopeIndex = 0;
         }
 
         std::shared_ptr<objects::Error> Compile([[maybe_unused]] std::shared_ptr<ast::Node> node)
@@ -200,7 +208,7 @@ namespace compiler
 
                 auto jumpPos = emit(bytecode::OpcodeType::OpJump, {9999});
 
-                auto afterConsequencePos = instructions.size();
+                auto afterConsequencePos = scopes[scopeIndex]->instructions.size();
                 changeOperand(jumpNotTruthyPos, afterConsequencePos);
 
                 if(ifObj->pAlternative == nullptr)
@@ -221,7 +229,7 @@ namespace compiler
                     }
                 }
 
-                afterConsequencePos = instructions.size();
+                afterConsequencePos = scopes[scopeIndex]->instructions.size();
                 changeOperand(jumpPos, afterConsequencePos);
             }
             else if(node->GetNodeType() == ast::NodeType::LetStatement)
@@ -331,6 +339,46 @@ namespace compiler
 
                 emit(bytecode::OpcodeType::OpIndex);
             }
+            else if(node->GetNodeType() == ast::NodeType::FunctionLiteral)
+            {
+                std::shared_ptr<ast::FunctionLiteral> funcObj = std::dynamic_pointer_cast<ast::FunctionLiteral>(node);
+
+                enterScope();
+
+                auto resultObj = Compile(funcObj->pBody);
+                if (evaluator::isError(resultObj))
+                {
+                    return resultObj;
+                }
+
+                if (lastInstructionIs(bytecode::OpcodeType::OpPop))
+                {
+                    removeLastPopWithReturn();
+                }
+
+                if(!lastInstructionIs(bytecode::OpcodeType::OpReturnValue))
+                {
+                    emit(bytecode::OpcodeType::OpReturn);
+                }
+
+                auto ins = leaveScope();
+
+                auto compiledFn = std::make_shared<objects::CompiledFunction>(ins);
+                auto pos = addConstant(compiledFn);
+                emit(bytecode::OpcodeType::OpConstant, {pos});
+            }
+            else if(node->GetNodeType() == ast::NodeType::ReturnStatement)
+            {
+                std::shared_ptr<ast::ReturnStatement> returnObj = std::dynamic_pointer_cast<ast::ReturnStatement>(node);
+
+                auto resultObj = Compile(returnObj->pReturnValue);
+                if (evaluator::isError(resultObj))
+                {
+                    return resultObj;
+                }
+
+                emit(bytecode::OpcodeType::OpReturnValue);
+            }
 
 
             return nullptr;
@@ -358,39 +406,66 @@ namespace compiler
 
         int addInstruction(bytecode::Instructions ins)
         {
+            auto instructions = currentInstructions();
             auto posNewInstruction = instructions.size();
             
             instructions.insert(instructions.end(), ins.begin(), ins.end());
+
+            scopes[scopeIndex]->instructions = instructions;
+
             return posNewInstruction;
         }
 
         void setLastInstruction(bytecode::OpcodeType op, int pos)
         {
-            prevInstruction = lastInstruction;
-            lastInstruction = EmittedInstruction(op, pos);
+            scopes[scopeIndex]->prevInstruction = scopes[scopeIndex]->lastInstruction;
+            scopes[scopeIndex]->lastInstruction = EmittedInstruction(op, pos);
         }
 
         bool lastInstructionIsPop()
         {
-            return (lastInstruction.Opcode == bytecode::OpcodeType::OpPop);
+            return lastInstructionIs(bytecode::OpcodeType::OpPop);
+        }
+
+        bool lastInstructionIs(bytecode::OpcodeType op)
+        {
+            if(scopes[scopeIndex]->instructions.size() == 0)
+            {
+                return false;
+            }
+
+            return (scopes[scopeIndex]->lastInstruction.Opcode == op);
         }
 
         void removeLastPop()
         {
+            auto instructions = currentInstructions();
+            auto lastInstruction = scopes[scopeIndex]->lastInstruction;
+
             instructions.assign(instructions.begin(), instructions.begin() + lastInstruction.Position);
-            lastInstruction = prevInstruction;
+
+            scopes[scopeIndex]->instructions = instructions;
+            scopes[scopeIndex]->lastInstruction = scopes[scopeIndex]->prevInstruction;
+        }
+
+        void removeLastPopWithReturn()
+        {
+            auto lastPos = scopes[scopeIndex]->lastInstruction.Position;
+            replaceInstruction(lastPos, bytecode::Make(bytecode::OpcodeType::OpReturnValue));
+            scopes[scopeIndex]->lastInstruction.Opcode = bytecode::OpcodeType::OpReturnValue;
         }
 
         void replaceInstruction(int pos, const bytecode::Instructions& newInstruction)
         {
             for (int i = 0, size = newInstruction.size(); i < size; i++)
             {
-                instructions[pos + i] = newInstruction[i];
+                scopes[scopeIndex]->instructions[pos + i] = newInstruction[i];
             }
         }
 
         void changeOperand(int opPos, int operand)
         {
+            auto instructions = currentInstructions();
             bytecode::OpcodeType op = static_cast<bytecode::OpcodeType>(instructions[opPos]);
             auto newInstruction = bytecode::Make(op, {operand});
 
@@ -399,7 +474,28 @@ namespace compiler
 
         std::shared_ptr<ByteCode> Bytecode()
         {
-            return std::make_shared<ByteCode>(instructions, constants);
+            return std::make_shared<ByteCode>(scopes[scopeIndex]->instructions, constants);
+        }
+
+        bytecode::Instructions currentInstructions()
+        {
+            return scopes[scopeIndex]->instructions;
+        }
+
+        void enterScope()
+        {
+            auto scope = std::make_shared<CompilationScope>();
+            scopes.push_back(scope);
+            scopeIndex += 1;
+        }
+
+        bytecode::Instructions leaveScope()
+        {
+            auto ins = currentInstructions();
+            scopes.pop_back();
+            scopeIndex -= 1;
+
+            return ins;
         }
     };
 
