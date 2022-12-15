@@ -987,6 +987,8 @@ TEST(testCompilerScopes, basic)
 
     EXPECT_EQ(compiler->scopeIndex, 0);
 
+    auto globalSymbolTable = compiler->symbolTable;
+
     compiler->emit(bytecode::OpcodeType::OpMul);
 
     compiler->enterScope();
@@ -1000,9 +1002,15 @@ TEST(testCompilerScopes, basic)
     auto last = compiler->scopes[compiler->scopeIndex]->lastInstruction;
     EXPECT_EQ(last.Opcode, bytecode::OpcodeType::OpSub);
 
+    EXPECT_EQ(compiler->symbolTable->Outer, globalSymbolTable);
+
     compiler->leaveScope();
 
     EXPECT_EQ(compiler->scopeIndex, 0);
+
+    EXPECT_EQ(compiler->symbolTable, globalSymbolTable);
+    EXPECT_EQ(compiler->symbolTable->Outer, nullptr);
+
     compiler->emit(bytecode::OpcodeType::OpAdd);
     EXPECT_EQ(compiler->scopes[compiler->scopeIndex]->instructions.size(), 2u);
 
@@ -1012,3 +1020,71 @@ TEST(testCompilerScopes, basic)
     auto previous = compiler->scopes[compiler->scopeIndex]->prevInstruction;
     EXPECT_EQ(previous.Opcode, bytecode::OpcodeType::OpMul);
 }
+
+TEST(testCompilerLetStatementScope, basic)
+{
+    std::vector<std::vector<bytecode::Instructions>> ins{
+        {
+            {bytecode::Make(bytecode::OpcodeType::OpGetGlobal, {0})},
+            {bytecode::Make(bytecode::OpcodeType::OpReturnValue)},
+        },
+        {
+            {bytecode::Make(bytecode::OpcodeType::OpConstant, {0})},
+            {bytecode::Make(bytecode::OpcodeType::OpSetLocal, {0})},
+            {bytecode::Make(bytecode::OpcodeType::OpGetLocal, {0})},
+            {bytecode::Make(bytecode::OpcodeType::OpReturnValue)},
+        },
+        {
+            {bytecode::Make(bytecode::OpcodeType::OpConstant, {0})},
+            {bytecode::Make(bytecode::OpcodeType::OpSetLocal, {0})},
+            {bytecode::Make(bytecode::OpcodeType::OpConstant, {1})},
+            {bytecode::Make(bytecode::OpcodeType::OpSetLocal, {1})},
+            {bytecode::Make(bytecode::OpcodeType::OpGetLocal, {0})},
+            {bytecode::Make(bytecode::OpcodeType::OpGetLocal, {1})},
+            {bytecode::Make(bytecode::OpcodeType::OpAdd)},
+            {bytecode::Make(bytecode::OpcodeType::OpReturnValue)},
+        },
+    };
+
+    std::vector<CompilerTestCase> tests
+    {
+        {
+            "let num = 55; fn(){ num }",
+            {
+                55,  
+                ins[0]
+            },
+            {
+                {bytecode::Make(bytecode::OpcodeType::OpConstant, {0})},
+                {bytecode::Make(bytecode::OpcodeType::OpSetGlobal, {0})},
+                {bytecode::Make(bytecode::OpcodeType::OpConstant, {1})},
+                {bytecode::Make(bytecode::OpcodeType::OpPop)},
+            }
+        },
+        {
+            "fn(){ let num = 55; num }",
+            {
+                55, 
+                ins[1]
+            },
+            {
+                {bytecode::Make(bytecode::OpcodeType::OpConstant, {1})},
+                {bytecode::Make(bytecode::OpcodeType::OpPop)},
+            }
+        },
+        {
+            "fn(){ let a = 55; let b = 77; a + b",
+            {
+                55, 
+                77, 
+                ins[2]
+            },
+            {
+                {bytecode::Make(bytecode::OpcodeType::OpConstant, {2})},
+                {bytecode::Make(bytecode::OpcodeType::OpPop)},
+            }
+        },
+    };
+
+    runCompilerTests(tests);
+} 

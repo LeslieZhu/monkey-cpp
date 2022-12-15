@@ -242,7 +242,13 @@ namespace compiler
                 }
 
                 auto symbol = symbolTable->Define(letObj->pName->Value);
-                emit(bytecode::OpcodeType::OpSetGlobal, {symbol->Index});
+
+                if(symbol->Scope == compiler::SymbolScopeType::GlobalScope)
+                {
+                    emit(bytecode::OpcodeType::OpSetGlobal, {symbol->Index});
+                } else {
+                    emit(bytecode::OpcodeType::OpSetLocal, {symbol->Index});
+                }
             }
             else if(node->GetNodeType() == ast::NodeType::Identifier)
             {
@@ -252,7 +258,13 @@ namespace compiler
                 {
                     return evaluator::newError("undefined variable " + identObj->Value);
                 }
-                emit(bytecode::OpcodeType::OpGetGlobal, {symbol->Index});
+
+                if(symbol->Scope == compiler::SymbolScopeType::GlobalScope)
+                {
+                    emit(bytecode::OpcodeType::OpGetGlobal, {symbol->Index});
+                } else {
+                    emit(bytecode::OpcodeType::OpGetLocal, {symbol->Index});
+                }
             }
             else if(node->GetNodeType() == ast::NodeType::IntegerLiteral)
             {
@@ -499,6 +511,7 @@ namespace compiler
             auto scope = std::make_shared<CompilationScope>();
             scopes.push_back(scope);
             scopeIndex += 1;
+            symbolTable = NewEnclosedSymbolTable(symbolTable);
         }
 
         bytecode::Instructions leaveScope()
@@ -506,6 +519,7 @@ namespace compiler
             auto ins = currentInstructions();
             scopes.pop_back();
             scopeIndex -= 1;
+            symbolTable = symbolTable->Outer;
 
             return ins;
         }

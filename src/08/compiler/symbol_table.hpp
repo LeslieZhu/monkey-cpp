@@ -14,6 +14,7 @@ namespace compiler
     namespace SymbolScopeType
     {
         const SymbolScope GlobalScope = "GLOBAL";
+        const SymbolScope LocalScope = "LOCAL";
     }
 
     struct Symbol{
@@ -21,6 +22,7 @@ namespace compiler
         SymbolScope Scope;
         int Index;
 
+        Symbol(std::string name, int idx): Name(name), Index(idx){}
         Symbol(std::string name, SymbolScope scope, int idx): Name(name), Scope(scope), Index(idx){}
 
         bool operator==(const Symbol &rhs) const
@@ -35,12 +37,21 @@ namespace compiler
     };
 
     struct SymbolTable{
+        std::shared_ptr<SymbolTable> Outer;
         std::map<std::string, std::shared_ptr<Symbol>> store;
         int numDefinitions;
 
         std::shared_ptr<Symbol> Define(std::string name)
         {
-            auto symbol = std::make_shared<Symbol>(name, SymbolScopeType::GlobalScope, numDefinitions);
+            auto symbol = std::make_shared<Symbol>(name, numDefinitions);
+
+            if(Outer == nullptr)
+            {
+                symbol->Scope = SymbolScopeType::GlobalScope;
+            } else {
+                symbol->Scope = SymbolScopeType::LocalScope;
+            }
+
             store[name] = symbol;
             numDefinitions++;
             return symbol;
@@ -53,6 +64,10 @@ namespace compiler
             {
                 return fit->second;
             }
+            else if(Outer != nullptr)
+            {
+                return Outer->Resolve(name);
+            }
             else
             {
                 return nullptr;
@@ -63,6 +78,13 @@ namespace compiler
     std::shared_ptr<SymbolTable> NewSymbolTable()
     {
         return std::make_shared<SymbolTable>();
+    }
+
+    std::shared_ptr<SymbolTable> NewEnclosedSymbolTable(std::shared_ptr<SymbolTable> outer)
+    {
+        auto symbol = std::make_shared<SymbolTable>();
+        symbol->Outer = outer;
+        return symbol;
     }
 }
 
