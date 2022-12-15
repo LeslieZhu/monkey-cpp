@@ -137,7 +137,7 @@ namespace objects
 		int NumLocals;
 		int NumParameters;
 
-		CompiledFunction(bytecode::Instructions &insconst int &numLocals, const int &numParameters)
+		CompiledFunction(bytecode::Instructions &ins, const int &numLocals, const int &numParameters)
 			: Instructions(ins),
 			  NumLocals(numLocals),
 			  NumParameters(numParameters)
