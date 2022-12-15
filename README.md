@@ -12,6 +12,7 @@ But re-write the Monkey interpreter/compiler with C++.
 - src/06: expression and condition statement
 - src/07: symbol table, string, array, hashmap and index expression
 - src/08: function
+- src/09: butiltin functions and function closures
 
 Also see the [MinYiLife Blogs](http://lesliezhu.com/tags/%E8%A7%A3%E9%87%8A%E5%99%A8%E4%B8%8E%E7%BC%96%E8%AF%91%E5%99%A8.html)
 
@@ -20,7 +21,7 @@ Also see the [MinYiLife Blogs](http://lesliezhu.com/tags/%E8%A7%A3%E9%87%8A%E5%9
 For example:
 
 ```
-$ cd src/08/
+$ cd src/09/
 $ mkdir build/
 $ cd build/
 $ cmake ..
