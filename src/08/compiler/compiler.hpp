@@ -373,9 +373,10 @@ namespace compiler
                     emit(bytecode::OpcodeType::OpReturn);
                 }
 
+                auto numLocals = symbolTable->numDefinitions;
                 auto ins = leaveScope();
 
-                auto compiledFn = std::make_shared<objects::CompiledFunction>(ins);
+                auto compiledFn = std::make_shared<objects::CompiledFunction>(ins, numLocals);
                 auto pos = addConstant(compiledFn);
                 emit(bytecode::OpcodeType::OpConstant, {pos});
             }

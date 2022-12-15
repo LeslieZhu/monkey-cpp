@@ -218,6 +218,28 @@ namespace vm
                             }
                         }
                         break;
+                    case bytecode::OpcodeType::OpSetLocal:
+                        {
+                            uint8_t localIndex;
+                            bytecode::ReadUint8(instructions, ip+1, localIndex);
+                            frame->ip += 1;
+
+                            stack[frame->basePointer + int(localIndex)] = Pop();
+                        }
+                        break;
+                    case bytecode::OpcodeType::OpGetLocal:
+                        {
+                            uint8_t localIndex;
+                            bytecode::ReadUint8(instructions, ip+1, localIndex);
+                            frame->ip += 1;
+
+                            auto result = Push(stack[frame->basePointer + int(localIndex)]);
+                            if(evaluator::isError(result))
+                            {
+                               return result;
+                            }
+                        }
+                        break;
                     case bytecode::OpcodeType::OpArray:
                         {
                             uint16_t numElements;
@@ -281,26 +303,29 @@ namespace vm
                             }
 
                             auto compiledFnObj = std::dynamic_pointer_cast<objects::CompiledFunction>(fnObj);
-                            auto funcFrame = NewFrame(compiledFnObj);
+                            auto funcFrame = NewFrame(compiledFnObj, sp);
 
                             pushFrame(funcFrame);
 
                             frame = currentFrame();
                             instructions = frame->Instruction();
                             ins_size = instructions.size();
+
+                            sp = frame->basePointer + compiledFnObj->NumLocals;
                         }
                         break;
                     case bytecode::OpcodeType::OpReturnValue:
                         {
                             auto returnValue = Pop();
 
-                            popFrame();
+                            auto callFrame = popFrame();
+                            sp = callFrame->basePointer - 1;
 
                             frame = currentFrame();
                             instructions = frame->Instruction();
                             ins_size = instructions.size();
 
-                            Pop(); // 函数本体出栈
+                            //Pop(); // 函数本体出栈
 
                             auto result = Push(returnValue);
                             if(evaluator::isError(result))
@@ -311,13 +336,14 @@ namespace vm
                         break;
                     case bytecode::OpcodeType::OpReturn:
                         {
-                            popFrame();
+                            auto callFrame = popFrame();
+                            sp = callFrame->basePointer - 1;
 
                             frame = currentFrame();
                             instructions = frame->Instruction();
                             ins_size = instructions.size();
 
-                            Pop(); // 函数本体出栈
+                            //Pop(); // 函数本体出栈
 
                             auto result = Push(objects::NULL_OBJ);
                             if(evaluator::isError(result))
@@ -566,8 +592,8 @@ namespace vm
 
     std::shared_ptr<VM> New(std::shared_ptr<compiler::ByteCode> bytecode)
     {
-        auto mainFn = std::make_shared<objects::CompiledFunction>(bytecode->Instructions);
-        auto mainFrame = NewFrame(mainFn);
+        auto mainFn = std::make_shared<objects::CompiledFunction>(bytecode->Instructions, 0);
+        auto mainFrame = NewFrame(mainFn, 0);
 
         std::vector<std::shared_ptr<Frame>> frames(FrameSize);
         frames[0] = mainFrame;

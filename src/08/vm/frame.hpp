@@ -14,8 +14,9 @@ namespace vm
     struct Frame{
         std::shared_ptr<objects::CompiledFunction> fn;
         int ip;
+        int basePointer;
 
-        Frame(std::shared_ptr<objects::CompiledFunction> f, const int i): fn(f), ip(i){}
+        Frame(std::shared_ptr<objects::CompiledFunction> f, const int i, const int bp): fn(f), ip(i), basePointer(bp){}
 
         bytecode::Instructions Instruction()
         {
@@ -23,9 +24,9 @@ namespace vm
         }
     };
 
-    std::shared_ptr<Frame> NewFrame(std::shared_ptr<objects::CompiledFunction> f)
+    std::shared_ptr<Frame> NewFrame(std::shared_ptr<objects::CompiledFunction> f, int basePointer)
     {
-        return std::make_shared<Frame>(f, -1);
+        return std::make_shared<Frame>(f, -1, basePointer);
     }
 }
 

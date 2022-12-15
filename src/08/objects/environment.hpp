@@ -134,8 +134,9 @@ namespace objects
 	struct CompiledFunction: Object
 	{
 		bytecode::Instructions Instructions;
+		int NumLocals;
 
-		CompiledFunction(bytecode::Instructions& ins): Instructions(ins){}
+		CompiledFunction(bytecode::Instructions& ins, const int& numLocals): Instructions(ins), NumLocals(numLocals){}
 		virtual ObjectType Type() { return ObjectType::COMPILED_FUNCTION; }
 		virtual std::string Inspect()
 		{
