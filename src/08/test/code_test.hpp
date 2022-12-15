@@ -43,6 +43,14 @@ TEST(TestMaker, BasicAssertions)
             {
                 static_cast<bytecode::Opcode>(bytecode::OpcodeType::OpAdd)
             }
+        },
+        {
+            bytecode::OpcodeType::OpGetLocal,
+            {255},
+            {
+                static_cast<bytecode::Opcode>(bytecode::OpcodeType::OpGetLocal),
+                255
+            }
         }
     };
 
@@ -60,32 +68,46 @@ TEST(TestMaker, BasicAssertions)
 
 TEST(TestInstructionsString, BasicTest)
 {
-    std::vector<bytecode::Instructions> instructions{
+    std::vector<std::vector<bytecode::Instructions>> vinstructions{
         {
-            bytecode::Make(bytecode::OpcodeType::OpAdd,{})
+            {bytecode::Make(bytecode::OpcodeType::OpAdd, {})},
+            {bytecode::Make(bytecode::OpcodeType::OpConstant, {2})},
+            {bytecode::Make(bytecode::OpcodeType::OpConstant, {65535})}
         },
         {
-            bytecode::Make(bytecode::OpcodeType::OpConstant, {2})
-        },
-        {
-            bytecode::Make(bytecode::OpcodeType::OpConstant, {65535})
+            {bytecode::Make(bytecode::OpcodeType::OpAdd, {})},
+            {bytecode::Make(bytecode::OpcodeType::OpGetLocal, {1})},
+            {bytecode::Make(bytecode::OpcodeType::OpConstant, {2})},
+            {bytecode::Make(bytecode::OpcodeType::OpConstant, {65535})}
         }
     };
 
-    std::string expected = R""(0000 OpAdd
+    std::vector<std::string> expected{
+        R""(0000 OpAdd
 0001 OpConstant 2
 0004 OpConstant 65535
-)"";
+)"",
+        R""(0000 OpAdd
+0001 OpGetLocal 1
+0003 OpConstant 2
+0006 OpConstant 65535
+)"",
+    };
 
-    bytecode::Instructions concated = bytecode::Instructions{};
-    for(auto &vins: instructions)
+    int i = -1;
+    for(auto &instructions: vinstructions)
     {
-        concated.insert(concated.end(), vins.begin(), vins.end());
+        i += 1;
+        bytecode::Instructions concated = bytecode::Instructions{};
+        for (auto &vins : instructions)
+        {
+            concated.insert(concated.end(), vins.begin(), vins.end());
+        }
+
+        std::string concatedStr = bytecode::InstructionsString(concated);
+
+        EXPECT_STREQ(concatedStr.c_str(), expected[i].c_str());
     }
-
-    std::string concatedStr = bytecode::InstructionsString(concated);
-
-    EXPECT_STREQ(concatedStr.c_str(), expected.c_str());
 }
 
 TEST(TestReadOperands, BasicTest)
@@ -100,6 +122,9 @@ TEST(TestReadOperands, BasicTest)
     {
         {
             bytecode::OpcodeType::OpConstant, {65535}, 2
+        },
+        {
+            bytecode::OpcodeType::OpGetLocal, {255}, 1
         }
     };
 

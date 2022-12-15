@@ -61,6 +61,9 @@ namespace bytecode
         OpGetGlobal,
         OpSetGlobal,
 
+        OpGetLocal,
+        OpSetLocal,
+
         OpArray,
         OpHash,
         OpIndex,
@@ -110,6 +113,10 @@ namespace bytecode
                 return "OpGetGlobal";
             case OpcodeType::OpSetGlobal:
                 return "OpSetGlobal";
+            case OpcodeType::OpGetLocal:
+                return "OpGetLocal";
+            case OpcodeType::OpSetLocal:
+                return "OpSetLocal";
             case OpcodeType::OpArray:
                 return "OpArray";
             case OpcodeType::OpHash:
@@ -166,6 +173,9 @@ namespace bytecode
         {OpcodeType::OpGetGlobal, std::make_shared<Definition>("OpGetGlobal", 2)},
         {OpcodeType::OpSetGlobal, std::make_shared<Definition>("OpSetGlobal", 2)},
 
+        {OpcodeType::OpGetLocal, std::make_shared<Definition>("OpGetLocal", 1)},
+        {OpcodeType::OpSetLocal, std::make_shared<Definition>("OpSetLocal", 1)},
+
         {OpcodeType::OpArray, std::make_shared<Definition>("OpArray", 2)},
         {OpcodeType::OpHash, std::make_shared<Definition>("OpHash", 2)},
 
@@ -183,6 +193,11 @@ namespace bytecode
             return nullptr;
         }
         return fit->second;
+    }
+
+    void ReadUint8(Instructions &ins, int offset, uint8_t& uint8Value)
+    {
+        memcpy(&uint8Value, (unsigned char*)(&ins[offset]), sizeof(uint8Value));
     }
 
     void ReadUint16(Instructions &ins, int offset, uint16_t& uint16Value)
@@ -234,18 +249,15 @@ namespace bytecode
             switch(width)
             {
                 case 2:
-                    uint16_t uint16Value = static_cast<uint16_t>(operands[i]);
-
-                    /* if(bytecode::BinaryEndian() == bytecode::BinaryEndianType::SMALLENDIAN) // must use BIGENDIAN
                     {
-                        unsigned char *p = (unsigned char*)&uint16Value;
-                        unsigned char tmp = *(&p[0]);
-                        p[0] = p[1];
-                        p[1] = tmp;
+                        uint16_t uint16Value = static_cast<uint16_t>(operands[i]);
+                        WriteUint16(instruction, offset, uint16Value);
                     }
-
-                    memcpy(&instruction[offset], (unsigned char *)(&uint16Value), sizeof(uint16Value)); */
-                    WriteUint16(instruction, offset, uint16Value);
+                    break;
+                case 1:
+                    {
+                        instruction[offset] = static_cast<Opcode>(operands[i]);
+                    }
                     break;
             }
             offset += width;
@@ -275,6 +287,13 @@ namespace bytecode
                         uint16_t uint16Value;
                         ReadUint16(ins, pos, uint16Value);
                         operands[i] = static_cast<int>(uint16Value);
+                    }
+                    break;
+                case 1:
+                    {
+                        uint8_t uint8Value;
+                        ReadUint8(ins, pos, uint8Value);
+                        operands[i] = static_cast<int>(uint8Value);
                     }
                     break;
             }
