@@ -211,11 +211,81 @@ TEST(testVMIndexExpressions, basicTest)
         {"[][0]", nullptr},
         {"[1,2,3][99]", nullptr},
         {"[1][-1]", nullptr},
-        /* {"{1: 1, 2:2}[1]", 1},
+        {"{1: 1, 2:2}[1]", 1},
         {"{1: 1, 2:2}[2]", 2},
         {"{1: 1}[0]", nullptr},
-        {"{}[0]", nullptr}, */
+        {"{}[0]", nullptr},
         };
+
+    runVmTests(tests);  
+}
+
+TEST(testVMCallingFunctionWIthoutArguments, basicTest)
+{
+    std::vector<vmTestCases> tests{
+        {
+            R""(
+                let fivePlusTen = fn(){ 5 + 10; }
+                fivePlusTen();
+            )"",
+            15
+        },
+        {
+            R""(
+                let one = fn(){ 1; };
+                let two = fn(){ 2; };
+                one() + two();
+            )"",
+            3
+        },
+        {
+            R""(
+                let a = fn(){ 1; };
+                let b = fn(){ a() + 1 };
+                let c = fn(){ b() + 1 };
+                c();
+            )"",
+            3
+        },
+        {
+            R""(
+                let earlyExit = fn(){ return 99; 100; };
+                earlyExit();
+            )"",
+            99
+        },
+        {
+            R""(
+                let earlyExit = fn(){ return 99; return 100; }
+                earlyExit();
+            )"",
+            99
+        },
+        {
+            R""(
+                let noReturn = fn() { };
+                noReturn();
+            )"",
+            nullptr
+        },
+        {
+            R""(
+                let noReturn = fn() { };
+                let noReturnTwo = fn() { noReturn(); };
+                noReturn();
+                noReturnTwo();
+            )"",
+            nullptr
+        },
+        {
+            R""(
+                let returnOne = fn(){ 1; };
+                let returnOneReturner = fn(){ returnOne; };
+                returnOneReturner()();
+            )"",
+            1
+        }
+    };
 
     runVmTests(tests);  
 }

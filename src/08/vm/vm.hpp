@@ -81,16 +81,14 @@ namespace vm
 
             int ip;
             bytecode::OpcodeType op;
-
-            bytecode::Instructions instructions = frame->Instruction();
-            int ins_size = frame->Instruction().size();
+            bytecode::Instructions instructions = currentFrame()->Instruction();
+            int ins_size = instructions.size();
 
             while(frame->ip < ins_size - 1) // frame->ip start with -1
             {
                 frame->ip += 1;
 
                 ip = frame->ip;
-                //instructions = frame->Instruction();
                 op = static_cast<bytecode::OpcodeType>(instructions[ip]);
 
                 switch(op)
@@ -268,6 +266,60 @@ namespace vm
                             auto left = Pop();
 
                             auto result = executeIndexExpression(left, index);
+                            if(evaluator::isError(result))
+                            {
+                               return result;
+                            }
+                        }
+                        break;
+                    case bytecode::OpcodeType::OpCall:
+                        {
+                            auto fnObj = stack[sp - 1];
+                            if(fnObj->Type() != objects::ObjectType::COMPILED_FUNCTION)
+                            {
+                                return evaluator::newError("calling non-function");
+                            }
+
+                            auto compiledFnObj = std::dynamic_pointer_cast<objects::CompiledFunction>(fnObj);
+                            auto funcFrame = NewFrame(compiledFnObj);
+
+                            pushFrame(funcFrame);
+
+                            frame = currentFrame();
+                            instructions = frame->Instruction();
+                            ins_size = instructions.size();
+                        }
+                        break;
+                    case bytecode::OpcodeType::OpReturnValue:
+                        {
+                            auto returnValue = Pop();
+
+                            popFrame();
+
+                            frame = currentFrame();
+                            instructions = frame->Instruction();
+                            ins_size = instructions.size();
+
+                            Pop(); // 函数本体出栈
+
+                            auto result = Push(returnValue);
+                            if(evaluator::isError(result))
+                            {
+                               return result;
+                            }
+                        }
+                        break;
+                    case bytecode::OpcodeType::OpReturn:
+                        {
+                            popFrame();
+
+                            frame = currentFrame();
+                            instructions = frame->Instruction();
+                            ins_size = instructions.size();
+
+                            Pop(); // 函数本体出栈
+
+                            auto result = Push(objects::NULL_OBJ);
                             if(evaluator::isError(result))
                             {
                                return result;

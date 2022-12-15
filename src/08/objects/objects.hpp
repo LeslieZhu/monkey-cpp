@@ -84,6 +84,10 @@ namespace objects
 				return "ARRAY";
 			case ObjectType::HASH:
 				return "HASH";
+			case ObjectType::BUILTIN:
+				return "BUILTIN";
+			case ObjectType::COMPILED_FUNCTION:
+				return "COMPILED_FUNCTION";
 			default:
 				return "BadType";
 			}
