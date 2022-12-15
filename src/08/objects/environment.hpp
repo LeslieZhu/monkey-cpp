@@ -135,13 +135,20 @@ namespace objects
 	{
 		bytecode::Instructions Instructions;
 		int NumLocals;
+		int NumParameters;
 
-		CompiledFunction(bytecode::Instructions& ins, const int& numLocals): Instructions(ins), NumLocals(numLocals){}
+		CompiledFunction(bytecode::Instructions &insconst int &numLocals, const int &numParameters)
+			: Instructions(ins),
+			  NumLocals(numLocals),
+			  NumParameters(numParameters)
+		{
+		}
+
 		virtual ObjectType Type() { return ObjectType::COMPILED_FUNCTION; }
 		virtual std::string Inspect()
 		{
 			std::stringstream oss;
-			oss << this;
+			oss << "CompiledFunction[" << this << "]";
 			return oss.str();
 		}
 	};

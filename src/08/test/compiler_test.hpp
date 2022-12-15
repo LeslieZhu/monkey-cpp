@@ -899,6 +899,21 @@ TEST(TestCompileFunctions, BasicAssertions)
             {bytecode::Make(bytecode::OpcodeType::OpConstant, {0})},
             {bytecode::Make(bytecode::OpcodeType::OpReturnValue)},
         },
+        {
+            {bytecode::Make(bytecode::OpcodeType::OpReturn)},
+        },
+        {
+            {bytecode::Make(bytecode::OpcodeType::OpGetLocal, {0})},
+            {bytecode::Make(bytecode::OpcodeType::OpReturnValue)},
+        },
+        {
+            {bytecode::Make(bytecode::OpcodeType::OpGetLocal, {0})},
+            {bytecode::Make(bytecode::OpcodeType::OpPop)},
+            {bytecode::Make(bytecode::OpcodeType::OpGetLocal, {1})},
+            {bytecode::Make(bytecode::OpcodeType::OpPop)},
+            {bytecode::Make(bytecode::OpcodeType::OpGetLocal, {2})},
+            {bytecode::Make(bytecode::OpcodeType::OpReturnValue)},
+        }
     };
 
     std::vector<CompilerTestCase> tests
@@ -957,7 +972,7 @@ TEST(TestCompileFunctions, BasicAssertions)
             },
             {
                 {bytecode::Make(bytecode::OpcodeType::OpConstant, {1})},
-                {bytecode::Make(bytecode::OpcodeType::OpCall)},
+                {bytecode::Make(bytecode::OpcodeType::OpCall, {0})},
                 {bytecode::Make(bytecode::OpcodeType::OpPop)},
             }
         },
@@ -971,7 +986,75 @@ TEST(TestCompileFunctions, BasicAssertions)
                 {bytecode::Make(bytecode::OpcodeType::OpConstant, {1})},
                 {bytecode::Make(bytecode::OpcodeType::OpSetGlobal, {0})},
                 {bytecode::Make(bytecode::OpcodeType::OpGetGlobal, {0})},
-                {bytecode::Make(bytecode::OpcodeType::OpCall)},
+                {bytecode::Make(bytecode::OpcodeType::OpCall, {0})},
+                {bytecode::Make(bytecode::OpcodeType::OpPop)},
+            }
+        },
+        {
+            "let oneAgr = fn(a) { }; oneAgr(24);",
+            {
+                ins[5],
+                24
+            },
+            {
+                {bytecode::Make(bytecode::OpcodeType::OpConstant, {0})},
+                {bytecode::Make(bytecode::OpcodeType::OpSetGlobal, {0})},
+                {bytecode::Make(bytecode::OpcodeType::OpGetGlobal, {0})},
+                {bytecode::Make(bytecode::OpcodeType::OpConstant, {1})},
+                {bytecode::Make(bytecode::OpcodeType::OpCall, {1})},
+                {bytecode::Make(bytecode::OpcodeType::OpPop)},
+            }
+        },
+        {
+            "let manyArg = fn(a, b, c){ }; manyArg(24, 25, 26);",
+            {
+                ins[5],
+                24,
+                25,
+                26
+            },
+            {
+                {bytecode::Make(bytecode::OpcodeType::OpConstant, {0})},
+                {bytecode::Make(bytecode::OpcodeType::OpSetGlobal, {0})},
+                {bytecode::Make(bytecode::OpcodeType::OpGetGlobal, {0})},
+                {bytecode::Make(bytecode::OpcodeType::OpConstant, {1})},
+                {bytecode::Make(bytecode::OpcodeType::OpConstant, {2})},
+                {bytecode::Make(bytecode::OpcodeType::OpConstant, {3})},
+                {bytecode::Make(bytecode::OpcodeType::OpCall, {3})},
+                {bytecode::Make(bytecode::OpcodeType::OpPop)},
+            }
+        },
+        {
+            "let oneArg = fn(a) { a }; oneArg(24);",
+            {
+                ins[6],
+                24
+            },
+            {
+                {bytecode::Make(bytecode::OpcodeType::OpConstant, {0})},
+                {bytecode::Make(bytecode::OpcodeType::OpSetGlobal, {0})},
+                {bytecode::Make(bytecode::OpcodeType::OpGetGlobal, {0})},
+                {bytecode::Make(bytecode::OpcodeType::OpConstant, {1})},
+                {bytecode::Make(bytecode::OpcodeType::OpCall, {1})},
+                {bytecode::Make(bytecode::OpcodeType::OpPop)},
+            }
+        },
+        {
+            "let manyArg = fn(a, b, c){ a; b; c; }; manyArg(24, 25, 26);",
+            {
+                ins[7],
+                24,
+                25,
+                26
+            },
+            {
+                {bytecode::Make(bytecode::OpcodeType::OpConstant, {0})},
+                {bytecode::Make(bytecode::OpcodeType::OpSetGlobal, {0})},
+                {bytecode::Make(bytecode::OpcodeType::OpGetGlobal, {0})},
+                {bytecode::Make(bytecode::OpcodeType::OpConstant, {1})},
+                {bytecode::Make(bytecode::OpcodeType::OpConstant, {2})},
+                {bytecode::Make(bytecode::OpcodeType::OpConstant, {3})},
+                {bytecode::Make(bytecode::OpcodeType::OpCall, {3})},
                 {bytecode::Make(bytecode::OpcodeType::OpPop)},
             }
         },

@@ -49,6 +49,11 @@ void testExpectedObject(std::variant<int, bool, std::string, void*> expected, st
             EXPECT_NE(hashObj, nullptr);
             EXPECT_STREQ(hashObj->Inspect().c_str(), val.c_str());
         }
+        else if(std::shared_ptr<objects::Error> errorObj = std::dynamic_pointer_cast<objects::Error>(actual); errorObj != nullptr)
+        {
+            EXPECT_NE(errorObj, nullptr);
+            EXPECT_STREQ(errorObj->Message.c_str(), val.c_str());
+        }
         else {
             testStringObject(actual, val);
         }
@@ -284,15 +289,7 @@ TEST(testVMCallingFunctionWithoutArguments, basicTest)
                 returnOneReturner()();
             )"",
             1
-        }
-    };
-
-    runVmTests(tests);  
-}
-
-TEST(testVMCallingFunctionWIthoutArguments, basicTest)
-{
-    std::vector<vmTestCases> tests{
+        },
         {
             R""(
                 let one = fn(){ let one = 1; one }
@@ -364,3 +361,113 @@ TEST(testVMCallingFirstFunctions, basicTest)
 
     runVmTests(tests);  
 }
+
+TEST(testVMCallingFunctionWithArguments, basicTest)
+{
+    std::vector<vmTestCases> tests{
+        {
+            R""(
+                let identify = fn(a) { a; }
+                identify(4);
+            )"",
+            4
+        },
+        {
+            R""(
+                let sum = fn(a, b){ a + b; }
+                sum(1,2);
+            )"",
+            3
+        },
+        {
+            R""(
+                let sum = fn(a, b){
+                    let c = a + b;
+                    c;
+                }
+
+                sum(1,2);
+            )"",
+            3
+        },
+        {
+            R""(
+                let sum = fn(a, b) {
+                    let c = a + b;
+                    c;
+                }
+
+                sum(1, 2) + sum(3, 4)
+            )"",
+            10
+        },
+        {
+            R""(
+                let sum = fn(a, b){
+                    let c = a + b;
+                    c;
+                }
+
+                let outer = fn(){
+                    sum(1, 2) + sum(3, 4);
+                }
+
+                outer();
+            )"",
+            10
+        }
+    };
+
+    runVmTests(tests);  
+}
+
+
+TEST(testVMCallingFunctionWithWrongArguments, basicTest)
+{
+    struct testInput
+    {
+        std::string input;
+        std::string expected;
+    };
+
+    std::vector<testInput> tests{
+        {
+            R""(
+                fn(){ 1; }(1)
+            )"",
+            "wrong number of arguments: want=0, got=1"
+        },
+        {
+            R""(
+                fn(a){ a; }()
+            )"",
+            "wrong number of arguments: want=1, got=0"
+        },
+        {
+            R""(
+                fn(a, b){ a + b; }(1)
+            )"",
+            "wrong number of arguments: want=2, got=1"
+        }
+    };
+
+    for (const auto &test : tests)
+    {
+        std::unique_ptr<ast::Node> astNode = TestHelper(test.input);
+        std::shared_ptr<compiler::Compiler> compiler = compiler::New();
+        
+        auto resultObj = compiler->Compile(std::move(astNode));
+        EXPECT_EQ(resultObj, nullptr);
+
+        std::shared_ptr<compiler::ByteCode> bytecodeObj = compiler->Bytecode();
+
+        auto vm = vm::New(bytecodeObj);
+        auto vmresult = vm->Run();
+        EXPECT_NE(vmresult, nullptr);
+
+        std::shared_ptr<objects::Error> errorObj = std::dynamic_pointer_cast<objects::Error>(vmresult);
+
+        EXPECT_NE(errorObj, nullptr);
+        EXPECT_STREQ(errorObj->Message.c_str(), test.expected.c_str());
+    }
+} 

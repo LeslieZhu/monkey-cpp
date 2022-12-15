@@ -296,22 +296,19 @@ namespace vm
                         break;
                     case bytecode::OpcodeType::OpCall:
                         {
-                            auto fnObj = stack[sp - 1];
-                            if(fnObj->Type() != objects::ObjectType::COMPILED_FUNCTION)
+                            uint8_t numArgs;
+                            bytecode::ReadUint8(instructions, ip+1, numArgs);
+                            frame->ip += 1;
+
+                            auto result = callFunction((int)numArgs);
+                            if(evaluator::isError(result))
                             {
-                                return evaluator::newError("calling non-function");
+                               return result;
                             }
-
-                            auto compiledFnObj = std::dynamic_pointer_cast<objects::CompiledFunction>(fnObj);
-                            auto funcFrame = NewFrame(compiledFnObj, sp);
-
-                            pushFrame(funcFrame);
 
                             frame = currentFrame();
                             instructions = frame->Instruction();
                             ins_size = instructions.size();
-
-                            sp = frame->basePointer + compiledFnObj->NumLocals;
                         }
                         break;
                     case bytecode::OpcodeType::OpReturnValue:
@@ -572,6 +569,32 @@ namespace vm
             return std::make_shared<objects::Hash>(hashPairs);
         }
 
+        std::shared_ptr<objects::Object> callFunction(int numArgs)
+        {
+            auto fnObj = stack[sp - 1 - numArgs];
+            if (fnObj->Type() != objects::ObjectType::COMPILED_FUNCTION)
+            {
+                return evaluator::newError("calling non-function");
+            }
+
+            auto compiledFnObj = std::dynamic_pointer_cast<objects::CompiledFunction>(fnObj);
+
+            if(compiledFnObj->NumParameters != numArgs)
+            {
+                std::string str1 = std::to_string(compiledFnObj->NumParameters);
+                std::string str2 = std::to_string(numArgs);
+                return evaluator::newError("wrong number of arguments: want=" + str1 + ", got=" + str2);
+            }
+
+            auto funcFrame = NewFrame(compiledFnObj, sp - numArgs);
+
+            pushFrame(funcFrame);
+
+            sp = funcFrame->basePointer + compiledFnObj->NumLocals;
+
+            return nullptr;
+        }
+
         std::shared_ptr<Frame> currentFrame()
         {
             return frames[frameIndex - 1];
@@ -592,7 +615,7 @@ namespace vm
 
     std::shared_ptr<VM> New(std::shared_ptr<compiler::ByteCode> bytecode)
     {
-        auto mainFn = std::make_shared<objects::CompiledFunction>(bytecode->Instructions, 0);
+        auto mainFn = std::make_shared<objects::CompiledFunction>(bytecode->Instructions, 0, 0);
         auto mainFrame = NewFrame(mainFn, 0);
 
         std::vector<std::shared_ptr<Frame>> frames(FrameSize);

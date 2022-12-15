@@ -357,6 +357,11 @@ namespace compiler
 
                 enterScope();
 
+                for(auto &args: funcObj->v_pParameters)
+                {
+                    symbolTable->Define(args->Value);
+                }
+
                 auto resultObj = Compile(funcObj->pBody);
                 if (evaluator::isError(resultObj))
                 {
@@ -374,9 +379,10 @@ namespace compiler
                 }
 
                 auto numLocals = symbolTable->numDefinitions;
+                auto numParameters = funcObj->v_pParameters.size();
                 auto ins = leaveScope();
 
-                auto compiledFn = std::make_shared<objects::CompiledFunction>(ins, numLocals);
+                auto compiledFn = std::make_shared<objects::CompiledFunction>(ins, numLocals, numParameters);
                 auto pos = addConstant(compiledFn);
                 emit(bytecode::OpcodeType::OpConstant, {pos});
             }
@@ -402,7 +408,17 @@ namespace compiler
                     return resultObj;
                 }
 
-                emit(bytecode::OpcodeType::OpCall);
+                for(auto &args: callObj->pArguments)
+                {
+                    resultObj = Compile(args);
+                    if (evaluator::isError(resultObj))
+                    {
+                        return resultObj;
+                    }
+                }
+
+                int argsNum = callObj->pArguments.size();
+                emit(bytecode::OpcodeType::OpCall, {argsNum});
             }
 
 

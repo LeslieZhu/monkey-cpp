@@ -181,7 +181,7 @@ namespace bytecode
 
         {OpcodeType::OpIndex, std::make_shared<Definition>("OpIndex")},
 
-        {OpcodeType::OpCall, std::make_shared<Definition>("OpCall")},
+        {OpcodeType::OpCall, std::make_shared<Definition>("OpCall", 1)},
         {OpcodeType::OpReturnValue, std::make_shared<Definition>("OpReturnValue")},
         {OpcodeType::OpReturn, std::make_shared<Definition>("OpReturn")},
     };
