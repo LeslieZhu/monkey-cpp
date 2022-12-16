@@ -15,6 +15,7 @@ namespace compiler
     {
         const SymbolScope GlobalScope = "GLOBAL";
         const SymbolScope LocalScope = "LOCAL";
+        const SymbolScope BuiltinScope = "BUILTIN";
     }
 
     struct Symbol{
@@ -54,6 +55,13 @@ namespace compiler
 
             store[name] = symbol;
             numDefinitions++;
+            return symbol;
+        }
+
+        std::shared_ptr<Symbol> DefineBuiltin(const int& index, std::string name)
+        {
+            auto symbol = std::make_shared<Symbol>(name, SymbolScopeType::BuiltinScope ,index);
+            store[name] = symbol;
             return symbol;
         }
 

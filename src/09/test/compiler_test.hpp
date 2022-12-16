@@ -1171,3 +1171,72 @@ TEST(testCompilerLetStatementScope, basic)
 
     runCompilerTests(tests);
 } 
+
+
+TEST(TestCompileBuiltins, BasicAssertions)
+{
+    std::vector<std::vector<bytecode::Instructions>> ins{
+        {
+            {bytecode::Make(bytecode::OpcodeType::OpGetBuiltin, {0})},
+            {bytecode::Make(bytecode::OpcodeType::OpArray, {0})},
+            {bytecode::Make(bytecode::OpcodeType::OpCall, {1})},
+            {bytecode::Make(bytecode::OpcodeType::OpReturnValue)},
+        }
+    };
+
+    std::vector<CompilerTestCase>  tests
+    {
+        {
+            "len([]); push([], 1);",
+            {
+                1
+            },
+            {
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpGetBuiltin, {0})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpArray, {0})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpCall, {1})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpPop)
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpGetBuiltin, {5})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpArray, {0})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpConstant, {0})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpCall, {2})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpPop)
+                },
+            }
+        },
+        {
+            "fn(){ len([]) };",
+            {
+                ins[0],
+            },
+            {
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpConstant, {0})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpPop)
+                },
+            }
+        }
+    };
+
+    runCompilerTests(tests);
+} 
+

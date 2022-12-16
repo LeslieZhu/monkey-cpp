@@ -157,11 +157,11 @@ namespace objects
 
     std::vector<std::shared_ptr<objects::BuiltinWithName>> Builtins{
         std::make_shared<objects::BuiltinWithName>("len", &BuiltinFunc_Len),
+        std::make_shared<objects::BuiltinWithName>("puts", &BuiltinFunc_Puts),
         std::make_shared<objects::BuiltinWithName>("first", &BuiltinFunc_First),
         std::make_shared<objects::BuiltinWithName>("last", &BuiltinFunc_Last),
         std::make_shared<objects::BuiltinWithName>("rest", &BuiltinFunc_Rest),
         std::make_shared<objects::BuiltinWithName>("push", &BuiltinFunc_Push),
-        std::make_shared<objects::BuiltinWithName>("puts", &BuiltinFunc_Puts),
     };
 
     std::shared_ptr<objects::Builtin> GetBuiltinByName(const std::string& name)

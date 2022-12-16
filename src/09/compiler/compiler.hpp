@@ -13,6 +13,7 @@
 //#include "evaluator/evaluator.hpp"
 //#include "objects/environment.hpp"
 #include "compiler/symbol_table.hpp"
+#include "objects/builtins.hpp"
 
 namespace compiler
 {
@@ -260,12 +261,7 @@ namespace compiler
                     return objects::newError("undefined variable " + identObj->Value);
                 }
 
-                if(symbol->Scope == compiler::SymbolScopeType::GlobalScope)
-                {
-                    emit(bytecode::OpcodeType::OpGetGlobal, {symbol->Index});
-                } else {
-                    emit(bytecode::OpcodeType::OpGetLocal, {symbol->Index});
-                }
+                loadSymbol(symbol);
             }
             else if(node->GetNodeType() == ast::NodeType::IntegerLiteral)
             {
@@ -446,6 +442,22 @@ namespace compiler
             return emit(op, {});
         }
 
+        void loadSymbol(std::shared_ptr<compiler::Symbol> symbol)
+        {
+            if (symbol->Scope == compiler::SymbolScopeType::GlobalScope)
+            {
+                emit(bytecode::OpcodeType::OpGetGlobal, {symbol->Index});
+            }
+            else if(symbol->Scope == compiler::SymbolScopeType::LocalScope)
+            {
+                emit(bytecode::OpcodeType::OpGetLocal, {symbol->Index});
+            }
+            else if(symbol->Scope == compiler::SymbolScopeType::BuiltinScope)
+            {
+                emit(bytecode::OpcodeType::OpGetBuiltin, {symbol->Index});
+            }
+        }
+
         int addInstruction(bytecode::Instructions ins)
         {
             auto instructions = currentInstructions();
@@ -545,7 +557,19 @@ namespace compiler
 
     std::shared_ptr<Compiler> New()
     {
-        return std::make_shared<Compiler>();
+        auto symbolTable = NewSymbolTable();
+
+        int i = -1;
+        for(auto &fn: objects::Builtins)
+        {
+            i += 1;
+            symbolTable->DefineBuiltin(i, fn->Name);
+        }
+
+        auto compiler = std::make_shared<Compiler>();
+        compiler->symbolTable = symbolTable;
+
+        return compiler;
     }
 
     std::shared_ptr<Compiler> NewWithState(std::shared_ptr<compiler::SymbolTable> symbolTable,

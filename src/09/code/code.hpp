@@ -71,6 +71,8 @@ namespace bytecode
         OpCall,
         OpReturnValue,
         OpReturn,   // return null
+
+        OpGetBuiltin,
     };
 
     std::string OpcodeTypeStr(OpcodeType op)
@@ -129,6 +131,8 @@ namespace bytecode
                 return "OpReturnValue";
             case OpcodeType::OpReturn:
                 return "OpReturn";
+            case OpcodeType::OpGetBuiltin:
+                return "OpGetBuiltin";
             default:
                 return std::to_string(static_cast<int>(op));
         }
@@ -184,6 +188,8 @@ namespace bytecode
         {OpcodeType::OpCall, std::make_shared<Definition>("OpCall", 1)},
         {OpcodeType::OpReturnValue, std::make_shared<Definition>("OpReturnValue")},
         {OpcodeType::OpReturn, std::make_shared<Definition>("OpReturn")},
+
+        {OpcodeType::OpGetBuiltin, std::make_shared<Definition>("OpGetBuiltin", 1)},
     };
 
     std::shared_ptr<Definition> Lookup(OpcodeType op){

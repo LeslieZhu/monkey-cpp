@@ -13,11 +13,11 @@ namespace evaluator
 {
     std::map<std::string, std::shared_ptr<objects::Builtin>> builtins{
         {"len", objects::GetBuiltinByName("len")},
+        {"puts", objects::GetBuiltinByName("puts")},
         {"first", objects::GetBuiltinByName("first")},
         {"last", objects::GetBuiltinByName("last")},
         {"rest", objects::GetBuiltinByName("rest")},
         {"push", objects::GetBuiltinByName("push")},
-        {"puts", objects::GetBuiltinByName("puts")}
     };
 }
 

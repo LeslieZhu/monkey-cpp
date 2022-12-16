@@ -140,3 +140,41 @@ TEST(testResolveNestedLocal, Basic)
         }
     }
 }
+
+TEST(testResolveBuiltins, Basic)
+{
+    auto global = compiler::NewSymbolTable();
+    auto firstLocal = compiler::NewEnclosedSymbolTable(global);
+    auto secondLocal = compiler::NewEnclosedSymbolTable(firstLocal);
+
+    std::vector<std::shared_ptr<compiler::SymbolTable>> tests{
+        global,
+        firstLocal, 
+        secondLocal
+    };
+
+    std::vector<std::shared_ptr<compiler::Symbol>> expected{
+        std::make_shared<compiler::Symbol>("a", compiler::SymbolScopeType::BuiltinScope, 0),
+        std::make_shared<compiler::Symbol>("c", compiler::SymbolScopeType::BuiltinScope, 1),
+        std::make_shared<compiler::Symbol>("e", compiler::SymbolScopeType::BuiltinScope, 2),
+        std::make_shared<compiler::Symbol>("f", compiler::SymbolScopeType::BuiltinScope, 3),
+    };
+
+    int i = -1;
+    for(auto &sym: expected)
+    {
+        i += 1;
+        global->DefineBuiltin(i, sym->Name);
+    }
+
+    for (unsigned long i = 0; i < tests.size(); i++)
+    {
+        for (auto &sym : expected)
+        {
+            auto result = tests[i]->Resolve(sym->Name);
+
+            EXPECT_NE(result, nullptr);
+            EXPECT_EQ(*result, *sym);
+        }
+    }
+}
