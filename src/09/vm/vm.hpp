@@ -588,11 +588,13 @@ namespace vm
 
             if(fnObj->Type() == objects::ObjectType::COMPILED_FUNCTION)
             {
-                return callFunction(fnObj, numArgs);
+                auto compiledFnObj = std::dynamic_pointer_cast<objects::CompiledFunction>(fnObj);
+                return callFunction(compiledFnObj, numArgs);
             }
             else if(fnObj->Type() == objects::ObjectType::BUILTIN)
             {
-                return callBuiltin(fnObj, numArgs);
+                auto builtinFnObj = std::dynamic_pointer_cast<objects::Builtin>(fnObj);
+                return callBuiltin(builtinFnObj, numArgs);
             }
             else
             {
@@ -600,15 +602,8 @@ namespace vm
             }
         }
 
-        std::shared_ptr<objects::Object> callFunction(std::shared_ptr<objects::Object> fnObj,int numArgs)
+        std::shared_ptr<objects::Object> callFunction(std::shared_ptr<objects::CompiledFunction> compiledFnObj,int numArgs)
         {
-            if (fnObj->Type() != objects::ObjectType::COMPILED_FUNCTION)
-            {
-                return objects::newError("calling non-function");
-            }
-
-            auto compiledFnObj = std::dynamic_pointer_cast<objects::CompiledFunction>(fnObj);
-
             if(compiledFnObj->NumParameters != numArgs)
             {
                 std::string str1 = std::to_string(compiledFnObj->NumParameters);
@@ -625,21 +620,13 @@ namespace vm
             return nullptr;
         }
 
-        std::shared_ptr<objects::Object> callBuiltin(std::shared_ptr<objects::Object> fnObj,int numArgs)
+        std::shared_ptr<objects::Object> callBuiltin(std::shared_ptr<objects::Builtin> builtinFnObj,int numArgs)
         {
-            if (fnObj->Type() != objects::ObjectType::BUILTIN)
-            {
-                return objects::newError("calling non-built-in");
-            }
-
-            auto builtinFnObj = std::dynamic_pointer_cast<objects::Builtin>(fnObj);
-
             std::vector<std::shared_ptr<objects::Object>> args;
-
             args.assign(stack.begin() + sp - numArgs, stack.begin() + sp);
 
             auto result = builtinFnObj->Fn(args);
-            
+
             sp = sp - numArgs - 1;
 
             if(result != nullptr)
