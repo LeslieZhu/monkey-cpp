@@ -7,30 +7,10 @@
 #include <map>
 
 #include "objects/objects.hpp"
+#include "objects/builtins.hpp"
 
 namespace evaluator
 {
-    std::shared_ptr<objects::Object> BuiltinFunc_Len([[maybe_unused]] std::vector<std::shared_ptr<objects::Object>>& args)
-    {
-        if(args.size() != 1)
-        {
-            return objects::newError("wrong number of arguments. got=" + std::to_string(args.size()) + ", want=1");
-        }
-
-        if(std::shared_ptr<objects::String> obj = std::dynamic_pointer_cast<objects::String>(args[0]); obj != nullptr)
-        {
-            return std::make_shared<objects::Integer>(obj->Value.size());
-        }
-        else if(std::shared_ptr<objects::Array> obj = std::dynamic_pointer_cast<objects::Array>(args[0]); obj != nullptr)
-        {
-            return std::make_shared<objects::Integer>(obj->Elements.size());
-        }
-        else
-        {
-            return objects::newError("argument to 'len' not supported, got " + args[0]->TypeStr());
-        }
-    }
-
     std::shared_ptr<objects::Object> BuiltinFunc_First([[maybe_unused]] std::vector<std::shared_ptr<objects::Object>>& args)
     {
         if(args.size() != 1)
@@ -134,7 +114,7 @@ namespace evaluator
     std::map<std::string, std::shared_ptr<objects::Builtin>> builtins
     {
         {
-            "len", std::make_shared<objects::Builtin>(&BuiltinFunc_Len)
+            "len", objects::GetBuiltinByName("len")
         },
         {
             "first", std::make_shared<objects::Builtin>(&BuiltinFunc_First)
