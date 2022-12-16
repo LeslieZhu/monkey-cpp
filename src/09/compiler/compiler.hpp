@@ -10,7 +10,8 @@
 #include "ast/ast.hpp"
 #include "objects/objects.hpp"
 #include "code/code.hpp"
-#include "evaluator/evaluator.hpp"
+//#include "evaluator/evaluator.hpp"
+//#include "objects/environment.hpp"
 #include "compiler/symbol_table.hpp"
 
 namespace compiler

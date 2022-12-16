@@ -8,7 +8,7 @@
 #include "lexer/lexer.hpp"
 #include "parser/parser.hpp"
 //#include "objects/environment.hpp"
-#include "evaluator/evaluator.hpp"
+//#include "evaluator/evaluator.hpp"
 #include "compiler/compiler.hpp"
 #include "vm/vm.hpp"
 

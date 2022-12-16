@@ -8,7 +8,7 @@
 #include <memory>
 
 #include "objects/objects.hpp"
-#include "code/code.hpp"
+//#include "code/code.hpp"
 
 namespace objects
 {
@@ -101,57 +101,6 @@ namespace objects
 		env->outer = outer;
 		return env;
 	}
-
-	struct Function : Object
-	{
-		std::vector<std::shared_ptr<ast::Identifier>> Parameters;
-		std::shared_ptr<ast::BlockStatement> Body;
-		std::shared_ptr<Environment> Env;
-
-		virtual ~Function() {
-			Parameters.clear();
-			Body.reset();
-			Env.reset();
-		}
-		virtual ObjectType Type() { return ObjectType::FUNCTION; }
-		virtual std::string Inspect()
-		{
-			std::stringstream oss;
-
-			std::vector<std::string> params{};
-
-			for (auto &p : Parameters)
-			{
-				params.push_back(p->String());
-			}
-
-			oss << "fn(" << ast::Join(params, ", ") << ") {\n"
-				<< Body->String() << "\n}";
-			return oss.str();
-		}
-	};
-
-	struct CompiledFunction: Object
-	{
-		bytecode::Instructions Instructions;
-		int NumLocals;
-		int NumParameters;
-
-		CompiledFunction(bytecode::Instructions &ins, const int &numLocals, const int &numParameters)
-			: Instructions(ins),
-			  NumLocals(numLocals),
-			  NumParameters(numParameters)
-		{
-		}
-
-		virtual ObjectType Type() { return ObjectType::COMPILED_FUNCTION; }
-		virtual std::string Inspect()
-		{
-			std::stringstream oss;
-			oss << "CompiledFunction[" << this << "]";
-			return oss.str();
-		}
-	};
 }
 
 #endif // H_ENVIRONMENT_H

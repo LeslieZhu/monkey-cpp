@@ -10,7 +10,6 @@
 #include "objects/objects.hpp"
 #include "compiler/compiler.hpp"
 #include "code/code.hpp"
-#include "evaluator/evaluator.hpp"
 #include "vm/frame.hpp"
 
 namespace vm
