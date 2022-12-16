@@ -53,7 +53,13 @@ namespace evaluator
 		}
 		else if (std::shared_ptr<objects::Builtin> builtin = std::dynamic_pointer_cast<objects::Builtin>(fn); builtin != nullptr)
 		{
-			return builtin->Fn(args);
+			auto result = builtin->Fn(args);
+			if(result != nullptr)
+			{
+				return result;
+			} else {
+				return objects::NULL_OBJ;
+			}
 		}
 		else
 		{
