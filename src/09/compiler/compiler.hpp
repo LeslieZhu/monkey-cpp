@@ -64,7 +64,7 @@ namespace compiler
                 for(auto &stmt: program->v_pStatements)
                 {
                     auto resultObj = Compile(stmt);
-                    if(evaluator::isError(resultObj))
+                    if(objects::isError(resultObj))
                     {
                         return resultObj;
                     }
@@ -76,7 +76,7 @@ namespace compiler
                 for(auto &stmt: blockObj->v_pStatements)
                 {
                     auto resultObj = Compile(stmt);
-                    if(evaluator::isError(resultObj))
+                    if(objects::isError(resultObj))
                     {
                         return resultObj;
                     }
@@ -87,7 +87,7 @@ namespace compiler
                 std::shared_ptr<ast::ExpressionStatement> exprStmt = std::dynamic_pointer_cast<ast::ExpressionStatement>(node);
 
                 auto resultObj = Compile(exprStmt->pExpression);
-                if (evaluator::isError(resultObj))
+                if (objects::isError(resultObj))
                 {
                     return resultObj;
                 }
@@ -100,13 +100,13 @@ namespace compiler
                 if (infixObj->Operator == "<")
                 {
                     auto resultObj = Compile(infixObj->pRight);
-                    if (evaluator::isError(resultObj))
+                    if (objects::isError(resultObj))
                     {
                         return resultObj;
                     }
 
                     resultObj = Compile(infixObj->pLeft);
-                    if (evaluator::isError(resultObj))
+                    if (objects::isError(resultObj))
                     {
                         return resultObj;
                     }
@@ -118,13 +118,13 @@ namespace compiler
                 }
 
                 auto resultObj = Compile(infixObj->pLeft);
-                if (evaluator::isError(resultObj))
+                if (objects::isError(resultObj))
                 {
                     return resultObj;
                 }
 
                 resultObj = Compile(infixObj->pRight);
-                if (evaluator::isError(resultObj))
+                if (objects::isError(resultObj))
                 {
                     return resultObj;
                 }
@@ -165,7 +165,7 @@ namespace compiler
             {
                 std::shared_ptr<ast::PrefixExpression> prefixObj = std::dynamic_pointer_cast<ast::PrefixExpression>(node);
                 auto resultObj = Compile(prefixObj->pRight);
-                if (evaluator::isError(resultObj))
+                if (objects::isError(resultObj))
                 {
                     return resultObj;
                 }
@@ -187,7 +187,7 @@ namespace compiler
                 std::shared_ptr<ast::IfExpression> ifObj = std::dynamic_pointer_cast<ast::IfExpression>(node);
 
                 auto resultObj = Compile(ifObj->pCondition);
-                if (evaluator::isError(resultObj))
+                if (objects::isError(resultObj))
                 {
                     return resultObj;
                 }
@@ -196,7 +196,7 @@ namespace compiler
                 auto jumpNotTruthyPos =  emit(bytecode::OpcodeType::OpJumpNotTruthy, {9999});
 
                 resultObj = Compile(ifObj->pConsequence);
-                if (evaluator::isError(resultObj))
+                if (objects::isError(resultObj))
                 {
                     return resultObj;
                 }
@@ -218,7 +218,7 @@ namespace compiler
                 else
                 {
                     resultObj = Compile(ifObj->pAlternative);
-                    if (evaluator::isError(resultObj))
+                    if (objects::isError(resultObj))
                     {
                         return resultObj;
                     }
@@ -236,7 +236,7 @@ namespace compiler
             {
                 std::shared_ptr<ast::LetStatement> letObj = std::dynamic_pointer_cast<ast::LetStatement>(node);
                 auto resultObj = Compile(letObj->pValue);
-                if (evaluator::isError(resultObj))
+                if (objects::isError(resultObj))
                 {
                     return resultObj;
                 }
@@ -296,7 +296,7 @@ namespace compiler
                 for(auto &stmt: arrayLiteral->Elements)
                 {
                     auto resultObj = Compile(stmt);
-                    if (evaluator::isError(resultObj))
+                    if (objects::isError(resultObj))
                     {
                         return resultObj;
                     }
@@ -319,13 +319,13 @@ namespace compiler
                 for(auto &key: keys)
                 {
                     auto resultObj = Compile(key);
-                    if (evaluator::isError(resultObj))
+                    if (objects::isError(resultObj))
                     {
                         return resultObj;
                     }
 
                     resultObj = Compile(hashLiteral->Pairs[key]);
-                    if (evaluator::isError(resultObj))
+                    if (objects::isError(resultObj))
                     {
                         return resultObj;
                     }
@@ -338,13 +338,13 @@ namespace compiler
                 std::shared_ptr<ast::IndexExpression> indexObj = std::dynamic_pointer_cast<ast::IndexExpression>(node);
 
                 auto resultObj = Compile(indexObj->Left);
-                if (evaluator::isError(resultObj))
+                if (objects::isError(resultObj))
                 {
                     return resultObj;
                 }
 
                 resultObj = Compile(indexObj->Index);
-                if (evaluator::isError(resultObj))
+                if (objects::isError(resultObj))
                 {
                     return resultObj;
                 }
@@ -363,7 +363,7 @@ namespace compiler
                 }
 
                 auto resultObj = Compile(funcObj->pBody);
-                if (evaluator::isError(resultObj))
+                if (objects::isError(resultObj))
                 {
                     return resultObj;
                 }
@@ -391,7 +391,7 @@ namespace compiler
                 std::shared_ptr<ast::ReturnStatement> returnObj = std::dynamic_pointer_cast<ast::ReturnStatement>(node);
 
                 auto resultObj = Compile(returnObj->pReturnValue);
-                if (evaluator::isError(resultObj))
+                if (objects::isError(resultObj))
                 {
                     return resultObj;
                 }
@@ -403,7 +403,7 @@ namespace compiler
                 std::shared_ptr<ast::CallExpression> callObj = std::dynamic_pointer_cast<ast::CallExpression>(node);
 
                 auto resultObj = Compile(callObj->pFunction);
-                if (evaluator::isError(resultObj))
+                if (objects::isError(resultObj))
                 {
                     return resultObj;
                 }
@@ -411,7 +411,7 @@ namespace compiler
                 for(auto &args: callObj->pArguments)
                 {
                     resultObj = Compile(args);
-                    if (evaluator::isError(resultObj))
+                    if (objects::isError(resultObj))
                     {
                         return resultObj;
                     }

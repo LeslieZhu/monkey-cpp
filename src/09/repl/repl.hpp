@@ -84,7 +84,7 @@ namespace repl
             //auto comp = compiler::New();
             auto comp = compiler::NewWithState(symbolTable, constants);
             auto result = comp->Compile(std::move(astNode));
-            if(evaluator::isError(result))
+            if(objects::isError(result))
             {
                 std::cout << "Woops! Compilation failed: \n" + result->Inspect() << std::endl;
                 continue;
@@ -95,7 +95,7 @@ namespace repl
             auto machine = vm::NewWithGlobalsStore(code, globals);
 
             auto runResult = machine->Run();
-            if(evaluator::isError(runResult))
+            if(objects::isError(runResult))
             {
                 std::cout << "Woops! Executing bytecode failed: \n" + runResult->Inspect() << std::endl;
                 continue;

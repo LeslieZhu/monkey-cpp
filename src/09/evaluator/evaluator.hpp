@@ -20,35 +20,6 @@ namespace evaluator
 {
 	std::shared_ptr<objects::Object> Eval(std::shared_ptr<ast::Node> node, std::shared_ptr<objects::Environment> env);
 
-	bool isError(std::shared_ptr<objects::Object> obj)
-	{
-		if (obj != nullptr)
-		{
-			return (obj->Type() == objects::ObjectType::ERROR);
-		}
-		return false;
-	}
-
-	bool isTruthy(std::shared_ptr<objects::Object> obj)
-	{
-		if (obj == objects::NULL_OBJ)
-		{
-			return false;
-		}
-		else if (obj == objects::TRUE_OBJ)
-		{
-			return true;
-		}
-		else if (obj == objects::FALSE_OBJ)
-		{
-			return false;
-		}
-		else
-		{
-			return true;
-		}
-	}
-
 	std::shared_ptr<objects::Boolean> nativeBoolToBooleanObject(bool input)
 	{
 		if (input)
@@ -109,7 +80,7 @@ namespace evaluator
 		for (auto &e : exps)
 		{
 			std::shared_ptr<objects::Object> evaluated = Eval(e, env);
-			if (isError(evaluated))
+			if (objects::isError(evaluated))
 			{
 				std::vector<std::shared_ptr<objects::Object>> x;
 				x.push_back(evaluated);
@@ -152,11 +123,11 @@ namespace evaluator
 	std::shared_ptr<objects::Object> evalIfExpression(std::shared_ptr<ast::IfExpression> ie, std::shared_ptr<objects::Environment> env)
 	{
 		std::shared_ptr<objects::Object> condition = Eval(ie->pCondition, env);
-		if (isError(condition))
+		if (objects::isError(condition))
 		{
 			return condition;
 		}
-		if (isTruthy(condition))
+		if (objects::isTruthy(condition))
 		{
 			return Eval(ie->pConsequence, env);
 		}
@@ -364,7 +335,7 @@ namespace evaluator
 		for(auto &[keyNode, valueNode]: hashNode->Pairs)
 		{
 			auto key = Eval(keyNode, env);
-			if(isError(key))
+			if(objects::isError(key))
 			{
 				return key;
 			}
@@ -375,7 +346,7 @@ namespace evaluator
 			}
 
 			auto value = Eval(valueNode, env);
-			if(isError(value))
+			if(objects::isError(value))
 			{
 				return value;
 			}
@@ -490,7 +461,7 @@ namespace evaluator
 #endif
 			std::shared_ptr<ast::ReturnStatement> returnStmt = std::dynamic_pointer_cast<ast::ReturnStatement>(node);
 			std::shared_ptr<objects::Object> val = Eval(returnStmt->pReturnValue, env);
-			if (isError(val))
+			if (objects::isError(val))
 			{
 				return val;
 			}
@@ -513,7 +484,7 @@ namespace evaluator
 			std::cout << "\t lit get val=" << val->Inspect() << std::endl;
 #endif
 
-			if (isError(val))
+			if (objects::isError(val))
 			{
 				return val;
 			}
@@ -555,7 +526,7 @@ namespace evaluator
 			std::shared_ptr<ast::PrefixExpression> infixObj = std::dynamic_pointer_cast<ast::PrefixExpression>(node);
 
 			std::shared_ptr<objects::Object> right = Eval(infixObj->pRight, env);
-			if (isError(right))
+			if (objects::isError(right))
 			{
 				return right;
 			}
@@ -569,13 +540,13 @@ namespace evaluator
 			std::shared_ptr<ast::InfixExpression> infixObj = std::dynamic_pointer_cast<ast::InfixExpression>(node);
 
 			std::shared_ptr<objects::Object> left = Eval(infixObj->pLeft, env);
-			if (isError(left))
+			if (objects::isError(left))
 			{
 				return left;
 			}
 
 			std::shared_ptr<objects::Object> right = Eval(infixObj->pRight, env);
-			if (isError(right))
+			if (objects::isError(right))
 			{
 				return right;
 			}
@@ -628,13 +599,13 @@ namespace evaluator
 			std::shared_ptr<ast::CallExpression> callObj = std::dynamic_pointer_cast<ast::CallExpression>(node);
 
 			std::shared_ptr<objects::Object> function = Eval(callObj->pFunction, env);
-			if (isError(function))
+			if (objects::isError(function))
 			{
 				return function;
 			}
 
 			std::vector<std::shared_ptr<objects::Object>> args = evalExpressions(callObj->pArguments, env);
-			if (args.size() == 1 && isError(args[0]))
+			if (args.size() == 1 && objects::isError(args[0]))
 			{
 				return args[0];
 			}
@@ -645,7 +616,7 @@ namespace evaluator
 		{
 			std::shared_ptr<ast::ArrayLiteral> arrayObj = std::dynamic_pointer_cast<ast::ArrayLiteral>(node);
 			auto elements = evalExpressions(arrayObj->Elements, env);
-			if(elements.size() == 1 && isError(elements[0]))
+			if(elements.size() == 1 && objects::isError(elements[0]))
 			{
 				return elements[0];
 			}
@@ -657,13 +628,13 @@ namespace evaluator
 			std::shared_ptr<ast::IndexExpression> idxObj = std::dynamic_pointer_cast<ast::IndexExpression>(node);
 
 			auto left = Eval(idxObj->Left, env);
-			if(isError(left))
+			if(objects::isError(left))
 			{
 				return left;
 			}
 
 			auto index = Eval(idxObj->Index, env);
-			if(isError(index))
+			if(objects::isError(index))
 			{
 				return index;
 			}

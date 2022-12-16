@@ -254,6 +254,11 @@ namespace objects
 		}
 	};
 
+
+	static std::shared_ptr<objects::Null> NULL_OBJ = std::make_shared<objects::Null>();
+	static std::shared_ptr<objects::Boolean> TRUE_OBJ = std::make_shared<objects::Boolean>(true);
+	static std::shared_ptr<objects::Boolean> FALSE_OBJ = std::make_shared<objects::Boolean>(false);
+
 	std::shared_ptr<objects::Error> newError(std::string msg)
 	{
 		std::shared_ptr<objects::Error> error = std::make_shared<objects::Error>();
@@ -261,9 +266,36 @@ namespace objects
 		return error;
 	}
 
-	static std::shared_ptr<objects::Null> NULL_OBJ = std::make_shared<objects::Null>();
-	static std::shared_ptr<objects::Boolean> TRUE_OBJ = std::make_shared<objects::Boolean>(true);
-	static std::shared_ptr<objects::Boolean> FALSE_OBJ = std::make_shared<objects::Boolean>(false);
+	bool isError(std::shared_ptr<objects::Object> obj)
+	{
+		if (obj != nullptr)
+		{
+			return (obj->Type() == objects::ObjectType::ERROR);
+		}
+		return false;
+	}
+
+	bool isTruthy(std::shared_ptr<objects::Object> obj)
+	{
+		if (obj == objects::NULL_OBJ)
+		{
+			return false;
+		}
+		else if (obj == objects::TRUE_OBJ)
+		{
+			return true;
+		}
+		else if (obj == objects::FALSE_OBJ)
+		{
+			return false;
+		}
+		else
+		{
+			return true;
+		}
+	}
+
+
 }
 
 #endif // H_OBJECTS_H

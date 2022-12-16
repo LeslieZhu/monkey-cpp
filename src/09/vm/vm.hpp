@@ -99,7 +99,7 @@ namespace vm
                             bytecode::ReadUint16(instructions, ip+1, constIndex);
                             frame->ip += 2;
                             auto result = Push(constants[constIndex]);
-                            if(evaluator::isError(result))
+                            if(objects::isError(result))
                             {
                                 return result;
                             }
@@ -111,7 +111,7 @@ namespace vm
                     case bytecode::OpcodeType::OpDiv:
                         {
                             auto result = executeBinaryOperaction(op);
-                            if(evaluator::isError(result))
+                            if(objects::isError(result))
                             {
                                 return result;
                             }
@@ -125,7 +125,7 @@ namespace vm
                     case bytecode::OpcodeType::OpTrue:
                         {
                             auto result = Push(objects::TRUE_OBJ);
-                            if(evaluator::isError(result))
+                            if(objects::isError(result))
                             {
                                 return result;
                             }
@@ -134,7 +134,7 @@ namespace vm
                     case bytecode::OpcodeType::OpFalse:
                         {
                             auto result = Push(objects::FALSE_OBJ);
-                            if(evaluator::isError(result))
+                            if(objects::isError(result))
                             {
                                 return result;
                             }
@@ -145,7 +145,7 @@ namespace vm
                     case bytecode::OpcodeType::OpGreaterThan:
                         {
                             auto result = executeComparison(op);
-                            if(evaluator::isError(result))
+                            if(objects::isError(result))
                             {
                                 return result;
                             }
@@ -154,7 +154,7 @@ namespace vm
                     case bytecode::OpcodeType::OpBang:
                         {
                             auto result = executeBangOperator();
-                            if(evaluator::isError(result))
+                            if(objects::isError(result))
                             {
                                 return result;
                             }
@@ -163,7 +163,7 @@ namespace vm
                     case bytecode::OpcodeType::OpMinus:
                         {
                             auto result = executeMinusOperator();
-                            if(evaluator::isError(result))
+                            if(objects::isError(result))
                             {
                                 return result;
                             }
@@ -183,7 +183,7 @@ namespace vm
                             frame->ip += 2;
                             
                             auto condition = Pop();
-                            if(!evaluator::isTruthy(condition))
+                            if(!objects::isTruthy(condition))
                             {
                                 frame->ip = pos - 1;
                             }
@@ -192,7 +192,7 @@ namespace vm
                     case bytecode::OpcodeType::OpNull:
                         {
                             auto result = Push(objects::NULL_OBJ);
-                            if(evaluator::isError(result))
+                            if(objects::isError(result))
                             {
                                 return result;
                             }
@@ -212,7 +212,7 @@ namespace vm
                             bytecode::ReadUint16(instructions, ip+1, globalIndex);
                             frame->ip += 2;
                             auto result = Push(globals[globalIndex]);
-                            if(evaluator::isError(result))
+                            if(objects::isError(result))
                             {
                                return result;
                             }
@@ -234,7 +234,7 @@ namespace vm
                             frame->ip += 1;
 
                             auto result = Push(stack[frame->basePointer + int(localIndex)]);
-                            if(evaluator::isError(result))
+                            if(objects::isError(result))
                             {
                                return result;
                             }
@@ -247,7 +247,7 @@ namespace vm
                             frame->ip += 2;
 
                             auto arrayObj = buildArray(sp - numElements, sp);
-                            if(evaluator::isError(arrayObj))
+                            if(objects::isError(arrayObj))
                             {
                                return arrayObj;
                             }
@@ -255,7 +255,7 @@ namespace vm
                             sp -= numElements; // 移出
 
                             auto result = Push(arrayObj);
-                            if(evaluator::isError(result))
+                            if(objects::isError(result))
                             {
                                return result;
                             }
@@ -268,7 +268,7 @@ namespace vm
                             frame->ip += 2;
 
                             auto hashObj = buildHash(sp - numElements, sp);
-                            if(evaluator::isError(hashObj))
+                            if(objects::isError(hashObj))
                             {
                                return hashObj;
                             }
@@ -276,7 +276,7 @@ namespace vm
                             sp -= numElements;
 
                             auto result = Push(hashObj);
-                            if(evaluator::isError(result))
+                            if(objects::isError(result))
                             {
                                return result;
                             }
@@ -288,7 +288,7 @@ namespace vm
                             auto left = Pop();
 
                             auto result = executeIndexExpression(left, index);
-                            if(evaluator::isError(result))
+                            if(objects::isError(result))
                             {
                                return result;
                             }
@@ -301,7 +301,7 @@ namespace vm
                             frame->ip += 1;
 
                             auto result = callFunction((int)numArgs);
-                            if(evaluator::isError(result))
+                            if(objects::isError(result))
                             {
                                return result;
                             }
@@ -325,7 +325,7 @@ namespace vm
                             //Pop(); // 函数本体出栈
 
                             auto result = Push(returnValue);
-                            if(evaluator::isError(result))
+                            if(objects::isError(result))
                             {
                                return result;
                             }
@@ -343,7 +343,7 @@ namespace vm
                             //Pop(); // 函数本体出栈
 
                             auto result = Push(objects::NULL_OBJ);
-                            if(evaluator::isError(result))
+                            if(objects::isError(result))
                             {
                                return result;
                             }
@@ -512,7 +512,7 @@ namespace vm
             if(left->Type() == objects::ObjectType::ARRAY && index->Type() == objects::ObjectType::INTEGER)
             {
                 auto result = evaluator::evalArrayIndexExpression(left, index);
-                if (evaluator::isError(result))
+                if (objects::isError(result))
                 {
                     return result;
                 }
@@ -523,7 +523,7 @@ namespace vm
             else if(left->Type() == objects::ObjectType::HASH)
             {
                 auto result = evaluator::evalHashIndexExpression(left, index);
-                if (evaluator::isError(result))
+                if (objects::isError(result))
                 {
                     return result;
                 }
