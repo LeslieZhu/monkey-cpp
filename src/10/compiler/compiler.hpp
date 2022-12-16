@@ -381,7 +381,9 @@ namespace compiler
 
                 auto compiledFn = std::make_shared<objects::CompiledFunction>(ins, numLocals, numParameters);
                 auto pos = addConstant(compiledFn);
-                emit(bytecode::OpcodeType::OpConstant, {pos});
+
+                //emit(bytecode::OpcodeType::OpConstant, {pos});
+                emit(bytecode::OpcodeType::OpClosure, {pos, 0});
             }
             else if(node->GetNodeType() == ast::NodeType::ReturnStatement)
             {

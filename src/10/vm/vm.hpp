@@ -66,6 +66,20 @@ namespace vm
             return nullptr;
         }
 
+        std::shared_ptr<objects::Object> PushClosure(int constIndex)
+        {
+            auto constant = constants[constIndex];
+            auto compiledFn = std::dynamic_pointer_cast<objects::CompiledFunction>(constant);
+            if(compiledFn == nullptr)
+            {
+                return objects::newError("not a function: " + constant->Inspect());
+            }
+
+            auto closure = std::make_shared<objects::Closure>(compiledFn);
+
+            return Push(closure);
+        }
+
         std::shared_ptr<objects::Object> Pop()
         {
             auto obj = stack[sp - 1];
@@ -362,6 +376,23 @@ namespace vm
                             }
                         }
                         break;
+                    case bytecode::OpcodeType::OpClosure:
+                        {
+                            uint16_t constIndex;
+                            bytecode::ReadUint16(instructions, ip+1, constIndex);
+                            frame->ip += 2;
+
+                            uint8_t numFree;
+                            bytecode::ReadUint8(instructions, ip+3, numFree);
+                            frame->ip += 1;
+
+                            auto result = PushClosure((int)constIndex);
+                            if(objects::isError(result))
+                            {
+                               return result;
+                            }
+                        }
+                        break;
                 }
             }
 
@@ -586,10 +617,12 @@ namespace vm
         {
             auto fnObj = stack[sp - 1 - numArgs];
 
-            if(fnObj->Type() == objects::ObjectType::COMPILED_FUNCTION)
+            if(fnObj->Type() == objects::ObjectType::CLOSURE)
             {
-                auto compiledFnObj = std::dynamic_pointer_cast<objects::CompiledFunction>(fnObj);
-                return callFunction(compiledFnObj, numArgs);
+                //auto compiledFnObj = std::dynamic_pointer_cast<objects::CompiledFunction>(fnObj);
+                //auto closureFn = std::make_shared<objects::Closure>(compiledFnObj);
+                auto closureFn = std::dynamic_pointer_cast<objects::Closure>(fnObj);
+                return callClosure(closureFn, numArgs);
             }
             else if(fnObj->Type() == objects::ObjectType::BUILTIN)
             {
@@ -602,20 +635,20 @@ namespace vm
             }
         }
 
-        std::shared_ptr<objects::Object> callFunction(std::shared_ptr<objects::CompiledFunction> compiledFnObj,int numArgs)
+        std::shared_ptr<objects::Object> callClosure(std::shared_ptr<objects::Closure> closureFn,int numArgs)
         {
-            if(compiledFnObj->NumParameters != numArgs)
+            if(closureFn->Fn->NumParameters != numArgs)
             {
-                std::string str1 = std::to_string(compiledFnObj->NumParameters);
+                std::string str1 = std::to_string(closureFn->Fn->NumParameters);
                 std::string str2 = std::to_string(numArgs);
                 return objects::newError("wrong number of arguments: want=" + str1 + ", got=" + str2);
             }
 
-            auto funcFrame = NewFrame(compiledFnObj, sp - numArgs);
+            auto funcFrame = NewFrame(closureFn, sp - numArgs);
 
             pushFrame(funcFrame);
 
-            sp = funcFrame->basePointer + compiledFnObj->NumLocals;
+            sp = funcFrame->basePointer + closureFn->Fn->NumLocals;
 
             return nullptr;
         }
@@ -660,7 +693,8 @@ namespace vm
     std::shared_ptr<VM> New(std::shared_ptr<compiler::ByteCode> bytecode)
     {
         auto mainFn = std::make_shared<objects::CompiledFunction>(bytecode->Instructions, 0, 0);
-        auto mainFrame = NewFrame(mainFn, 0);
+        auto mainClosure = std::make_shared<objects::Closure>(mainFn);
+        auto mainFrame = NewFrame(mainClosure, 0);
 
         std::vector<std::shared_ptr<Frame>> frames(FrameSize);
         frames[0] = mainFrame;

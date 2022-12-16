@@ -7,26 +7,26 @@
 #include <memory>
 
 #include "code/code.hpp"
-#include "objects/environment.hpp"
+#include "objects/objects.hpp"
 
 namespace vm
 {
     struct Frame{
-        std::shared_ptr<objects::CompiledFunction> fn;
+        std::shared_ptr<objects::Closure> cl;
         int ip;
         int basePointer;
 
-        Frame(std::shared_ptr<objects::CompiledFunction> f, const int i, const int bp): fn(f), ip(i), basePointer(bp){}
+        Frame(std::shared_ptr<objects::Closure> cl, const int i, const int bp): cl(cl), ip(i), basePointer(bp){}
 
         bytecode::Instructions Instruction()
         {
-            return fn->Instructions;
+            return cl->Fn->Instructions;
         }
     };
 
-    std::shared_ptr<Frame> NewFrame(std::shared_ptr<objects::CompiledFunction> f, int basePointer)
+    std::shared_ptr<Frame> NewFrame(std::shared_ptr<objects::Closure> cl, int basePointer)
     {
-        return std::make_shared<Frame>(f, -1, basePointer);
+        return std::make_shared<Frame>(cl, -1, basePointer);
     }
 }
 

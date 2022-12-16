@@ -73,6 +73,7 @@ namespace bytecode
         OpReturn,   // return null
 
         OpGetBuiltin,
+        OpClosure,
     };
 
     std::string OpcodeTypeStr(OpcodeType op)
@@ -133,6 +134,8 @@ namespace bytecode
                 return "OpReturn";
             case OpcodeType::OpGetBuiltin:
                 return "OpGetBuiltin";
+            case OpcodeType::OpClosure:
+                return "OpClosure";
             default:
                 return std::to_string(static_cast<int>(op));
         }
@@ -147,6 +150,11 @@ namespace bytecode
 
         Definition(const std::string &name) : Name(name) {}
         Definition(const std::string &name, const int &width) : Name(name) { OperandWidths.push_back(width); }
+        Definition(const std::string &name, std::vector<int> widths) : Name(name)
+        {
+                OperandWidths.insert(OperandWidths.end(), widths.begin(), widths.end());
+        }
+
         ~Definition() { OperandWidths.clear(); }
     };
 
@@ -190,6 +198,8 @@ namespace bytecode
         {OpcodeType::OpReturn, std::make_shared<Definition>("OpReturn")},
 
         {OpcodeType::OpGetBuiltin, std::make_shared<Definition>("OpGetBuiltin", 1)},
+
+        {OpcodeType::OpClosure, std::make_shared<Definition>("OpClosure", std::vector<int>{2, 1})},
     };
 
     std::shared_ptr<Definition> Lookup(OpcodeType op){
@@ -329,6 +339,12 @@ namespace bytecode
             case 1:
                 {
                     oss << def->Name << " " << operands[0];
+                    return oss.str();
+                }
+                break;
+            case 2:
+                {
+                    oss << def->Name << " " << operands[0] << " " << operands[1];
                     return oss.str();
                 }
                 break;

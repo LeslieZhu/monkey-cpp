@@ -27,6 +27,7 @@ namespace objects
 		HASH,
 		BUILTIN,
 		COMPILED_FUNCTION,
+		CLOSURE,
 	};
 
 	struct HashKey
@@ -292,6 +293,23 @@ namespace objects
 		{
 			std::stringstream oss;
 			oss << "CompiledFunction[" << this << "]";
+			return oss.str();
+		}
+	};
+
+	struct Closure: Object
+	{
+		std::shared_ptr<CompiledFunction> Fn;
+		std::vector<std::shared_ptr<Object>> Free;
+
+		Closure(std::shared_ptr<CompiledFunction> fn): Fn(fn){}
+		virtual ~Closure(){}
+
+		virtual ObjectType Type() { return ObjectType::CLOSURE; }
+		virtual std::string Inspect()
+		{
+			std::stringstream oss;
+			oss << "Closure[" << this << "]";
 			return oss.str();
 		}
 	};

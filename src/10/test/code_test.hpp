@@ -51,6 +51,16 @@ TEST(TestMaker, BasicAssertions)
                 static_cast<bytecode::Opcode>(bytecode::OpcodeType::OpGetLocal),
                 255
             }
+        },
+        {
+            bytecode::OpcodeType::OpClosure,
+            {65534, 255},
+            {
+                static_cast<bytecode::Opcode>(bytecode::OpcodeType::OpClosure),
+                255,
+                254,
+                255
+            }
         }
     };
 
@@ -79,6 +89,13 @@ TEST(TestInstructionsString, BasicTest)
             {bytecode::Make(bytecode::OpcodeType::OpGetLocal, {1})},
             {bytecode::Make(bytecode::OpcodeType::OpConstant, {2})},
             {bytecode::Make(bytecode::OpcodeType::OpConstant, {65535})}
+        },
+        {
+            {bytecode::Make(bytecode::OpcodeType::OpAdd, {})},
+            {bytecode::Make(bytecode::OpcodeType::OpGetLocal, {1})},
+            {bytecode::Make(bytecode::OpcodeType::OpConstant, {2})},
+            {bytecode::Make(bytecode::OpcodeType::OpConstant, {65535})},
+            {bytecode::Make(bytecode::OpcodeType::OpClosure, {65535, 255})}
         }
     };
 
@@ -91,6 +108,12 @@ TEST(TestInstructionsString, BasicTest)
 0001 OpGetLocal 1
 0003 OpConstant 2
 0006 OpConstant 65535
+)"",
+        R""(0000 OpAdd
+0001 OpGetLocal 1
+0003 OpConstant 2
+0006 OpConstant 65535
+0009 OpClosure 65535 255
 )"",
     };
 
@@ -125,6 +148,9 @@ TEST(TestReadOperands, BasicTest)
         },
         {
             bytecode::OpcodeType::OpGetLocal, {255}, 1
+        },
+        {
+            bytecode::OpcodeType::OpClosure, {65535, 255}, 3
         }
     };
 

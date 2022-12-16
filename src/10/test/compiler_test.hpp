@@ -12,6 +12,7 @@
 extern void printParserErrors(std::vector<std::string> errors);
 extern void testIntegerObject(std::shared_ptr<objects::Object> obj, int64_t expected);
 extern void testStringObject(std::shared_ptr<objects::Object> obj, std::string expected);
+extern void testNullObject(std::shared_ptr<objects::Object> obj);
 
 std::unique_ptr<ast::Node> TestHelper(const std::string& input)
 {
@@ -70,10 +71,19 @@ void testConstans(std::vector<std::variant<int, std::string, std::vector<bytecod
         {
             std::vector<bytecode::Instructions> ins = std::get<std::vector<bytecode::Instructions>>(constant);
 
-            std::shared_ptr<objects::CompiledFunction> funcObj = std::dynamic_pointer_cast<objects::CompiledFunction>(actual[i]);
-            EXPECT_NE(funcObj, nullptr);
+            // std::cout << actual[i]->TypeStr() << std::endl;
 
-            testInstructions(ins, funcObj->Instructions);
+            if(std::shared_ptr<objects::Closure> funcObj = std::dynamic_pointer_cast<objects::Closure>(actual[i]); funcObj != nullptr)
+            {
+                testInstructions(ins, funcObj->Fn->Instructions);
+            }
+            else if(std::shared_ptr<objects::CompiledFunction> funcObj = std::dynamic_pointer_cast<objects::CompiledFunction>(actual[i]); funcObj != nullptr)
+            {
+                testInstructions(ins, funcObj->Instructions);
+            }
+            else {
+                testNullObject(actual[i]);
+            } 
         }
 
         i += 1;
@@ -926,7 +936,7 @@ TEST(TestCompileFunctions, BasicAssertions)
                 ins[0]
             },
             {
-                {bytecode::Make(bytecode::OpcodeType::OpConstant, {2})},
+                {bytecode::Make(bytecode::OpcodeType::OpClosure, {2, 0})},
                 {bytecode::Make(bytecode::OpcodeType::OpPop)},
             }
         },
@@ -938,7 +948,7 @@ TEST(TestCompileFunctions, BasicAssertions)
                 ins[0]
             },
             {
-                {bytecode::Make(bytecode::OpcodeType::OpConstant, {2})},
+                {bytecode::Make(bytecode::OpcodeType::OpClosure, {2, 0})},
                 {bytecode::Make(bytecode::OpcodeType::OpPop)},
             }
         },
@@ -950,7 +960,7 @@ TEST(TestCompileFunctions, BasicAssertions)
                 ins[1]
             },
             {
-                {bytecode::Make(bytecode::OpcodeType::OpConstant, {2})},
+                {bytecode::Make(bytecode::OpcodeType::OpClosure, {2, 0})},
                 {bytecode::Make(bytecode::OpcodeType::OpPop)},
             }
         },
@@ -960,7 +970,7 @@ TEST(TestCompileFunctions, BasicAssertions)
                 ins[2]
             },
             {
-                {bytecode::Make(bytecode::OpcodeType::OpConstant, {0})},
+                {bytecode::Make(bytecode::OpcodeType::OpClosure, {0, 0})},
                 {bytecode::Make(bytecode::OpcodeType::OpPop)},
             }
         },
@@ -971,7 +981,7 @@ TEST(TestCompileFunctions, BasicAssertions)
                 ins[3]
             },
             {
-                {bytecode::Make(bytecode::OpcodeType::OpConstant, {1})},
+                {bytecode::Make(bytecode::OpcodeType::OpClosure, {1, 0})},
                 {bytecode::Make(bytecode::OpcodeType::OpCall, {0})},
                 {bytecode::Make(bytecode::OpcodeType::OpPop)},
             }
@@ -983,7 +993,7 @@ TEST(TestCompileFunctions, BasicAssertions)
                 ins[4]
             },
             {
-                {bytecode::Make(bytecode::OpcodeType::OpConstant, {1})},
+                {bytecode::Make(bytecode::OpcodeType::OpClosure, {1, 0})},
                 {bytecode::Make(bytecode::OpcodeType::OpSetGlobal, {0})},
                 {bytecode::Make(bytecode::OpcodeType::OpGetGlobal, {0})},
                 {bytecode::Make(bytecode::OpcodeType::OpCall, {0})},
@@ -997,7 +1007,7 @@ TEST(TestCompileFunctions, BasicAssertions)
                 24
             },
             {
-                {bytecode::Make(bytecode::OpcodeType::OpConstant, {0})},
+                {bytecode::Make(bytecode::OpcodeType::OpClosure, {0, 0})},
                 {bytecode::Make(bytecode::OpcodeType::OpSetGlobal, {0})},
                 {bytecode::Make(bytecode::OpcodeType::OpGetGlobal, {0})},
                 {bytecode::Make(bytecode::OpcodeType::OpConstant, {1})},
@@ -1014,7 +1024,7 @@ TEST(TestCompileFunctions, BasicAssertions)
                 26
             },
             {
-                {bytecode::Make(bytecode::OpcodeType::OpConstant, {0})},
+                {bytecode::Make(bytecode::OpcodeType::OpClosure, {0, 0})},
                 {bytecode::Make(bytecode::OpcodeType::OpSetGlobal, {0})},
                 {bytecode::Make(bytecode::OpcodeType::OpGetGlobal, {0})},
                 {bytecode::Make(bytecode::OpcodeType::OpConstant, {1})},
@@ -1031,7 +1041,7 @@ TEST(TestCompileFunctions, BasicAssertions)
                 24
             },
             {
-                {bytecode::Make(bytecode::OpcodeType::OpConstant, {0})},
+                {bytecode::Make(bytecode::OpcodeType::OpClosure, {0, 0})},
                 {bytecode::Make(bytecode::OpcodeType::OpSetGlobal, {0})},
                 {bytecode::Make(bytecode::OpcodeType::OpGetGlobal, {0})},
                 {bytecode::Make(bytecode::OpcodeType::OpConstant, {1})},
@@ -1048,7 +1058,7 @@ TEST(TestCompileFunctions, BasicAssertions)
                 26
             },
             {
-                {bytecode::Make(bytecode::OpcodeType::OpConstant, {0})},
+                {bytecode::Make(bytecode::OpcodeType::OpClosure, {0,0})},
                 {bytecode::Make(bytecode::OpcodeType::OpSetGlobal, {0})},
                 {bytecode::Make(bytecode::OpcodeType::OpGetGlobal, {0})},
                 {bytecode::Make(bytecode::OpcodeType::OpConstant, {1})},
@@ -1140,7 +1150,7 @@ TEST(testCompilerLetStatementScope, basic)
             {
                 {bytecode::Make(bytecode::OpcodeType::OpConstant, {0})},
                 {bytecode::Make(bytecode::OpcodeType::OpSetGlobal, {0})},
-                {bytecode::Make(bytecode::OpcodeType::OpConstant, {1})},
+                {bytecode::Make(bytecode::OpcodeType::OpClosure, {1, 0})},
                 {bytecode::Make(bytecode::OpcodeType::OpPop)},
             }
         },
@@ -1151,19 +1161,19 @@ TEST(testCompilerLetStatementScope, basic)
                 ins[1]
             },
             {
-                {bytecode::Make(bytecode::OpcodeType::OpConstant, {1})},
+                {bytecode::Make(bytecode::OpcodeType::OpClosure, {1, 0})},
                 {bytecode::Make(bytecode::OpcodeType::OpPop)},
             }
         },
         {
-            "fn(){ let a = 55; let b = 77; a + b",
+            "fn(){ let a = 55; let b = 77; a + b}",
             {
                 55, 
                 77, 
                 ins[2]
             },
             {
-                {bytecode::Make(bytecode::OpcodeType::OpConstant, {2})},
+                {bytecode::Make(bytecode::OpcodeType::OpClosure, {2,0})},
                 {bytecode::Make(bytecode::OpcodeType::OpPop)},
             }
         },
@@ -1228,7 +1238,7 @@ TEST(TestCompileBuiltins, BasicAssertions)
             },
             {
                 {
-                    bytecode::Make(bytecode::OpcodeType::OpConstant, {0})
+                    bytecode::Make(bytecode::OpcodeType::OpClosure, {0, 0})
                 },
                 {
                     bytecode::Make(bytecode::OpcodeType::OpPop)
