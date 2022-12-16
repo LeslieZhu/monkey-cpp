@@ -58,7 +58,7 @@ namespace vm
         {
             if(sp > StackSize)
             {
-                return evaluator::newError("stack overflow");
+                return objects::newError("stack overflow");
             }
 
             stack[sp] = obj;
@@ -369,7 +369,7 @@ namespace vm
                 return executeBinaryStringOperaction(op, left, right);
             }
             else {
-                return evaluator::newError("unsupported types for binary operaction: " + left->TypeStr() + " " + right->TypeStr());
+                return objects::newError("unsupported types for binary operaction: " + left->TypeStr() + " " + right->TypeStr());
             }
         }
 
@@ -397,7 +397,7 @@ namespace vm
 
             if(operand->Type() != objects::ObjectType::INTEGER)
             {
-                return evaluator::newError("unsupported type for negation: " + operand->TypeStr());
+                return objects::newError("unsupported type for negation: " + operand->TypeStr());
             }
             auto integerObj = std::dynamic_pointer_cast<objects::Integer>(operand);
             return Push(std::make_shared<objects::Integer>(-1 * integerObj->Value));
@@ -428,7 +428,7 @@ namespace vm
                 break;
             
             default:
-                return evaluator::newError("unknow integer operator: " + bytecode::OpcodeTypeStr(op));
+                return objects::newError("unknow integer operator: " + bytecode::OpcodeTypeStr(op));
                 break;
             }
 
@@ -451,7 +451,7 @@ namespace vm
                 break;
             
             default:
-                return evaluator::newError("unknow string operator: " + bytecode::OpcodeTypeStr(op));
+                return objects::newError("unknow string operator: " + bytecode::OpcodeTypeStr(op));
                 break;
             }
 
@@ -478,7 +478,7 @@ namespace vm
                 break;
             
             default:
-                return evaluator::newError("unknow operator: " + bytecode::OpcodeTypeStr(op) + " (" + left->TypeStr() + " " + right->TypeStr() + ")");
+                return objects::newError("unknow operator: " + bytecode::OpcodeTypeStr(op) + " (" + left->TypeStr() + " " + right->TypeStr() + ")");
             }
         }
 
@@ -502,7 +502,7 @@ namespace vm
                 break;
 
             default:
-                return evaluator::newError("unknow operator: " + bytecode::OpcodeTypeStr(op));
+                return objects::newError("unknow operator: " + bytecode::OpcodeTypeStr(op));
             }
         }
 
@@ -532,7 +532,7 @@ namespace vm
             }
             else 
             {
-                return evaluator::newError("index operator not supported: " + left->TypeStr());
+                return objects::newError("index operator not supported: " + left->TypeStr());
             }
         }
 
@@ -560,7 +560,7 @@ namespace vm
 
                 if(!key->Hashable())
                 {
-                    return evaluator::newError("unusable as hash type: " + key->TypeStr());
+                    return objects::newError("unusable as hash type: " + key->TypeStr());
                 }
 
                 hashPairs[key->GetHashKey()] = pair;
@@ -574,7 +574,7 @@ namespace vm
             auto fnObj = stack[sp - 1 - numArgs];
             if (fnObj->Type() != objects::ObjectType::COMPILED_FUNCTION)
             {
-                return evaluator::newError("calling non-function");
+                return objects::newError("calling non-function");
             }
 
             auto compiledFnObj = std::dynamic_pointer_cast<objects::CompiledFunction>(fnObj);
@@ -583,7 +583,7 @@ namespace vm
             {
                 std::string str1 = std::to_string(compiledFnObj->NumParameters);
                 std::string str2 = std::to_string(numArgs);
-                return evaluator::newError("wrong number of arguments: want=" + str1 + ", got=" + str2);
+                return objects::newError("wrong number of arguments: want=" + str1 + ", got=" + str2);
             }
 
             auto funcFrame = NewFrame(compiledFnObj, sp - numArgs);

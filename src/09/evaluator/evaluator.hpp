@@ -20,13 +20,6 @@ namespace evaluator
 {
 	std::shared_ptr<objects::Object> Eval(std::shared_ptr<ast::Node> node, std::shared_ptr<objects::Environment> env);
 
-	std::shared_ptr<objects::Error> newError(std::string msg)
-	{
-		std::shared_ptr<objects::Error> error = std::make_shared<objects::Error>();
-		error->Message = msg;
-		return error;
-	}
-
 	bool isError(std::shared_ptr<objects::Object> obj)
 	{
 		if (obj != nullptr)
@@ -105,7 +98,7 @@ namespace evaluator
 		}
 		else
 		{
-			return newError("not a function: " + fn->TypeStr());
+			return objects::newError("not a function: " + fn->TypeStr());
 		}
 	}
 
@@ -153,7 +146,7 @@ namespace evaluator
 			return builtin;
 		}
 
-		return newError("identifier not found: " + node->Value);
+		return objects::newError("identifier not found: " + node->Value);
 	}
 
 	std::shared_ptr<objects::Object> evalIfExpression(std::shared_ptr<ast::IfExpression> ie, std::shared_ptr<objects::Environment> env)
@@ -222,7 +215,7 @@ namespace evaluator
 		}
 		else
 		{
-			return newError("unknown operator: " + left->TypeStr() + " " + ops + " " + right->TypeStr());
+			return objects::newError("unknown operator: " + left->TypeStr() + " " + ops + " " + right->TypeStr());
 		}
 	}
 
@@ -231,7 +224,7 @@ namespace evaluator
 	{
 		if(ops != "+")
 		{
-			return newError("unknown operator: " + left->TypeStr() + " " + ops + " " + right->TypeStr());
+			return objects::newError("unknown operator: " + left->TypeStr() + " " + ops + " " + right->TypeStr());
 		}
 		std::string leftValue = std::dynamic_pointer_cast<objects::String>(left)->Value;
 		std::string rightValue = std::dynamic_pointer_cast<objects::String>(right)->Value;
@@ -244,7 +237,7 @@ namespace evaluator
 	{
 		if (right->Type() != objects::ObjectType::INTEGER)
 		{
-			return newError("unknown operator: -" + right->TypeStr());
+			return objects::newError("unknown operator: -" + right->TypeStr());
 		}
 
 		long long int value = std::dynamic_pointer_cast<objects::Integer>(right)->Value;
@@ -283,7 +276,7 @@ namespace evaluator
 		}
 		else
 		{
-			return newError("unknown operator: " + ops + right->TypeStr());
+			return objects::newError("unknown operator: " + ops + right->TypeStr());
 		}
 	}
 
@@ -307,11 +300,11 @@ namespace evaluator
 		}
 		else if (left->Type() != right->Type())
 		{
-			return newError("type mismatch: " + left->TypeStr() + " " + ops + " " + right->TypeStr());
+			return objects::newError("type mismatch: " + left->TypeStr() + " " + ops + " " + right->TypeStr());
 		}
 		else
 		{
-			return newError("unknown operator: " + left->TypeStr() + " " + ops + " " + right->TypeStr());
+			return objects::newError("unknown operator: " + left->TypeStr() + " " + ops + " " + right->TypeStr());
 		}
 	}
 
@@ -335,7 +328,7 @@ namespace evaluator
 
 		if(!index->Hashable())
 		{
-			return newError("unusable as hash key: " + index->TypeStr());
+			return objects::newError("unusable as hash key: " + index->TypeStr());
 		}
 
 		auto hashed = index->GetHashKey();
@@ -359,7 +352,7 @@ namespace evaluator
 		{
 			return evalHashIndexExpression(left, index);
 		} else {
-			return newError("index operator not supported: " + left->TypeStr());
+			return objects::newError("index operator not supported: " + left->TypeStr());
 		}
 	}
 
@@ -378,7 +371,7 @@ namespace evaluator
 
 			if(!key->Hashable())
 			{
-				return newError("unusable as hash key: " + key->TypeStr());
+				return objects::newError("unusable as hash key: " + key->TypeStr());
 			}
 
 			auto value = Eval(valueNode, env);

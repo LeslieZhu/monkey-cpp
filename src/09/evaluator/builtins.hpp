@@ -10,13 +10,11 @@
 
 namespace evaluator
 {
-    std::shared_ptr<objects::Error> newError(std::string msg);
-
     std::shared_ptr<objects::Object> BuiltinFunc_Len([[maybe_unused]] std::vector<std::shared_ptr<objects::Object>>& args)
     {
         if(args.size() != 1)
         {
-            return newError("wrong number of arguments. got=" + std::to_string(args.size()) + ", want=1");
+            return objects::newError("wrong number of arguments. got=" + std::to_string(args.size()) + ", want=1");
         }
 
         if(std::shared_ptr<objects::String> obj = std::dynamic_pointer_cast<objects::String>(args[0]); obj != nullptr)
@@ -29,7 +27,7 @@ namespace evaluator
         }
         else
         {
-            return newError("argument to 'len' not supported, got " + args[0]->TypeStr());
+            return objects::newError("argument to 'len' not supported, got " + args[0]->TypeStr());
         }
     }
 
@@ -37,7 +35,7 @@ namespace evaluator
     {
         if(args.size() != 1)
         {
-            return newError("wrong number of arguments. got=" + std::to_string(args.size()) + ", want=1");
+            return objects::newError("wrong number of arguments. got=" + std::to_string(args.size()) + ", want=1");
         }
 
         if(std::shared_ptr<objects::Array> obj = std::dynamic_pointer_cast<objects::Array>(args[0]); obj != nullptr)
@@ -51,7 +49,7 @@ namespace evaluator
         }
         else
         {
-            return newError("argument to 'first' must be ARRAY, got " + args[0]->TypeStr());
+            return objects::newError("argument to 'first' must be ARRAY, got " + args[0]->TypeStr());
         }
     }
 
@@ -59,7 +57,7 @@ namespace evaluator
     {
         if(args.size() != 1)
         {
-            return newError("wrong number of arguments. got=" + std::to_string(args.size()) + ", want=1");
+            return objects::newError("wrong number of arguments. got=" + std::to_string(args.size()) + ", want=1");
         }
 
         if(std::shared_ptr<objects::Array> obj = std::dynamic_pointer_cast<objects::Array>(args[0]); obj != nullptr)
@@ -74,7 +72,7 @@ namespace evaluator
         }
         else
         {
-            return newError("argument to 'last' must be ARRAY, got " + args[0]->TypeStr());
+            return objects::newError("argument to 'last' must be ARRAY, got " + args[0]->TypeStr());
         }
     }
 
@@ -82,7 +80,7 @@ namespace evaluator
     {
         if(args.size() != 1)
         {
-            return newError("wrong number of arguments. got=" + std::to_string(args.size()) + ", want=1");
+            return objects::newError("wrong number of arguments. got=" + std::to_string(args.size()) + ", want=1");
         }
 
         if(std::shared_ptr<objects::Array> obj = std::dynamic_pointer_cast<objects::Array>(args[0]); obj != nullptr)
@@ -99,7 +97,7 @@ namespace evaluator
         }
         else
         {
-            return newError("argument to 'rest' must be ARRAY, got " + args[0]->TypeStr());
+            return objects::newError("argument to 'rest' must be ARRAY, got " + args[0]->TypeStr());
         }
     }
 
@@ -107,7 +105,7 @@ namespace evaluator
     {
         if(args.size() != 2)
         {
-            return newError("wrong number of arguments. got=" + std::to_string(args.size()) + ", want=2");
+            return objects::newError("wrong number of arguments. got=" + std::to_string(args.size()) + ", want=2");
         }
 
         if(std::shared_ptr<objects::Array> obj = std::dynamic_pointer_cast<objects::Array>(args[0]); obj != nullptr)
@@ -119,7 +117,7 @@ namespace evaluator
         }
         else
         {
-            return newError("argument to 'push' must be ARRAY, got " + args[0]->TypeStr());
+            return objects::newError("argument to 'push' must be ARRAY, got " + args[0]->TypeStr());
         }
     }
 

@@ -158,7 +158,7 @@ namespace compiler
                     emit(bytecode::OpcodeType::OpNotEqual, {});
                 }
                 else {
-                    return evaluator::newError("unknow operator: " + infixObj->Operator);
+                    return objects::newError("unknow operator: " + infixObj->Operator);
                 }
             }
             else if(node->GetNodeType() == ast::NodeType::PrefixExpression)
@@ -179,7 +179,7 @@ namespace compiler
                     emit(bytecode::OpcodeType::OpMinus, {});
                 }
                 else{
-                    return evaluator::newError("unknow operator: " + prefixObj->Operator);
+                    return objects::newError("unknow operator: " + prefixObj->Operator);
                 }
             }
             else if(node->GetNodeType() == ast::NodeType::IfExpression)
@@ -256,7 +256,7 @@ namespace compiler
                 auto symbol = symbolTable->Resolve(identObj->Value);
                 if(symbol == nullptr)
                 {
-                    return evaluator::newError("undefined variable " + identObj->Value);
+                    return objects::newError("undefined variable " + identObj->Value);
                 }
 
                 if(symbol->Scope == compiler::SymbolScopeType::GlobalScope)
