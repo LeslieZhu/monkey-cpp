@@ -511,7 +511,7 @@ namespace vm
         {
             if(left->Type() == objects::ObjectType::ARRAY && index->Type() == objects::ObjectType::INTEGER)
             {
-                auto result = evaluator::evalArrayIndexExpression(left, index);
+                auto result = objects::evalArrayIndexExpression(left, index);
                 if (objects::isError(result))
                 {
                     return result;
@@ -522,7 +522,7 @@ namespace vm
             }
             else if(left->Type() == objects::ObjectType::HASH)
             {
-                auto result = evaluator::evalHashIndexExpression(left, index);
+                auto result = objects::evalHashIndexExpression(left, index);
                 if (objects::isError(result))
                 {
                     return result;

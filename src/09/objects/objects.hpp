@@ -308,6 +308,40 @@ namespace objects
 		}
 	}
 
+	std::shared_ptr<objects::Object> evalArrayIndexExpression(std::shared_ptr<objects::Object> left, std::shared_ptr<objects::Object> index)
+	{
+		std::shared_ptr<objects::Array> arrayObj = std::dynamic_pointer_cast<objects::Array>(left);
+		auto idx = std::dynamic_pointer_cast<objects::Integer>(index)->Value;
+		auto max = static_cast<int64_t>(arrayObj->Elements.size() - 1);
+
+		if(idx < 0 || idx > max)
+		{
+			return objects::NULL_OBJ;
+		}
+
+		return arrayObj->Elements[idx];
+	}
+
+	std::shared_ptr<objects::Object> evalHashIndexExpression(std::shared_ptr<objects::Object> left, std::shared_ptr<objects::Object> index)
+	{
+		std::shared_ptr<objects::Hash> hashObj = std::dynamic_pointer_cast<objects::Hash>(left);
+
+		if(!index->Hashable())
+		{
+			return objects::newError("unusable as hash key: " + index->TypeStr());
+		}
+
+		auto hashed = index->GetHashKey();
+
+		auto fit = hashObj->Pairs.find(hashed);
+		if(fit == hashObj->Pairs.end())
+		{
+			return objects::NULL_OBJ;
+		}
+
+		return fit->second->Value;
+	}
+
 
 }
 
