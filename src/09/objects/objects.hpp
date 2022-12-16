@@ -296,6 +296,19 @@ namespace objects
 	}
 
 
+	std::shared_ptr<objects::Boolean> nativeBoolToBooleanObject(bool input)
+	{
+		if (input)
+		{
+			return objects::TRUE_OBJ;
+		}
+		else
+		{
+			return objects::FALSE_OBJ;
+		}
+	}
+
+
 }
 
 #endif // H_OBJECTS_H

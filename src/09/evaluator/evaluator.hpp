@@ -20,18 +20,6 @@ namespace evaluator
 {
 	std::shared_ptr<objects::Object> Eval(std::shared_ptr<ast::Node> node, std::shared_ptr<objects::Environment> env);
 
-	std::shared_ptr<objects::Boolean> nativeBoolToBooleanObject(bool input)
-	{
-		if (input)
-		{
-			return objects::TRUE_OBJ;
-		}
-		else
-		{
-			return objects::FALSE_OBJ;
-		}
-	}
-
 	std::shared_ptr<objects::Object> unwrapReturnValue(std::shared_ptr<objects::Object> obj)
 	{
 		std::shared_ptr<objects::ReturnValue> returnValue = std::dynamic_pointer_cast<objects::ReturnValue>(obj);
@@ -170,19 +158,19 @@ namespace evaluator
 		}
 		else if (ops == "<")
 		{
-			return nativeBoolToBooleanObject(leftValue < rightValue);
+			return objects::nativeBoolToBooleanObject(leftValue < rightValue);
 		}
 		else if (ops == ">")
 		{
-			return nativeBoolToBooleanObject(leftValue > rightValue);
+			return objects::nativeBoolToBooleanObject(leftValue > rightValue);
 		}
 		else if (ops == "==")
 		{
-			return nativeBoolToBooleanObject(leftValue == rightValue);
+			return objects::nativeBoolToBooleanObject(leftValue == rightValue);
 		}
 		else if (ops == "!=")
 		{
-			return nativeBoolToBooleanObject(leftValue != rightValue);
+			return objects::nativeBoolToBooleanObject(leftValue != rightValue);
 		}
 		else
 		{
@@ -263,11 +251,11 @@ namespace evaluator
 		}
 		else if (ops == "==")
 		{
-			return nativeBoolToBooleanObject(left == right);
+			return objects::nativeBoolToBooleanObject(left == right);
 		}
 		else if (ops == "!=")
 		{
-			return nativeBoolToBooleanObject(left != right);
+			return objects::nativeBoolToBooleanObject(left != right);
 		}
 		else if (left->Type() != right->Type())
 		{
@@ -511,7 +499,7 @@ namespace evaluator
 #ifdef DEBUG
 			std::cout << "Eval: Boolean" << std::endl;
 #endif
-			return nativeBoolToBooleanObject(std::dynamic_pointer_cast<ast::Boolean>(node)->Value);
+			return objects::nativeBoolToBooleanObject(std::dynamic_pointer_cast<ast::Boolean>(node)->Value);
 		}
 		else if(node->GetNodeType() == ast::NodeType::StringLiteral)
 		{

@@ -471,10 +471,10 @@ namespace vm
             switch (op)
             {
             case bytecode::OpcodeType::OpEqual:
-                return Push(evaluator::nativeBoolToBooleanObject(right == left));
+                return Push(objects::nativeBoolToBooleanObject(right == left));
                 break;
             case bytecode::OpcodeType::OpNotEqual:
-                return Push(evaluator::nativeBoolToBooleanObject(right != left));
+                return Push(objects::nativeBoolToBooleanObject(right != left));
                 break;
             
             default:
@@ -492,13 +492,13 @@ namespace vm
             switch (op)
             {
             case bytecode::OpcodeType::OpEqual:
-                return Push(evaluator::nativeBoolToBooleanObject(rightObj->Value == leftObj->Value));
+                return Push(objects::nativeBoolToBooleanObject(rightObj->Value == leftObj->Value));
                 break;
             case bytecode::OpcodeType::OpNotEqual:
-                return Push(evaluator::nativeBoolToBooleanObject(rightObj->Value != leftObj->Value));
+                return Push(objects::nativeBoolToBooleanObject(rightObj->Value != leftObj->Value));
                 break;
             case bytecode::OpcodeType::OpGreaterThan:
-                return Push(evaluator::nativeBoolToBooleanObject(leftObj->Value > rightObj->Value));
+                return Push(objects::nativeBoolToBooleanObject(leftObj->Value > rightObj->Value));
                 break;
 
             default:
