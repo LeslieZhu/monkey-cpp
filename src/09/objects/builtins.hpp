@@ -39,7 +39,7 @@ namespace objects
         }
         else
         {
-            return objects::newError("argument to 'len' not supported, got " + args[0]->TypeStr());
+            return objects::newError("argument to `len` not supported, got " + args[0]->TypeStr());
         }
     }
 
@@ -61,7 +61,7 @@ namespace objects
         }
         else
         {
-            return objects::newError("argument to 'first' must be ARRAY, got " + args[0]->TypeStr());
+            return objects::newError("argument to `first` must be ARRAY, got " + args[0]->TypeStr());
         }
     }
 
@@ -84,7 +84,7 @@ namespace objects
         }
         else
         {
-            return objects::newError("argument to 'last' must be ARRAY, got " + args[0]->TypeStr());
+            return objects::newError("argument to `last` must be ARRAY, got " + args[0]->TypeStr());
         }
     }
 
@@ -109,7 +109,7 @@ namespace objects
         }
         else
         {
-            return objects::newError("argument to 'rest' must be ARRAY, got " + args[0]->TypeStr());
+            return objects::newError("argument to `rest` must be ARRAY, got " + args[0]->TypeStr());
         }
     }
 
@@ -129,7 +129,7 @@ namespace objects
         }
         else
         {
-            return objects::newError("argument to 'push' must be ARRAY, got " + args[0]->TypeStr());
+            return objects::newError("argument to `push` must be ARRAY, got " + args[0]->TypeStr());
         }
     }
 

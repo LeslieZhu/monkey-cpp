@@ -299,7 +299,7 @@ namespace vm
                             bytecode::ReadUint8(instructions, ip+1, numArgs);
                             frame->ip += 1;
 
-                            auto result = callFunction((int)numArgs);
+                            auto result = executeCall((int)numArgs);
                             if(objects::isError(result))
                             {
                                return result;
@@ -342,6 +342,20 @@ namespace vm
                             //Pop(); // 函数本体出栈
 
                             auto result = Push(objects::NULL_OBJ);
+                            if(objects::isError(result))
+                            {
+                               return result;
+                            }
+                        }
+                        break;
+                    case bytecode::OpcodeType::OpGetBuiltin:
+                        {
+                            uint8_t builtinIndex;
+                            bytecode::ReadUint8(instructions, ip+1, builtinIndex);
+                            frame->ip += 1;
+
+                            auto definition = objects::Builtins[builtinIndex];
+                            auto result = Push(definition->Builtin);
                             if(objects::isError(result))
                             {
                                return result;
@@ -568,9 +582,26 @@ namespace vm
             return std::make_shared<objects::Hash>(hashPairs);
         }
 
-        std::shared_ptr<objects::Object> callFunction(int numArgs)
+        std::shared_ptr<objects::Object>  executeCall(int numArgs)
         {
             auto fnObj = stack[sp - 1 - numArgs];
+
+            if(fnObj->Type() == objects::ObjectType::COMPILED_FUNCTION)
+            {
+                return callFunction(fnObj, numArgs);
+            }
+            else if(fnObj->Type() == objects::ObjectType::BUILTIN)
+            {
+                return callBuiltin(fnObj, numArgs);
+            }
+            else
+            {
+                return objects::newError("calling non-function and non-built-in");
+            }
+        }
+
+        std::shared_ptr<objects::Object> callFunction(std::shared_ptr<objects::Object> fnObj,int numArgs)
+        {
             if (fnObj->Type() != objects::ObjectType::COMPILED_FUNCTION)
             {
                 return objects::newError("calling non-function");
@@ -590,6 +621,33 @@ namespace vm
             pushFrame(funcFrame);
 
             sp = funcFrame->basePointer + compiledFnObj->NumLocals;
+
+            return nullptr;
+        }
+
+        std::shared_ptr<objects::Object> callBuiltin(std::shared_ptr<objects::Object> fnObj,int numArgs)
+        {
+            if (fnObj->Type() != objects::ObjectType::BUILTIN)
+            {
+                return objects::newError("calling non-built-in");
+            }
+
+            auto builtinFnObj = std::dynamic_pointer_cast<objects::Builtin>(fnObj);
+
+            std::vector<std::shared_ptr<objects::Object>> args;
+
+            args.assign(stack.begin() + sp - numArgs, stack.begin() + sp);
+
+            auto result = builtinFnObj->Fn(args);
+            
+            sp = sp - numArgs - 1;
+
+            if(result != nullptr)
+            {
+                Push(result);
+            } else {
+                Push(objects::NULL_OBJ);
+            }
 
             return nullptr;
         }

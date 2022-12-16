@@ -11,6 +11,7 @@
 //#include "evaluator/evaluator.hpp"
 #include "compiler/compiler.hpp"
 #include "vm/vm.hpp"
+#include "objects/builtins.hpp"
 
 namespace repl
 {
@@ -48,6 +49,13 @@ namespace repl
         std::vector<std::shared_ptr<objects::Object>> constants{};
         std::vector<std::shared_ptr<objects::Object>> globals(vm::GlobalsSize);
         auto symbolTable = compiler::NewSymbolTable();
+
+        int i = -1;
+        for(auto &fn: objects::Builtins)
+        {
+            i += 1;
+            symbolTable->DefineBuiltin(i, fn->Name);
+        }
 
         std::string line;
         while (true)

@@ -21,10 +21,10 @@ extern void testStringObject(std::shared_ptr<objects::Object> obj, std::string e
 
 struct vmTestCases{
     std::string input;
-    std::variant<int, bool, std::string, void*> expected;
+    std::variant<int, bool, std::string, std::shared_ptr<objects::Object>, void*> expected;
 };
 
-void testExpectedObject(std::variant<int, bool, std::string, void*> expected, std::shared_ptr<objects::Object> actual)
+void testExpectedObject(std::variant<int, bool, std::string, std::shared_ptr<objects::Object>, void*> expected, std::shared_ptr<objects::Object> actual)
 {
     if(std::holds_alternative<int>(expected))
     {
@@ -56,6 +56,23 @@ void testExpectedObject(std::variant<int, bool, std::string, void*> expected, st
         }
         else {
             testStringObject(actual, val);
+        }
+    }
+    else if(std::holds_alternative<std::shared_ptr<objects::Object>>(expected))
+    {
+        auto obj = std::get<std::shared_ptr<objects::Object>>(expected);
+        if(std::shared_ptr<objects::Error> errorObj = std::dynamic_pointer_cast<objects::Error>(obj); errorObj != nullptr)
+        {
+            testExpectedObject(errorObj->Message, actual);
+        } 
+        else if(std::shared_ptr<objects::Array> arrayObj = std::dynamic_pointer_cast<objects::Array>(obj); arrayObj != nullptr)
+        {
+            std::shared_ptr<objects::Array> actualArray = std::dynamic_pointer_cast<objects::Array>(actual);
+            EXPECT_NE(actualArray, nullptr);
+            EXPECT_STREQ(actualArray->Inspect().c_str(), arrayObj->Inspect().c_str());
+        }
+        else {
+            testNullObject(actual);
         }
     }
     else
@@ -470,4 +487,135 @@ TEST(testVMCallingFunctionWithWrongArguments, basicTest)
         EXPECT_NE(errorObj, nullptr);
         EXPECT_STREQ(errorObj->Message.c_str(), test.expected.c_str());
     }
+} 
+
+
+TEST(testVMCallingBuiltinFunction, basicTest)
+{
+    auto int1 = std::make_shared<objects::Integer>(1);
+    auto int2 = std::make_shared<objects::Integer>(2);
+    auto int3 = std::make_shared<objects::Integer>(3);
+
+    std::vector<std::shared_ptr<objects::Object>> Elements1 = {int1};
+    std::vector<std::shared_ptr<objects::Object>> Elements2 = {int2, int3};
+
+    auto array1 = std::make_shared<objects::Array>(Elements1);
+    auto array2 = std::make_shared<objects::Array>(Elements2);
+
+    std::vector<vmTestCases> tests{
+        {
+            R""(
+                len("")
+            )"",
+            0
+        },
+        {
+            R""(
+                len("four")
+            )"",
+            4
+        },
+        {
+            R""(
+                len("hello world")
+            )"",
+            11
+        },
+        {
+            R""(
+                last([1, 2, 3])
+            )"",
+            3
+        },
+        {
+            R""(
+                len([1, 2, 3])
+            )"",
+            3
+        },
+        {
+            R""(
+                first([1, 2, 3])
+            )"",
+            1
+        },
+        {
+            R""(
+                len([])
+            )"",
+            0
+        },
+        {
+            "len(1)",
+            objects::newError("argument to `len` not supported, got INTEGER")
+        },
+        {
+            R""(
+                len("one", "two")
+            )"",
+            objects::newError("wrong number of arguments. got=2, want=1")
+        },
+        {
+            R""(
+                first(1)
+            )"",
+            objects::newError("argument to `first` must be ARRAY, got INTEGER")
+        },
+        {
+            R""(
+                last(1)
+            )"",
+            objects::newError("argument to `last` must be ARRAY, got INTEGER")
+        },
+        {
+            R""(
+                push(1, 1)
+            )"",
+            objects::newError("argument to `push` must be ARRAY, got INTEGER")
+        },
+        {
+            R""(
+                puts("hello", "world!")
+            )"",
+            objects::NULL_OBJ
+        },
+        {
+            R""(
+                first([])
+            )"",
+            objects::NULL_OBJ
+        },
+        {
+            R""(
+                last([])
+            )"",
+            objects::NULL_OBJ
+        },
+        {
+            R""(
+                rest([])
+            )"",
+            objects::NULL_OBJ
+        },
+        {
+            R""(
+                rest([1, 2, 3])
+            )"",
+            array2
+        },
+        {
+            R""(
+                rest([])
+            )"",
+            objects::NULL_OBJ
+        },
+        {
+            R""(
+                push([], 1)
+            )"",
+            array1
+        }
+    };
+
+    runVmTests(tests);
 } 
