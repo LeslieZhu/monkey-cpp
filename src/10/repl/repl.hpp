@@ -7,8 +7,6 @@
 
 #include "lexer/lexer.hpp"
 #include "parser/parser.hpp"
-//#include "objects/environment.hpp"
-//#include "evaluator/evaluator.hpp"
 #include "compiler/compiler.hpp"
 #include "vm/vm.hpp"
 #include "objects/builtins.hpp"
@@ -69,9 +67,9 @@ namespace repl
                 continue;
             }
 
-            std::unique_ptr<lexer::Lexer> pLexer = lexer::New(line);
-            std::unique_ptr<parser::Parser> pParser = parser::New(std::move(pLexer));
-            std::unique_ptr<ast::Program> pProgram{pParser->ParseProgram()};
+            auto pLexer = lexer::New(line);
+            auto pParser = parser::New(std::move(pLexer));
+            auto pProgram = pParser->ParseProgram();
 
             std::vector<std::string> errors = pParser->Errors();
             if (errors.size() > 0)
@@ -80,9 +78,9 @@ namespace repl
                 continue;
             }
 
-            std::unique_ptr<ast::Node> astNode(reinterpret_cast<ast::Node *>(pProgram.release()));
+            std::shared_ptr<ast::Node> astNode(reinterpret_cast<ast::Node *>(pProgram.release()));
 
-            /* auto evaluated = evaluator::Eval(std::move(astNode), env);
+            /* auto evaluated = evaluator::Eval(astNode, env);
 
             if (evaluated != nullptr)
             {
@@ -91,7 +89,7 @@ namespace repl
 
             //auto comp = compiler::New();
             auto comp = compiler::NewWithState(symbolTable, constants);
-            auto result = comp->Compile(std::move(astNode));
+            auto result = comp->Compile(astNode);
             if(objects::isError(result))
             {
                 std::cout << "Woops! Compilation failed: \n" + result->Inspect() << std::endl;
