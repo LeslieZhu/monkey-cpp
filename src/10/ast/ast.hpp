@@ -396,6 +396,7 @@ namespace ast
         token::Token Token; // The 'fn' token
         std::vector<std::shared_ptr<Identifier>> v_pParameters;
         std::shared_ptr<BlockStatement> pBody;
+        std::string Name;
 
         FunctionLiteral(token::Token tok) : Token(tok) {}
         virtual ~FunctionLiteral() {}
@@ -410,7 +411,14 @@ namespace ast
             {
                 params.push_back(pParam->String());
             }
-            oss << TokenLiteral() << "(" << Join(params, ", ") << ") " << pBody->String();
+            oss << TokenLiteral();
+
+            if(Name != "")
+            {
+                oss << "<" << Name << ">";
+            }
+            
+            oss << "(" << Join(params, ", ") << ") " << pBody->String();
             return oss.str();
         }
         virtual NodeType GetNodeType() { return ast::NodeType::FunctionLiteral; }

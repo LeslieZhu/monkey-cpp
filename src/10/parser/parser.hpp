@@ -164,6 +164,12 @@ namespace parser
 
             pStmt->pValue = parseExpression(Priority::LOWEST);
 
+            if(pStmt->pValue->GetNodeType() == ast::NodeType::FunctionLiteral)
+            {
+                auto fl = std::dynamic_pointer_cast<ast::FunctionLiteral>(pStmt->pValue);
+                fl->Name = pStmt->pName->Value;
+            }
+
             if (peekTokenIs(token::types::SEMICOLON))
             {
                 nextToken();
