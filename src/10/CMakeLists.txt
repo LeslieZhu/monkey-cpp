@@ -22,7 +22,7 @@ include_directories(${PROJECT_SOURCE_DIR})
 find_package(GTest)
 include_directories(${GTEST_INCLUDE_DIRS})
 
-find_package(gflags REQUIRED)
+find_package(gflags)
 
 add_executable(monkey
   main/monkey.cpp
