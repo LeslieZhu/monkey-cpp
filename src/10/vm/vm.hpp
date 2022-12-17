@@ -66,7 +66,7 @@ namespace vm
             return nullptr;
         }
 
-        std::shared_ptr<objects::Object> PushClosure(int constIndex)
+        std::shared_ptr<objects::Object> PushClosure(int constIndex, int numFree)
         {
             auto constant = constants[constIndex];
             auto compiledFn = std::dynamic_pointer_cast<objects::CompiledFunction>(constant);
@@ -75,7 +75,15 @@ namespace vm
                 return objects::newError("not a function: " + constant->Inspect());
             }
 
-            auto closure = std::make_shared<objects::Closure>(compiledFn);
+            std::vector<std::shared_ptr<objects::Object>> free(numFree);
+            for(int i = 0; i < numFree; i++)
+            {
+                free[i] = stack[sp - numFree + i];
+            }
+
+            sp -= numFree;
+
+            auto closure = std::make_shared<objects::Closure>(compiledFn, free);
 
             return Push(closure);
         }
@@ -386,7 +394,21 @@ namespace vm
                             bytecode::ReadUint8(instructions, ip+3, numFree);
                             frame->ip += 1;
 
-                            auto result = PushClosure((int)constIndex);
+                            auto result = PushClosure((int)constIndex, (int)numFree);
+                            if(objects::isError(result))
+                            {
+                               return result;
+                            }
+                        }
+                        break;
+                    case bytecode::OpcodeType::OpGetFree:
+                        {
+                            uint8_t freeIndex;
+                            bytecode::ReadUint8(instructions, ip+1, freeIndex);
+                            frame->ip += 1;
+
+                            auto currentClosure = frame->cl;
+                            auto result = Push(currentClosure->Free[freeIndex]);
                             if(objects::isError(result))
                             {
                                return result;

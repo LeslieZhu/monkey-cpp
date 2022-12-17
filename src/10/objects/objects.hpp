@@ -303,6 +303,7 @@ namespace objects
 		std::vector<std::shared_ptr<Object>> Free;
 
 		Closure(std::shared_ptr<CompiledFunction> fn): Fn(fn){}
+		Closure(std::shared_ptr<CompiledFunction> fn, std::vector<std::shared_ptr<Object>> free): Fn(fn), Free(free){}
 		virtual ~Closure(){}
 
 		virtual ObjectType Type() { return ObjectType::CLOSURE; }
