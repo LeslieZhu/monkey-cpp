@@ -22,12 +22,20 @@ include_directories(${PROJECT_SOURCE_DIR})
 find_package(GTest)
 include_directories(${GTEST_INCLUDE_DIRS})
 
+find_package(gflags REQUIRED)
+
 add_executable(monkey
   main/monkey.cpp
 )
 
 target_link_libraries(monkey
 )
+
+add_executable(fibonacci
+  benchmark/fibonacci.cpp
+)
+
+target_link_libraries(fibonacci /usr/local/lib/libgflags.a)
 
 add_executable(test_monkey
   test/main.cpp
