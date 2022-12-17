@@ -16,6 +16,7 @@ namespace compiler
         const SymbolScope GlobalScope = "GLOBAL";
         const SymbolScope LocalScope = "LOCAL";
         const SymbolScope BuiltinScope = "BUILTIN";
+        const SymbolScope FreeScope = "FREE";
     }
 
     struct Symbol{
@@ -41,6 +42,7 @@ namespace compiler
         std::shared_ptr<SymbolTable> Outer;
         std::map<std::string, std::shared_ptr<Symbol>> store;
         int numDefinitions;
+        std::vector<std::shared_ptr<Symbol>> FreeSymbols;
 
         std::shared_ptr<Symbol> Define(std::string name)
         {
@@ -65,6 +67,15 @@ namespace compiler
             return symbol;
         }
 
+        std::shared_ptr<Symbol> DefineFree(std::shared_ptr<Symbol> original)
+        {
+            FreeSymbols.push_back(original);
+
+            auto symbol = std::make_shared<Symbol>(original->Name, SymbolScopeType::FreeScope ,FreeSymbols.size() - 1);
+            store[original->Name] = symbol;
+            return symbol;
+        }
+
         std::shared_ptr<Symbol> Resolve(std::string name)
         {
             auto fit = store.find(name);
@@ -74,7 +85,19 @@ namespace compiler
             }
             else if(Outer != nullptr)
             {
-                return Outer->Resolve(name);
+                auto obj = Outer->Resolve(name);
+                if(obj == nullptr)
+                {
+                    return obj;
+                }
+
+                if(obj->Scope == SymbolScopeType::GlobalScope || obj->Scope == SymbolScopeType::BuiltinScope)
+                {
+                    return obj;
+                }
+
+                auto free = DefineFree(obj);
+                return free;
             }
             else
             {

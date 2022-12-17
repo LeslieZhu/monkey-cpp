@@ -74,6 +74,7 @@ namespace bytecode
 
         OpGetBuiltin,
         OpClosure,
+        OpGetFree,
     };
 
     std::string OpcodeTypeStr(OpcodeType op)
@@ -136,6 +137,8 @@ namespace bytecode
                 return "OpGetBuiltin";
             case OpcodeType::OpClosure:
                 return "OpClosure";
+            case OpcodeType::OpGetFree:
+                return "OpGetFree";
             default:
                 return std::to_string(static_cast<int>(op));
         }
@@ -200,6 +203,7 @@ namespace bytecode
         {OpcodeType::OpGetBuiltin, std::make_shared<Definition>("OpGetBuiltin", 1)},
 
         {OpcodeType::OpClosure, std::make_shared<Definition>("OpClosure", std::vector<int>{2, 1})},
+        {OpcodeType::OpGetFree, std::make_shared<Definition>("OpGetFree", 1)},
     };
 
     std::shared_ptr<Definition> Lookup(OpcodeType op){

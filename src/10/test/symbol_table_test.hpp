@@ -178,3 +178,131 @@ TEST(testResolveBuiltins, Basic)
         }
     }
 }
+
+
+TEST(testResolveFree, Basic)
+{
+    std::string input = R""(
+        let a = 1;
+        let b = 2;
+
+        let firstLocal = fn(){
+            let c = 3;
+            let d = 4;
+
+            a + b + c + d;
+
+            let secondLocal = fn(){
+                let e = 5;
+                let f = 6;
+
+                a + b + c + d + e + f;
+            };
+        };
+    )"";
+
+    auto global = compiler::NewSymbolTable();
+    global->Define("a");
+    global->Define("b");
+
+    auto firstLocal = compiler::NewEnclosedSymbolTable(global);
+    firstLocal->Define("c");
+    firstLocal->Define("d");
+
+    auto secondLocal = compiler::NewEnclosedSymbolTable(firstLocal);
+    secondLocal->Define("e");
+    secondLocal->Define("f");
+
+    std::vector<std::shared_ptr<compiler::SymbolTable>> tests{
+        firstLocal, 
+        secondLocal
+    };
+
+    std::vector<std::vector<std::shared_ptr<compiler::Symbol>>> expected{
+        {
+            std::make_shared<compiler::Symbol>("a", compiler::SymbolScopeType::GlobalScope, 0),
+            std::make_shared<compiler::Symbol>("b", compiler::SymbolScopeType::GlobalScope, 1),
+            std::make_shared<compiler::Symbol>("c", compiler::SymbolScopeType::LocalScope, 0),
+            std::make_shared<compiler::Symbol>("d", compiler::SymbolScopeType::LocalScope, 1),
+        },
+        {
+            std::make_shared<compiler::Symbol>("a", compiler::SymbolScopeType::GlobalScope, 0),
+            std::make_shared<compiler::Symbol>("b", compiler::SymbolScopeType::GlobalScope, 1),
+            std::make_shared<compiler::Symbol>("c", compiler::SymbolScopeType::FreeScope, 0),
+            std::make_shared<compiler::Symbol>("d", compiler::SymbolScopeType::FreeScope, 1),
+            std::make_shared<compiler::Symbol>("e", compiler::SymbolScopeType::LocalScope, 0),
+            std::make_shared<compiler::Symbol>("f", compiler::SymbolScopeType::LocalScope, 1),
+        }
+    };
+
+    std::vector<std::vector<std::shared_ptr<compiler::Symbol>>> expected_free{
+        {
+        },
+        {
+            std::make_shared<compiler::Symbol>("c", compiler::SymbolScopeType::LocalScope, 0),
+            std::make_shared<compiler::Symbol>("d", compiler::SymbolScopeType::LocalScope, 1),
+        }
+    };
+
+    for (unsigned long i = 0; i < tests.size(); i++)
+    {
+        for (auto &sym : expected[i])
+        {
+            auto result = tests[i]->Resolve(sym->Name);
+
+            EXPECT_NE(result, nullptr);
+            EXPECT_EQ(*result, *sym);
+        }
+
+        EXPECT_EQ(tests[i]->FreeSymbols.size(), expected_free[i].size());
+
+        int j = -1;
+        for(auto &sym: expected_free[i])
+        {
+            j += 1;
+
+            auto result = tests[i]->FreeSymbols[j];
+            EXPECT_NE(result, nullptr);
+            EXPECT_EQ(*result, *sym);
+        }
+    }
+}
+
+TEST(testResolveUnresolveableFree, Basic)
+{
+    auto global = compiler::NewSymbolTable();
+    global->Define("a");
+
+    auto firstLocal = compiler::NewEnclosedSymbolTable(global);
+    firstLocal->Define("c");
+
+    auto secondLocal = compiler::NewEnclosedSymbolTable(firstLocal);
+    secondLocal->Define("e");
+    secondLocal->Define("f");
+
+    std::vector<std::shared_ptr<compiler::Symbol>> expected{
+        std::make_shared<compiler::Symbol>("a", compiler::SymbolScopeType::GlobalScope, 0),
+        std::make_shared<compiler::Symbol>("c", compiler::SymbolScopeType::FreeScope, 0),
+        std::make_shared<compiler::Symbol>("e", compiler::SymbolScopeType::LocalScope, 0),
+        std::make_shared<compiler::Symbol>("f", compiler::SymbolScopeType::LocalScope, 1),
+        
+    };
+
+    for (unsigned long i = 0; i < expected.size(); i++)
+    {
+        auto result = secondLocal->Resolve(expected[i]->Name);
+        EXPECT_NE(result, nullptr);
+        EXPECT_EQ(*result, *expected[i]);
+    }
+
+    std::vector<std::string> expectedUnresolveable{
+        "b",
+        "d",
+    };
+
+    for(unsigned long i = 0; i < expectedUnresolveable.size(); i++)
+    {
+        auto result = secondLocal->Resolve(expectedUnresolveable[i]);
+        EXPECT_EQ(result, nullptr);
+    }
+}

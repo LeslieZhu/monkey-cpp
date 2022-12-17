@@ -84,6 +84,9 @@ void testConstans(std::vector<std::variant<int, std::string, std::vector<bytecod
             else {
                 testNullObject(actual[i]);
             } 
+        } 
+        else {
+            testNullObject(actual[i]);
         }
 
         i += 1;
@@ -1250,3 +1253,158 @@ TEST(TestCompileBuiltins, BasicAssertions)
     runCompilerTests(tests);
 } 
 
+
+TEST(TestCompileClosure, BasicAssertions)
+{
+    std::vector<std::vector<bytecode::Instructions>> ins{
+        {
+            {bytecode::Make(bytecode::OpcodeType::OpGetFree, {0})},
+            {bytecode::Make(bytecode::OpcodeType::OpGetLocal, {0})},
+            {bytecode::Make(bytecode::OpcodeType::OpAdd)},
+            {bytecode::Make(bytecode::OpcodeType::OpReturnValue)},
+        },
+        {
+            {bytecode::Make(bytecode::OpcodeType::OpGetLocal, {0})},
+            {bytecode::Make(bytecode::OpcodeType::OpClosure, {0, 1})},
+            {bytecode::Make(bytecode::OpcodeType::OpReturnValue)},
+        },
+
+        //
+        {
+            {bytecode::Make(bytecode::OpcodeType::OpGetFree, {0})},
+            {bytecode::Make(bytecode::OpcodeType::OpGetFree, {1})},
+            {bytecode::Make(bytecode::OpcodeType::OpAdd)},
+            {bytecode::Make(bytecode::OpcodeType::OpGetLocal, {0})},
+            {bytecode::Make(bytecode::OpcodeType::OpAdd)},
+            {bytecode::Make(bytecode::OpcodeType::OpReturnValue)},
+        },
+        {
+            {bytecode::Make(bytecode::OpcodeType::OpGetFree, {0})},
+            {bytecode::Make(bytecode::OpcodeType::OpGetLocal, {0})},
+            {bytecode::Make(bytecode::OpcodeType::OpClosure, {0, 2})},
+            {bytecode::Make(bytecode::OpcodeType::OpReturnValue)},
+        },
+        {
+            {bytecode::Make(bytecode::OpcodeType::OpGetLocal, {0})},
+            {bytecode::Make(bytecode::OpcodeType::OpClosure, {1, 1})},
+            {bytecode::Make(bytecode::OpcodeType::OpReturnValue)},
+        },
+
+        //
+        {
+            {bytecode::Make(bytecode::OpcodeType::OpConstant, {3})},
+            {bytecode::Make(bytecode::OpcodeType::OpSetLocal, {0})},
+            {bytecode::Make(bytecode::OpcodeType::OpGetGlobal, {0})},
+            {bytecode::Make(bytecode::OpcodeType::OpGetFree, {0})},
+            {bytecode::Make(bytecode::OpcodeType::OpAdd)},
+            {bytecode::Make(bytecode::OpcodeType::OpGetFree, {1})},
+            {bytecode::Make(bytecode::OpcodeType::OpAdd)},
+            {bytecode::Make(bytecode::OpcodeType::OpGetLocal, {0})},
+            {bytecode::Make(bytecode::OpcodeType::OpAdd)},
+            {bytecode::Make(bytecode::OpcodeType::OpReturnValue)},
+        },
+        {
+            {bytecode::Make(bytecode::OpcodeType::OpConstant, {2})},
+            {bytecode::Make(bytecode::OpcodeType::OpSetLocal, {0})},
+            {bytecode::Make(bytecode::OpcodeType::OpGetFree, {0})},
+            {bytecode::Make(bytecode::OpcodeType::OpGetLocal, {0})},
+            {bytecode::Make(bytecode::OpcodeType::OpClosure, {4, 2})},
+            {bytecode::Make(bytecode::OpcodeType::OpReturnValue)},
+        },
+        {
+            {bytecode::Make(bytecode::OpcodeType::OpConstant, {1})},
+            {bytecode::Make(bytecode::OpcodeType::OpSetLocal, {0})},
+            {bytecode::Make(bytecode::OpcodeType::OpGetLocal, {0})},
+            {bytecode::Make(bytecode::OpcodeType::OpClosure, {5, 1})},
+            {bytecode::Make(bytecode::OpcodeType::OpReturnValue)},
+        }
+    };
+
+    std::vector<CompilerTestCase>  tests
+    {
+        {
+            R""(
+                fn(a){
+                    fn(b){
+                        a+b
+                    }
+                }
+            )"",
+            {
+                ins[0],
+                ins[1]
+            },
+            {
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpClosure, {1,0})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpPop)
+                },
+            }
+        },
+        {
+            R""(
+                fn(a){
+                    fn(b){
+                        fn(c){
+                            a + b + c;
+                        }
+                    }
+                };
+            )"",
+            {
+                ins[2],
+                ins[3],
+                ins[4]
+            },
+            {
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpClosure, {2,0})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpPop)
+                },
+            }
+        },
+        {
+            R""(
+                let global = 55;
+
+                fn(){
+                    let a = 66;
+
+                    fn(){
+                        let b = 77;
+
+                        fn(){
+                            let c = 88;
+
+                            global + a + b + c;
+                        }
+                    }
+                };
+            )"",
+            {
+                55,66,77,88,
+                ins[5],ins[6],ins[7]
+            },
+            {
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpConstant, {0})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpSetGlobal, {0})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpClosure, {6,0})
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpPop)
+                },
+            }
+        }
+    };
+
+    runCompilerTests(tests);
+} 

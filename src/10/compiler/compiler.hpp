@@ -375,15 +375,21 @@ namespace compiler
                     emit(bytecode::OpcodeType::OpReturn);
                 }
 
+                auto freeSymbols = symbolTable->FreeSymbols;
                 auto numLocals = symbolTable->numDefinitions;
                 auto numParameters = funcObj->v_pParameters.size();
                 auto ins = leaveScope();
+
+                for(auto &sym: freeSymbols)
+                {
+                    loadSymbol(sym);
+                }
 
                 auto compiledFn = std::make_shared<objects::CompiledFunction>(ins, numLocals, numParameters);
                 auto pos = addConstant(compiledFn);
 
                 //emit(bytecode::OpcodeType::OpConstant, {pos});
-                emit(bytecode::OpcodeType::OpClosure, {pos, 0});
+                emit(bytecode::OpcodeType::OpClosure, {pos, static_cast<int>(freeSymbols.size())});
             }
             else if(node->GetNodeType() == ast::NodeType::ReturnStatement)
             {
@@ -457,6 +463,10 @@ namespace compiler
             else if(symbol->Scope == compiler::SymbolScopeType::BuiltinScope)
             {
                 emit(bytecode::OpcodeType::OpGetBuiltin, {symbol->Index});
+            }
+            else if(symbol->Scope == compiler::SymbolScopeType::FreeScope)
+            {
+                emit(bytecode::OpcodeType::OpGetFree, {symbol->Index});
             }
         }
 
