@@ -17,6 +17,7 @@ namespace compiler
         const SymbolScope LocalScope = "LOCAL";
         const SymbolScope BuiltinScope = "BUILTIN";
         const SymbolScope FreeScope = "FREE";
+        const SymbolScope FunctionScope = "FUNCTION";
     }
 
     struct Symbol{
@@ -73,6 +74,13 @@ namespace compiler
 
             auto symbol = std::make_shared<Symbol>(original->Name, SymbolScopeType::FreeScope ,FreeSymbols.size() - 1);
             store[original->Name] = symbol;
+            return symbol;
+        }
+
+        std::shared_ptr<Symbol> DefineFunctionName(std::string name)
+        {
+            auto symbol = std::make_shared<Symbol>(name, SymbolScopeType::FunctionScope ,0);
+            store[name] = symbol;
             return symbol;
         }
 

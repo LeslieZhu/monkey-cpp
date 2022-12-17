@@ -93,6 +93,25 @@ void runVmTests(std::vector<vmTestCases>& tests)
 
         std::shared_ptr<compiler::ByteCode> bytecodeObj = compiler->Bytecode();
 
+        /*
+        for(unsigned long i = 0; i < bytecodeObj->Constants.size(); i++)
+        {
+            auto constant = bytecodeObj->Constants[i];
+            std::cout << "CONSTANT: " << i << " " << constant << std::endl;
+
+            if(constant->Type() == objects::ObjectType::COMPILED_FUNCTION)
+            {
+                auto obj = std::dynamic_pointer_cast<objects::CompiledFunction>(constant);
+                std::cout << " Instructions: \n" << bytecode::InstructionsString(obj->Instructions) << std::endl;
+            }
+            else if(constant->Type() == objects::ObjectType::INTEGER)
+            {
+                auto obj = std::dynamic_pointer_cast<objects::Integer>(constant);
+                std::cout << " Value: " << obj->Value << std::endl;
+            }
+        }
+        */
+
         auto vm = vm::New(bytecodeObj);
         auto vmresult = vm->Run();
         EXPECT_EQ(vmresult, nullptr);
@@ -719,6 +738,56 @@ TEST(testVMClosure, basicTest)
                 closure();
             )"",
             99
+        },
+        {
+            R""(
+                let countDown = fn(x){
+                    if(x == 0){
+                        return 0;
+                    } else {
+                        countDown(x - 1);
+                    }
+                };
+
+                countDown(1);
+            )"",
+            0
+        },
+        {
+            R""(
+                let countDown = fn(x){
+                    if(x == 0){
+                        return 0;
+                    } else {
+                        countDown(x - 1);
+                    }
+                };
+
+                let wrapper = fn(){
+                    countDown(1);
+                };
+
+                wrapper();
+            )"",
+            0
+        },
+        {
+            R""(
+                let wrapper = fn(){
+                    let countDown = fn(x){
+                        if(x == 0){
+                            return 0;
+                        } else {
+                            countDown(x - 1);
+                        }
+                    };
+
+                    countDown(1);
+                };
+
+                wrapper();
+            )"",
+            0
         }
     };
 

@@ -1408,3 +1408,110 @@ TEST(TestCompileClosure, BasicAssertions)
 
     runCompilerTests(tests);
 } 
+
+
+TEST(TestCompileRecursiveFunctions, BasicAssertions)
+{
+    std::vector<std::vector<bytecode::Instructions>> ins{
+        {
+            {bytecode::Make(bytecode::OpcodeType::OpCurrentClosure)},
+            {bytecode::Make(bytecode::OpcodeType::OpGetLocal, {0})},
+            {bytecode::Make(bytecode::OpcodeType::OpConstant, {0})},
+            {bytecode::Make(bytecode::OpcodeType::OpSub)},
+            {bytecode::Make(bytecode::OpcodeType::OpCall, {1})},
+            {bytecode::Make(bytecode::OpcodeType::OpReturnValue)},
+        },
+        {
+            {bytecode::Make(bytecode::OpcodeType::OpCurrentClosure)},
+            {bytecode::Make(bytecode::OpcodeType::OpGetLocal, {0})},
+            {bytecode::Make(bytecode::OpcodeType::OpConstant, {0})},
+            {bytecode::Make(bytecode::OpcodeType::OpSub)},
+            {bytecode::Make(bytecode::OpcodeType::OpCall, {1})},
+            {bytecode::Make(bytecode::OpcodeType::OpReturnValue)},
+        },
+        {
+            {bytecode::Make(bytecode::OpcodeType::OpClosure, {1, 0})},
+            {bytecode::Make(bytecode::OpcodeType::OpSetLocal, {0})},
+            {bytecode::Make(bytecode::OpcodeType::OpGetLocal, {0})},
+            {bytecode::Make(bytecode::OpcodeType::OpConstant, {2})},
+            {bytecode::Make(bytecode::OpcodeType::OpCall, {1})},
+            {bytecode::Make(bytecode::OpcodeType::OpReturnValue)},
+        }
+    };
+
+    std::vector<CompilerTestCase>  tests
+    {
+        {
+            R""(
+                let countDown = fn(x){
+                    countDown(x - 1);
+                };
+
+                countDown(1);
+            )"",
+            {
+                1,
+                ins[0],
+                1
+            },
+            {
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpClosure, {1,0})
+                },
+                {
+                    {bytecode::Make(bytecode::OpcodeType::OpSetGlobal, {0})},
+                },
+                {
+                    {bytecode::Make(bytecode::OpcodeType::OpGetGlobal, {0})},
+                },
+                {
+                    {bytecode::Make(bytecode::OpcodeType::OpConstant, {2})},
+                },
+                {
+                    {bytecode::Make(bytecode::OpcodeType::OpCall, {1})},
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpPop)
+                },
+            }
+        },
+        {
+            R""(
+                let wrapper = fn(){
+                    let countDown = fn(x){
+                        countDown(x - 1);
+                    };
+
+                    countDown(1);
+                };
+
+                wrapper();
+            )"",
+            {
+                1,
+                ins[1],
+                1,
+                ins[2]
+            },
+            {
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpClosure, {3,0})
+                },
+                {
+                    {bytecode::Make(bytecode::OpcodeType::OpSetGlobal, {0})},
+                },
+                {
+                    {bytecode::Make(bytecode::OpcodeType::OpGetGlobal, {0})},
+                },
+                {
+                    {bytecode::Make(bytecode::OpcodeType::OpCall, {0})},
+                },
+                {
+                    bytecode::Make(bytecode::OpcodeType::OpPop)
+                },
+            }
+        }
+    };
+
+    runCompilerTests(tests);
+} 

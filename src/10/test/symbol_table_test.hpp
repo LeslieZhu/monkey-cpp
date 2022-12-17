@@ -306,3 +306,33 @@ TEST(testResolveUnresolveableFree, Basic)
         EXPECT_EQ(result, nullptr);
     }
 }
+
+TEST(testDefineAndResolveFunctionName, Basic)
+{
+    auto global = compiler::NewSymbolTable();
+    global->DefineFunctionName("a");
+
+
+    auto expected = std::make_shared<compiler::Symbol>("a", compiler::SymbolScopeType::FunctionScope, 0);
+    auto result = global->Resolve(expected->Name);
+
+    EXPECT_NE(result, nullptr);
+    EXPECT_EQ(*expected, *result);
+}
+
+TEST(testShadowingFunctionName, Basic)
+{
+    auto global = compiler::NewSymbolTable();
+    global->DefineFunctionName("a");
+    global->Define("a");
+
+    auto expected = std::make_shared<compiler::Symbol>("a", compiler::SymbolScopeType::GlobalScope, 0);
+    auto result = global->Resolve(expected->Name);
+
+    EXPECT_NE(result, nullptr);
+
+    std::cout << expected->Name << " vs " << result->Name << std::endl;
+    std::cout << expected->Scope << " vs " << result->Scope << std::endl;
+
+    EXPECT_EQ(*expected, *result);
+}

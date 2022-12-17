@@ -237,13 +237,16 @@ namespace compiler
             else if(node->GetNodeType() == ast::NodeType::LetStatement)
             {
                 std::shared_ptr<ast::LetStatement> letObj = std::dynamic_pointer_cast<ast::LetStatement>(node);
+
+                auto symbol = symbolTable->Define(letObj->pName->Value);
+
                 auto resultObj = Compile(letObj->pValue);
                 if (objects::isError(resultObj))
                 {
                     return resultObj;
                 }
 
-                auto symbol = symbolTable->Define(letObj->pName->Value);
+                // auto symbol = symbolTable->Define(letObj->pName->Value);
 
                 if(symbol->Scope == compiler::SymbolScopeType::GlobalScope)
                 {
@@ -353,6 +356,11 @@ namespace compiler
                 std::shared_ptr<ast::FunctionLiteral> funcObj = std::dynamic_pointer_cast<ast::FunctionLiteral>(node);
 
                 enterScope();
+
+                if(funcObj->Name != "")
+                {
+                    symbolTable->DefineFunctionName(funcObj->Name);
+                }
 
                 for(auto &args: funcObj->v_pParameters)
                 {
@@ -467,6 +475,10 @@ namespace compiler
             else if(symbol->Scope == compiler::SymbolScopeType::FreeScope)
             {
                 emit(bytecode::OpcodeType::OpGetFree, {symbol->Index});
+            }
+            else if(symbol->Scope == compiler::SymbolScopeType::FunctionScope)
+            {
+                emit(bytecode::OpcodeType::OpCurrentClosure);
             }
         }
 

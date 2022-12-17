@@ -415,6 +415,16 @@ namespace vm
                             }
                         }
                         break;
+                    case bytecode::OpcodeType::OpCurrentClosure:
+                        {
+                            auto currentClosure = frame->cl;
+                            auto result = Push(currentClosure);
+                            if(objects::isError(result))
+                            {
+                               return result;
+                            }
+                        }
+                        break;
                 }
             }
 
