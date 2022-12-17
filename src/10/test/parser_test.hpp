@@ -781,6 +781,29 @@ TEST(TestFunctionLiteralParsing, BasicAssertions)
 	testInfixExpression(bodyStmt->pExpression, "x"s, "+", "y"s);
 }
 
+TEST(TestFunctionLiteralWithNameParsing, BasicAssertions)
+{
+	std::string input = "let myFunction = fn(){ };";
+
+	std::unique_ptr<lexer::Lexer> pLexer = lexer::New(input);
+	std::unique_ptr<parser::Parser> pParser = parser::New(std::move(pLexer));
+	std::unique_ptr<ast::Program> pProgram{pParser->ParseProgram()};
+	printParserErrors(pParser->Errors());
+
+	EXPECT_EQ(pProgram->v_pStatements.size(), 1u);
+
+	std::shared_ptr<ast::Statement> stmt = pProgram->v_pStatements[0];
+	std::shared_ptr<ast::LetStatement> letStmt = std::dynamic_pointer_cast<ast::LetStatement>(stmt);
+
+	EXPECT_NE(letStmt, nullptr);
+
+	std::shared_ptr<ast::Expression> exp = letStmt->pValue;
+	std::shared_ptr<ast::FunctionLiteral> funcStmt = std::dynamic_pointer_cast<ast::FunctionLiteral>(exp);
+
+	EXPECT_NE(funcStmt, nullptr);
+	EXPECT_STREQ(funcStmt->Name.c_str(), "myFunction");
+}
+
 TEST(TestFunctionParameterParsing, BasicAssertions)
 {
 	struct Input
