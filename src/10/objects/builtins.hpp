@@ -10,6 +10,16 @@
 
 namespace objects
 {
+    int fibonacci(const int& num){
+        if(num == 0){
+            return 0;
+        } else if(num == 1){
+            return 1;
+        } else {
+            return fibonacci(num - 1) + fibonacci(num - 2);
+        }
+    }
+
     using BuiltinFunction = std::shared_ptr<objects::Object> (*)(std::vector<std::shared_ptr<objects::Object>>& args);
 
 	struct Builtin: Object
@@ -143,6 +153,28 @@ namespace objects
         return nullptr;
     }
 
+    std::shared_ptr<objects::Object> BuiltinFunc_Fibonacci([[maybe_unused]] std::vector<std::shared_ptr<objects::Object>>& args)
+    {
+        if(args.size() != 1)
+        {
+            return objects::newError("wrong number of arguments. got=" + std::to_string(args.size()) + ", want=1");
+        }
+
+        if(std::shared_ptr<objects::Integer> obj = std::dynamic_pointer_cast<objects::Integer>(args[0]); obj != nullptr)
+        {
+            if(obj->Value < 0)
+            {
+                return objects::newError("argument to `fibonacci` can not be negative, got " + std::to_string(obj->Value));
+            }
+
+            return std::make_shared<objects::Integer>(fibonacci(obj->Value));
+        }
+        else
+        {
+            return objects::newError("argument to `fibonacci` must be Integer, got " + args[0]->TypeStr());
+        }
+    }
+
     struct BuiltinWithName
     {
         std::string Name;
@@ -162,6 +194,7 @@ namespace objects
         std::make_shared<objects::BuiltinWithName>("last", &BuiltinFunc_Last),
         std::make_shared<objects::BuiltinWithName>("rest", &BuiltinFunc_Rest),
         std::make_shared<objects::BuiltinWithName>("push", &BuiltinFunc_Push),
+        std::make_shared<objects::BuiltinWithName>("fibonacci", &BuiltinFunc_Fibonacci),
     };
 
     std::shared_ptr<objects::Builtin> GetBuiltinByName(const std::string& name)

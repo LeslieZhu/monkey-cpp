@@ -18,6 +18,7 @@ namespace evaluator
         {"last", objects::GetBuiltinByName("last")},
         {"rest", objects::GetBuiltinByName("rest")},
         {"push", objects::GetBuiltinByName("push")},
+        {"fibonacci", objects::GetBuiltinByName("fibonacci")}
     };
 }
 

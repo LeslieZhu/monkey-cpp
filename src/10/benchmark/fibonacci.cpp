@@ -32,7 +32,10 @@ let fibonacci = fn(x){
 fibonacci(35);
 )"";
 
+std::string input2 = "fibonacci(35);";
+
 DEFINE_string(engine, ":)", "use 'vm' or 'eval'");
+DEFINE_bool(builtin, false, "use builtin fibonacci function");
 
 int main(int argc, char **argv)
 {
@@ -44,6 +47,11 @@ int main(int argc, char **argv)
     auto end = start;
 
     auto pLexer = lexer::New(input);
+
+    if(FLAGS_builtin){
+        pLexer = lexer::New(input2);
+    }
+
     auto pParser = parser::New(std::move(pLexer));
     auto pProgram = pParser->ParseProgram();
 
@@ -82,7 +90,7 @@ int main(int argc, char **argv)
 
         end = std::chrono::system_clock::now();
     } else {
-        std::cout << "usage: fibonacci -engine vm|eval" << std::endl;
+        std::cout << "usage: fibonacci -engine vm|eval [-builtin]" << std::endl;
         return -1;
     }
 
